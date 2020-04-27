@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+    <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="McMaster.NETCore.Plugins" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AuthJanitor.Automation.PersistenceEncryption.SaltedAesEncryption\AuthJanitor.Automation.PersistenceEncryption.SaltedAesEncryption.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault\AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureAD\AuthJanitor.Providers.AzureAD.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureMaps\AuthJanitor.Providers.AzureMaps.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.CosmosDb\AuthJanitor.Providers.CosmosDb.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.KeyVault\AuthJanitor.Providers.KeyVault.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.ServiceBus\AuthJanitor.Providers.ServiceBus.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.Storage\AuthJanitor.Providers.Storage.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+﻿<Card>
+    <CardHeader Class="text-warning">Risks</CardHeader>
+    <CardBody>
+        @if (!Risks.Any())
+        {
+            <Heading Size="HeadingSize.Is6" TextColor="Blazorise.TextColor.Success" Margin="Margin.Is2.OnAll" Class="font-weight-bold">
+                No Risks Identified! 👍
+            </Heading>
+        }
+        else
+        {
+            <RiskListGroup Value="@Risks" />
+        }
+    </CardBody>
+</Card>
+
+@using AuthJanitor.Automation.Components.Common.Risks
+@code {
+    [Parameter]
+    public IEnumerable<RiskyConfigurationItem> Risks { get; set; } = new List<RiskyConfigurationItem>();
+}

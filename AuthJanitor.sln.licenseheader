@@ -1,0 +1,13 @@
+﻿extensions: designer.cs generated.cs
+extensions: .cs
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+extensions: .razor
+@* Copyright (c) Microsoft Corporation. *@
+@* Licensed under the MIT license. *@
+extensions: .html
+<!-- Copyright (c) Microsoft Corporation. -->
+<!-- Licensed under the MIT license. -->
+extensions: .css
+/* Copyright (c) Microsoft Corporation. */
+/* Licensed under the MIT license. */

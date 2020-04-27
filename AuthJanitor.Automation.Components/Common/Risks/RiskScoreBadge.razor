@@ -1,0 +1,29 @@
+﻿<Badge Color="@Color" IsPill="true" Float="@Float" Class="@Class">
+    @Value
+</Badge>
+
+@using Blazorise
+@code {
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ValueChanged { get; set; }
+
+    [Parameter]
+    public Float Float { get; set; } = Float.Right;
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    protected Color Color
+    {
+        get
+        {
+            if (Value > 99) return Color.Danger;
+            else if (Value > 70) return Color.Warning;
+            else if (Value > 10) return Color.Primary;
+            else return Color.Success;
+        }
+    }
+}

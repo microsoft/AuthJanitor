@@ -1,0 +1,19 @@
+<ThemeProvider Theme="@theme">
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        </Found>
+        <NotFound>
+            <pre>We looked high and we looked low, but there's nothing here by that name.</pre>
+        </NotFound>
+    </Router>
+</ThemeProvider>
+
+@using Blazorise
+@code{
+    private Theme theme = new Theme
+    {
+        IsGradient = true,
+        IsRounded = true
+    };
+}

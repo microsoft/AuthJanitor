@@ -1,0 +1,48 @@
+﻿<Accordion>
+    @foreach (var resource in Resources)
+    {
+        <Card>
+            <CardHeader>
+                <Button Clicked="@(() => PutVisibility(resource.ObjectId, !GetVisibility(resource.ObjectId)))">
+                    <ResourceNameStyled Value="@resource" />
+                </Button>
+                <RiskScoreBadge Value="@resource.RiskScore" Float="Float.Right" Class="mt-2" />
+            </CardHeader>
+            <Collapse IsOpen="@GetVisibility(resource.ObjectId)">
+                <CardBody Padding="Padding.Is2.OnAll">
+                    <Container IsFluid="true">
+                        <Row>
+                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
+                                <ProviderSettingsCard ProviderConfiguration="@resource.ProviderConfiguration" ShowEditControls="false" />
+                            </Column>
+                        </Row>
+                        <Row>
+                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+                                <RiskListCard Risks="@resource.Risks" />
+                            </Column>
+                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+                                <ActionDescriptionCard Description="@resource.RuntimeDescription" />
+                            </Column>
+                        </Row>
+                    </Container>
+                </CardBody>
+            </Collapse>
+        </Card>
+    }
+</Accordion>
+
+@using AuthJanitor.Automation.Components.Common.Resources
+@using AuthJanitor.Automation.Components.Common.Risks
+@code {
+    protected bool PutVisibility(Guid id, bool visible) => Visibilities[id] = visible;
+    protected bool GetVisibility(Guid id) => Visibilities.ContainsKey(id) ? Visibilities[id] : false;
+    protected Dictionary<Guid, bool> Visibilities { get; set; } = new Dictionary<Guid, bool>();
+
+    [Parameter]
+    public IEnumerable<ResourceViewModel> Resources { get; set; } = new List<ResourceViewModel>();
+
+    protected override void OnInitialized()
+    {
+        foreach (var item in Resources) Visibilities[item.ObjectId] = false;
+    }
+}

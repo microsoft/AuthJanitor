@@ -1,0 +1,22 @@
+﻿<Card>
+    <CardHeader Class="text-info">Provider Settings</CardHeader>
+    <CardBody Padding="Padding.Is0">
+        <ConfigurationVisualizer @bind-ShowEditControls="@ShowEditControls"
+                                  @bind-Value="@ProviderConfiguration" />
+    </CardBody>
+</Card>
+
+@using AuthJanitor.Automation.Components.Common.Providers 
+@code {
+    [Parameter]
+    public ProviderConfigurationViewModel ProviderConfiguration { get; set; } = new ProviderConfigurationViewModel();
+
+    [Parameter]
+    public EventCallback<ProviderConfigurationViewModel> ProviderConfigurationChanged { get; set; }
+
+    [Parameter]
+    public bool ShowEditControls { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> ShowEditControlsChanged { get; set; }
+}

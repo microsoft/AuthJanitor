@@ -1,0 +1,135 @@
+﻿@page "/"
+@page "/dashboard"
+
+<Container IsFluid="true" Padding="Padding.Is3">
+    <Row>
+        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+            <InformationSummaryCard Heading="Expiring Soon" HeadingColor="Color.Warning" Data="@($"{Metrics.TotalExpiringSoon}")" Icon="fas fa-calendar" />
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+            <InformationSummaryCard Heading="Expired" HeadingColor="Color.Danger" Data="@($"{Metrics.TotalExpired}")" Icon="fas fa-calendar-times" />
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+            <InformationSummaryCard Heading="Pending Approval" HeadingColor="Color.Success" Data="@($"{Metrics.TotalPendingApproval}")" Icon="fas fa-user-check" />
+        </Column>
+        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+            <InformationSummaryCard Heading="Managed Secrets" HeadingColor="Color.Info" Data="@($"{Metrics.TotalSecrets}")" Icon="fas fa-unlock-alt" />
+        </Column>
+    </Row>
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <Card>
+                <CardHeader>Expiring Soon</CardHeader>
+                @if (Metrics.ExpiringSoon.Any())
+                {
+                    <CardBody Padding="Padding.Is0">
+                        <BlazorTable.Table TableItem="ManagedSecretViewModel" Items="@Metrics.ExpiringSoon" TableClass="table table-striped table-bordered">
+                            <BlazorTable.Column TableItem="ManagedSecretViewModel" Title="Name" Field="@(x => x.Name)" Sortable="true" />
+                            <BlazorTable.Column TableItem="ManagedSecretViewModel" Title="Valid For" Field="@(x => x.ValidPeriodMinutes)" Sortable="true">
+                                <Template>
+                                    <TimespanComponent Value="@context.ValidPeriodMinutes" ShowEditControls="false" />
+                                </Template>
+                            </BlazorTable.Column>
+                            <BlazorTable.Column TableItem="ManagedSecretViewModel" Title="Expiry" Field="@(x => x.Expiry)" Sortable="true" />
+                            <BlazorTable.Column TableItem="ManagedSecretViewModel"
+                                                Title="Resources">
+                                <Template>
+                                    <ListGroup Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">
+                                        @foreach (var resource in context.Resources)
+                                        {
+                                            <ListGroupItem Padding="Padding.Is2.OnAll"
+                                                           Class="@(resource.IsRekeyableObjectProvider ? "border-left-primary" : "border-left-secondary")">
+                                                <ResourceNameStyled Value="@resource" />
+                                            </ListGroupItem>
+                                        }
+                                    </ListGroup>
+                                </Template>
+                            </BlazorTable.Column>
+                            <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+                        </BlazorTable.Table>
+                    </CardBody>
+                }
+                else
+                {
+                    <Paragraph Class="text-center text-success" Padding="Padding.Is0" Margin="Margin.Is2">No Managed Secrets Expiring Soon!</Paragraph>
+                }
+            </Card>
+        </Column>
+    </Row>
+    <Row Padding="Padding.Is3.OnY">
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnTablet">
+            <Card>
+                <CardHeader>Risks</CardHeader>
+                <CardBody>
+                    <Blazorise.Charts.DoughnutChart TItem="int" Data="@GetRiskDataSet()" />
+                </CardBody>
+            </Card>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnTablet">
+            <Card>
+                <CardHeader>Expiry</CardHeader>
+                <CardBody>
+                    <Blazorise.Charts.DoughnutChart TItem="int" Data="@GetExpiryDataSet()" />
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@using AuthJanitor.Automation.Components.Cards
+@using AuthJanitor.Automation.Components.Common.Resources
+@using AuthJanitor.Automation.Components.Common.Secrets
+@using AuthJanitor.Automation.Shared.ViewModels
+@code {
+    protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Metrics = await Http.AJGet<DashboardMetricsViewModel>();
+    }
+
+    protected Blazorise.Charts.ChartData<int> GetRiskDataSet()
+    {
+        return new Blazorise.Charts.ChartData<int>()
+        {
+            Datasets = new List<Blazorise.Charts.ChartDataset<int>>()
+{
+                new Blazorise.Charts.ChartDataset<int>()
+                {
+                    Label = "Risks",
+                    BackgroundColor = new List<string>() { "#1cc88a", "#858796", "#4e73df", "#f6c23e", "#e74a3b" },
+                    BorderColor = new List<string>() { "#ccc", "#ccc", "#ccc", "#ccc", "#ccc" },
+                    BorderWidth = 1,
+                    Data = new List<int>()
+    {
+                         Metrics.Risk0, Metrics.Risk35, Metrics.Risk60, Metrics.Risk85, Metrics.RiskOver85
+                    }
+                }
+            },
+            Labels = new List<string>() { "0", "1-35", "36-60", "61-85", ">85" }
+        };
+    }
+    protected Blazorise.Charts.ChartData<int> GetExpiryDataSet()
+    {
+        return new Blazorise.Charts.ChartData<int>()
+        {
+            Datasets = new List<Blazorise.Charts.ChartDataset<int>>()
+{
+                new Blazorise.Charts.ChartDataset<int>()
+                {
+                    Label = "Risks",
+                    BackgroundColor = new List<string>() { "#1cc88a", "#f6c23e", "#e74a3b" },
+                    BorderColor = new List<string>() { "#ccc", "#ccc", "#ccc" },
+                    BorderWidth = 1,
+                    Data = new List<int>()
+    {
+                        Metrics.TotalSecrets - Metrics.TotalExpired - Metrics.TotalExpiringSoon,
+                        Metrics.TotalExpiringSoon,
+                        Metrics.TotalExpired
+                    }
+                }
+            },
+            Labels = new List<string>() { "Valid", "Expiring Soon", "Expired" }
+        };
+    }
+}

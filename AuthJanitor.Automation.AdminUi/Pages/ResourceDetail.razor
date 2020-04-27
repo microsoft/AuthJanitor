@@ -1,0 +1,44 @@
+﻿@page "/resources/{ResourceId}"
+
+    <Container IsFluid="true" Padding="Padding.Is0">
+        <Row>
+            <Column ColumnSize="ColumnSize.Is10">
+                <Card Margin="Margin.Is4.FromBottom">
+                    <CardHeader>Resource Detail</CardHeader>
+                    <CardBody>
+                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">ID<span class="float-right text-muted">@Resource.ObjectId</span></Heading>
+                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Name<span class="float-right text-muted">@Resource.Name</span></Heading>
+                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Provider<span class="float-right text-muted">@Resource.ProviderDetail?.Name</span></Heading>
+                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Description<span class="float-right text-muted">@Resource.Description</span></Heading>
+                    </CardBody>
+                </Card>
+            </Column>
+        </Row>
+        <Row>
+            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
+                <ProviderSettingsCard ProviderConfiguration="@Resource.ProviderConfiguration" ShowEditControls="false" />
+            </Column>
+        </Row>
+        <Row>
+            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+                <RiskListCard Risks="@Resource.Risks" />
+            </Column>
+            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
+                <ActionDescriptionCard Description="@Resource.RuntimeDescription" />
+            </Column>
+        </Row>
+    </Container>
+
+@using AuthJanitor.Automation.Components.Cards
+@using AuthJanitor.Automation.Shared.ViewModels
+@code {
+    [Parameter]
+    public string ResourceId { get; set; }
+
+    public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Resource = await Http.AJGet<ResourceViewModel>(Guid.Parse(ResourceId));
+    }
+}

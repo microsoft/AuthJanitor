@@ -1,0 +1,13 @@
+﻿<Paragraph Margin="Margin.Is0.OnAll" Weight="TextWeight.Bold">
+    <i class="@Value.ProviderDetail.IconClass float-left mr-2"></i>
+    <Heading Size="HeadingSize.Is6" Float="Float.Left" Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">@Value.Name</Heading>
+    <div class="clearfix"></div>
+</Paragraph>
+
+@code {
+    [Parameter]
+    public ResourceViewModel Value { get; set; }
+
+    [Parameter]
+    public EventCallback<ResourceViewModel> ValueChanged { get; set; }
+}

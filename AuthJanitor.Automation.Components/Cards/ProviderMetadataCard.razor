@@ -1,0 +1,48 @@
+﻿<Card Margin="Margin.Is3.OnAll" 
+      Class="@(Provider.IsRekeyableObjectProvider ? "border-left-primary" : "border-left-secondary")">
+    <Row Class="no-gutters">
+        <Column ColumnSize="ColumnSize.Is3" Padding="Padding.Is2" Class="align-middle">
+            @((MarkupString)Provider.SvgImage)
+        </Column>
+        <Column ColumnSize="ColumnSize.Is9">
+            <CardBody>
+                <CardTitle Size="5">
+                    @if (!string.IsNullOrEmpty(Provider.Details.IconClass))
+                    {
+                        <i class="@Provider.Details.IconClass mr-2" />
+                    }
+                    @Provider.Details.Name
+                    <small class="text-muted ml-2">@Provider.AssemblyVersion.ToString()</small>
+                </CardTitle>
+                <CardText>@Provider.Details.Description</CardText>
+                <CardText><small class="text-muted">@System.IO.Path.GetFileName(Provider.OriginatingFile)</small></CardText>
+                <CardText>
+                    @if (Provider.AssemblyPublicKeyToken != null &&
+                       Provider.AssemblyPublicKeyToken.Any())
+                    {
+                        <small class="text-muted">@BitConverter.ToString(Provider.AssemblyPublicKeyToken).Replace("-", "")</small>
+                    }
+                    else
+                    {
+                        <small class="text-warning font-weight-bold">This Provider assembly was not signed!</small>
+                    }
+                </CardText>
+            </CardBody>
+            @if (!string.IsNullOrEmpty(Provider.Details.MoreInformationUrl))
+            {
+                <CardFooter>
+                    <a href="@Provider.Details.MoreInformationUrl" target="_blank">
+                        More Information...
+                        <Icon Name="FontAwesomeIcons.ExternalLinkAlt" Margin="Margin.Is2.FromLeft" />
+                    </a>
+                    <Button Color="Color.Secondary">More Information...</Button>
+                </CardFooter>
+            }
+        </Column>
+    </Row>
+</Card>
+
+@code {
+    [Parameter]
+    public LoadedProviderViewModel Provider { get; set; } = new LoadedProviderViewModel();
+}

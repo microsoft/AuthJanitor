@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>AuthJanitor</title>
+    <meta name="twitter:title" content="AuthJanitor">
+    <meta property="og:image" content="assets/img/AJLogoDark.png?h=958c82d5b384dcb19e2a6a296d9930ae">
+    <meta name="description" content="AuthJanitor simplifies application key and secret management by providing a framework to securely perform automated rotations.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="assets/img/AJLogoDark.png?h=958c82d5b384dcb19e2a6a296d9930ae">
+    <meta name="twitter:description" content="AuthJanitor simplifies application key and secret management by providing a framework to securely perform automated rotations.">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png?h=2db3839d856abaf9f45f6772e5e8c8b6">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png?h=05ccd94d643938bad16b283c75d4fa57">
+    <link rel="icon" type="image/png" sizes="180x180" href="assets/img/apple-icon-180x180.png?h=d8afafd8c963b1b06770328adfb3cec1">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/android-icon-192x192.png?h=902cd20f0f0f2b636063655453bb7900">
+    <link rel="icon" type="image/png" sizes="310x310" href="assets/img/ms-icon-310x310.png?h=baebe209234bc11695241df33d6c7a1e">
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=dabb7cac1f3710c03f56c5e12747fa31">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Muli">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/fonts/fontawesome5-overrides.min.css?h=18313f04cea0e078412a028c5361bd4e">
+</head>
+
+<body id="page-top">
+    <nav class="navbar navbar-light navbar-expand-lg fixed-top" id="mainNav">
+        <div class="container"><a class="navbar-brand js-scroll-trigger" href="#page-top"><img src="assets/img/AJLogoDark.png?h=958c82d5b384dcb19e2a6a296d9930ae" style="height: 75px;"></a><button data-toggle="collapse" data-target="#navbarResponsive" class="navbar-toggler float-right" aria-controls="navbarResponsive"
+                aria-expanded="false" aria-label="Toggle navigation"><i class="fa fa-bars"></i></button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="nav navbar-nav ml-auto">
+                    <li class="nav-item" role="presentation"><a class="nav-link js-scroll-trigger" href="#page-top">Home</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link js-scroll-trigger" href="#workflow">Secret Rotation</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link js-scroll-trigger" href="#features">Features</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link js-scroll-trigger" href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank">Documentation</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link js-scroll-trigger" href="https://github.com/microsoft/AuthJanitor" target="_blank">GitHub</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <header class="masthead" style="background:url('assets/img/bg-pattern.png?h=88366d218f2eda574d88b27e4cb4169d'), linear-gradient(to left, #7b4397, #dc2430);height:100%;">
+        <div class="container h-100">
+            <div class="row h-100">
+                <div class="col-lg-7 my-auto">
+                    <div class="mx-auto header-content">
+                        <h1 class="mb-5">Managing application secrets can be a risky, stressful process.<br><br>It doesn't have to be.</h1><a class="btn btn-outline-warning btn-xl js-scroll-trigger" role="button" href="#features">Learn More about AuthJanitor</a></div>
+                </div>
+                <div class="col-lg-5 my-auto">
+                    <div class="device-container">
+                        <div class="device-mockup iphone6_plus portrait white">
+                            <div class="device" style="background-image:url('assets/img/iphone_6_plus_white_port.png');">
+                                <div class="screen"><img class="img-fluid" src="assets/img/ajdashboard.png?h=b4f1d63b05d80dee896c6de4654e7001"></div>
+                                <div class="button"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="iphone-mockup"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <section class="download text-center bg-primary" style="overflow:hidden;"><i class="fa fa-key" style="position: absolute;font-size: 50vh;left: 0;opacity: 0.10;"></i>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <h2 class="section-heading">Enhance the security of your system with regular key and secret rotations.</h2>
+                    <p>Juggling application secrets and encryption key versions is a hassle. That means good practices fall by the wayside and become manual operations. By the time you're ready to go with your application, you may not even be thinking about
+                        regular key or secret rotations!<br><br>Adding AuthJanitor to your operations workflow enables automatic rekeying of all of your services, as well as manages those credentials among your deployed applications.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="workflow" class="features">
+        <div class="container">
+            <div class="section-heading text-center">
+                <h2>Simplify your application security nightmare.</h2>
+                <p class="text-muted">AuthJanitor is designed to work with your resources, on your schedule and on your terms. You can provide as much or as little access as you need to either your administrator users or to the AuthJanitor Agent, a fully-isolated service apart
+                    from the Administrator Tool.</p>
+                <hr>
+            </div>
+            <div class="row"><img class="img-fluid" src="assets/img/SecretRotationWorkflow.png?h=4296ec114829e399a0a72c0a242819fe"></div>
+        </div>
+    </section>
+    <section class="download text-center bg-info" style="overflow:hidden;"><i class="fas fa-robot" style="position: absolute;font-size: 50vh;right: 0;opacity: 0.10;"></i>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <h2 class="section-heading">Take the power out of the hands of the robots.</h2>
+                    <p>Many automation strategies for key and secret rotation are dependent on a single non-user identity which has broad read/write access to your services and/or cloud provider. This leaves a window wide open for an attacker to compromise
+                        many services via that single account.<br><br>AuthJanitor's workflow supports an administrator user "signing off" on potentially complex automated secret rotations with a single click, providing a human point of contact for security
+                        event logs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-heading text-center">
+                <h2>By Security Engineers, For Anyone</h2>
+                <p class="text-muted">Built upon decades of experience building and securing software and identities across multiple industries, AuthJanitor handles the technical security hurdles of managing application secrets, so you can get back to developing or operating
+                    your application.</p>
+                <hr>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 my-auto">
+                    <div class="device-container">
+                        <div class="device-mockup iphone6_plus portrait white">
+                            <div class="device" style="background-image:url('assets/img/iphone_6_plus_white_port.png');">
+                                <div class="screen"><img class="img-fluid" src="assets/img/ajsecret.png?h=a24d37b758b8a6a865877475c017f183"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8 my-auto">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="feature-item"><i class="fas fa-unlock-alt text-primary"></i>
+                                    <h3>Security-First</h3>
+                                    <p class="text-muted">AuthJanitor is split into multiple components with different levels of access, to help safeguard your system from lateral movement by an attacker.</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="feature-item"><i class="fas fa-project-diagram text-primary"></i>
+                                    <h3>Easy to Extend</h3>
+                                    <p class="text-muted">Using a service that's not supported yet? No problem! Adding new Providers to AuthJanitor can be done in as little as 50 lines of code.</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="feature-item"><i class="fas fa-book-open text-primary"></i>
+                                    <h3>Open-Source License</h3>
+                                    <p class="text-muted">AuthJanitor is an MIT-licensed open-source project, so anyone can audit its components at any time, and it is free to use for your next application!</p>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="feature-item"><i class="fas fa-map-signs text-primary"></i>
+                                    <h3>Flexible Approach</h3>
+                                    <p class="text-muted">AuthJanitor implements mechanisms for administrative signoff as well as service principal/managed identity for authenticating key rotation, so your organization's auditing requirements are met!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="cta" style="background-image: url(&quot;assets/img/rusting-lock.jpg?h=f962c64a39af9f889d3d61841365d210&quot;);">
+        <div class="cta-content">
+            <div class="container">
+                <h2 class="m-0" style="max-width: 500px;">Give yourself peace of mind.</h2>
+                <h4 class="mb-3 mt-2" style="max-width: 500px;color: rgb(255,255,255);">Implement a flexible secret rotation strategy for your application without the hassle.</h4><a class="btn btn-outline-warning btn-xl js-scroll-trigger" role="button" href="https://github.com/microsoft/AuthJanitor" target="_blank">Let authJanitor Help</a></div>
+        </div>
+        <div class="overlay"></div>
+    </section>
+    <section id="contact" class="contact bg-primary">
+        <div class="container">
+            <a href="https://github.com/microsoft/AuthJanitor" target="_blank">
+                <h2 class="text-dark"><span>We&nbsp;</span><span class="fa-stack"><i class="fas fa-heart fa-stack-2x"></i><i class="fab fa-github fa-stack-1x text-light"></i></span><span>&nbsp;our users and contributors!</span></h2>
+            </a>
+        </div>
+    </section>
+    <footer>
+        <div class="container"><p>AuthJanitor is an <a href="https://github.com/microsoft/AuthJanitor/blob/master/LICENSE" target="_blank">MIT-licensed</a> open-source project.</p>
+            <p class="text-danger">AuthJanitor does <span style="text-decoration: underline;">not</span> guarantee secure software; there is <span style="text-decoration: underline;">no substitute</span> for the use of a reputable software testing/assurance organization.</p>
+        </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <script src="assets/js/new-age.js?h=cf0c6eede7253521bdfea6a9a949db9a"></script>
+</body>
+
+</html>

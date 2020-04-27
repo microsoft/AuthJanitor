@@ -1,0 +1,29 @@
+﻿@switch (Value.InputType)
+{
+    case ProviderConfigurationItemViewModel.InputTypes.TextArray:
+    case ProviderConfigurationItemViewModel.InputTypes.Text:
+        <TextEdit @bind-Text="@Value.Value" />
+        break;
+    case ProviderConfigurationItemViewModel.InputTypes.Integer:
+        <NumericEdit @bind-Value="@Value.IntValue" />
+        break;
+    case ProviderConfigurationItemViewModel.InputTypes.Boolean:
+        <Check @bind-Checked="@Value.BoolValue" />
+        break;
+    case ProviderConfigurationItemViewModel.InputTypes.Enumeration:
+        <Select @bind-SelectedValue="@Value.Value">
+            @foreach (var option in Value.Options)
+                    {
+                <SelectItem Value="@option.Value">@option.DisplayName</SelectItem>
+                    }
+        </Select>
+        break;
+}
+
+@code {
+    [Parameter]
+    public ProviderConfigurationItemViewModel Value { get; set; }
+
+    [Parameter]
+    public EventCallback<ProviderConfigurationItemViewModel> ValueChanged { get; set; }
+}
