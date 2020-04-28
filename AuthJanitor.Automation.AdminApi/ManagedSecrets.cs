@@ -21,10 +21,14 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class ManagedSecrets : StorageIntegratedFunction
     {
+        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherService _eventDispatcher;
 
         public ManagedSecrets(
+            AuthJanitorServiceConfiguration serviceConfiguration,
+            ICryptographicImplementation cryptographicImplementation,
             EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -38,6 +42,8 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
+            _serviceConfiguration = serviceConfiguration;
+            _cryptographicImplementation = cryptographicImplementation;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -65,7 +71,8 @@ namespace AuthJanitor.Automation.AdminApi
                 ValidPeriod = TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 LastChanged = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
-                ResourceIds = resourceIds
+                ResourceIds = resourceIds,
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
             };
 
             await ManagedSecrets.CreateAsync(newManagedSecret);
@@ -153,7 +160,8 @@ namespace AuthJanitor.Automation.AdminApi
                 Description = inputSecret.Description,
                 ValidPeriod = TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
-                ResourceIds = resourceIds
+                ResourceIds = resourceIds,
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
             };
 
             await ManagedSecrets.UpdateAsync(newManagedSecret);

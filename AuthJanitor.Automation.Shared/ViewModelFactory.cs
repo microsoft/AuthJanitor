@@ -74,9 +74,9 @@ namespace AuthJanitor.Automation.Shared
                                       property.PropertyType.GetEnumValues().Cast<Enum>()
                                               .ToDictionary(
                                                     k => k.ToString(),
-                                                    v => HelperMethods.GetEnumValueAttribute<DescriptionAttribute>(v) == null ?
+                                                    v => v.GetEnumValueAttribute<DescriptionAttribute>() == null ?
                                                          v.ToString() :
-                                                         HelperMethods.GetEnumValueAttribute<DescriptionAttribute>(v).Description)
+                                                         v.GetEnumValueAttribute<DescriptionAttribute>().Description)
                                               .Select(i => new ProviderConfigurationItemViewModel.SelectOption(i.Key, i.Value)) :
                                       new List<ProviderConfigurationItemViewModel.SelectOption>(),
                             Value = valueReader(config, property)
