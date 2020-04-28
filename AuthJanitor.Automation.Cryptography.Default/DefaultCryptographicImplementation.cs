@@ -10,30 +10,35 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Automation.Cryptography.Default
 {
     /// <summary>
-    /// The default AuthJanitor cryptographic implementation attempts to be FIPS-aware
+    /// The default AuthJanitor cryptographic implementation.
+    /// 
+    /// This implementation uses cryptographic Types which pass through to OS modules which can be enabled for FIPS.
+    /// https://docs.microsoft.com/en-us/dotnet/standard/security/fips-compliance
     /// </summary>
     public class DefaultCryptographicImplementation : ICryptographicImplementation
     {
         private const string CHARS_ALPHANUMERIC_ONLY = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private string _masterKey;
+
+        /// <summary>
+        /// The default AuthJanitor cryptographic implementation
+        /// </summary>
+        /// <param name="masterKey">Encryption master key</param>
         public DefaultCryptographicImplementation(string masterKey)
         {
             _masterKey = masterKey;
         }
 
+        /// <summary>
+        /// Generates a cryptographically random string of a given length.
+        /// 
+        /// This implementation uses RNGCryptoServiceProvider.
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public Task<string> GenerateCryptographicallySecureString(int length)
         {
-            // Cryptography Tip!
             // https://cmvandrevala.wordpress.com/2016/09/24/modulo-bias-when-generating-random-numbers/
-            // Using modulus to wrap around the source string tends to mathematically favor lower index values for
-            //   smaller values of RAND_MAX (here it is LEN(chars)=62). To overcome this bias, we generate the randomness as
-            //   4 bytes (int32) per single character we need, to maximize the value of RAND_MAX inside the RNG (as Int32.Max).
-            //   Once the value comes out, though, we can introduce modulus again because RAND_MAX is based on the
-            //   entropy going into the byte array rather than a fixed set (0,LEN(chars)) -- that makes it sufficiently
-            //   large to overcome bias as seen by chi-squared. (Bias approaching zero)
-            // * There is some evidence to suggest this has been taken into account in newer versions of NET. *
-            // * The code below assumes this bias is *not* accounted for, which should make this secure generation xplat-safe for NET Core. *
-
             var chars = CHARS_ALPHANUMERIC_ONLY;
             byte[] data = new byte[4 * length];
             using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
@@ -51,8 +56,22 @@ namespace AuthJanitor.Automation.Cryptography.Default
             return Task.FromResult(sb.ToString());
         }
 
+        /// <summary>
+        /// Generates a one-way hash of a given string.
+        /// 
+        /// This implementation uses SHA256.
+        /// </summary>
+        /// <param name="str">String to hash</param>
+        /// <returns>SHA256 hash of string</returns>
         public Task<string> Hash(string str) => Hash(Encoding.UTF8.GetBytes(str));
 
+        /// <summary>
+        /// Generates a one-way hash of a given byte array.
+        /// 
+        /// This implementation uses SHA256.Create()
+        /// </summary>
+        /// <param name="inputBytes">Bytes to hash</param>
+        /// <returns>SHA256 hash of byte array</returns>
         public Task<string> Hash(byte[] inputBytes)
         {
             byte[] bytes = SHA256.Create().ComputeHash(inputBytes);
@@ -65,6 +84,14 @@ namespace AuthJanitor.Automation.Cryptography.Default
             return Task.FromResult(sb.ToString());
         }
 
+        /// <summary>
+        /// Decrypts a given cipherText with a provided salt.
+        /// 
+        /// This implementation uses Aes.Create() and Rfc2898DeriveBytes.
+        /// </summary>
+        /// <param name="salt">Encryption salt</param>
+        /// <param name="cipherText">Ciphertext (base64)</param>
+        /// <returns>Decrypted string</returns>
         public async Task<string> Decrypt(string salt, string cipherText)
         {
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(cipherText)))
@@ -88,6 +115,14 @@ namespace AuthJanitor.Automation.Cryptography.Default
             }
         }
 
+        /// <summary>
+        /// Encrypts a given cipherText with a provided salt.
+        /// 
+        /// This implementation uses Aes.Create() and Rfc2898DeriveBytes.
+        /// </summary>
+        /// <param name="salt">Encryption salt</param>
+        /// <param name="plainText">Plain text to encrypt</param>
+        /// <returns>Encrypted ciphertext (base64)</returns>
         public async Task<string> Encrypt(string salt, string plainText)
         {
             using (MemoryStream ms = new MemoryStream())
