@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AuthJanitor.Automation.Cryptography.Default\AuthJanitor.Automation.Cryptography.Default.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Automation.DataStores.AzureBlobs\AuthJanitor.Automation.DataStores.AzureBlobs.csproj" />
     <ProjectReference Include="..\AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault\AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault.csproj" />
     <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared.DataStores
+namespace AuthJanitor.Automation.Shared
 {
     public interface IDataStore<TModel> where TModel : IAuthJanitorModel
     {

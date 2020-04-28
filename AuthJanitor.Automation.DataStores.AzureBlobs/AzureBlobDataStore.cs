@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.Models;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -9,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared.DataStores
+namespace AuthJanitor.Automation.DataStores.AzureBlobs
 {
     public class AzureBlobDataStore<TDataType> : IDataStore<TDataType> where TDataType : IAuthJanitorModel
     {
@@ -74,19 +75,24 @@ namespace AuthJanitor.Automation.Shared.DataStores
             var list = await ListAsync();
             if (!list.Any(o => o.ObjectId == model.ObjectId))
                 throw new InvalidOperationException("ID does not exist!");
+
             list.RemoveAll(o => o.ObjectId == model.ObjectId);
             list.Add(model);
             await Commit(list);
         }
 
-        private Task Commit(List<TDataType> data) =>
-            Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None));
+        private async Task Commit(List<TDataType> data)
+        {
+            var leaseId = await Blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30), null);
+            await Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None));
+            await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
+        }
 
         private async Task<List<TDataType>> Retrieve()
         {
             if (!await Blob.ExistsAsync())
             {
-                await Blob.UploadTextAsync("[]");
+                await Commit(new List<TDataType>());
                 return new List<TDataType>();
             }
             return JsonConvert.DeserializeObject<List<TDataType>>(await Blob.DownloadTextAsync());
