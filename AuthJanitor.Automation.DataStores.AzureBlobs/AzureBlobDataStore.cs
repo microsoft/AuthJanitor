@@ -83,9 +83,16 @@ namespace AuthJanitor.Automation.DataStores.AzureBlobs
 
         private async Task Commit(List<TDataType> data)
         {
-            var leaseId = await Blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30), null);
-            await Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None));
-            await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
+            string leaseId = string.Empty;
+            try
+            {
+                leaseId = await Blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30), null);
+                await Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None));
+            }
+            finally
+            {
+                await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
+            }
         }
 
         private async Task<List<TDataType>> Retrieve()
