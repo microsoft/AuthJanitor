@@ -80,6 +80,7 @@ namespace AuthJanitor.Automation.Agent
             builder.Services.AddSingleton<ISecureStorageProvider>(s =>
                 new SecureStorageProviders.AzureKeyVault.KeyVaultSecureStorageProvider(
                     new SaltedAesPersistenceEncryption(
+                        s.GetRequiredService<ILoggerFactory>().CreateLogger<SaltedAesPersistenceEncryption>(),
                         s.GetRequiredService<AuthJanitorServiceConfiguration>()
                          .SecurePersistenceEncryptionKey),
                     s.GetRequiredService<CredentialProviderService>(),

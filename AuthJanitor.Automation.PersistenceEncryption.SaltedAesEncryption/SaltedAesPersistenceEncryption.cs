@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -12,15 +13,17 @@ namespace AuthJanitor.Automation.PersistenceEncryption.SaltedAesEncryption
     public class SaltedAesPersistenceEncryption : IPersistenceEncryption
     {
         private string _key;
-        public SaltedAesPersistenceEncryption(string key)
+        public SaltedAesPersistenceEncryption(ILogger log, string key)
         {
+            if (CryptoConfig.AllowOnlyFipsAlgorithms)
+                log.LogInformation("System-level FIPS enforced! Persistence Encryption will run in FIPS-compliant mode.");
             _key = key;
         }
 
         public async Task<string> Decrypt(string salt, string cipherText)
         {
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(cipherText)))
-            using (Aes aes = new AesManaged())
+            using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
             {
                 aes.Key = new Rfc2898DeriveBytes(_key, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 aes.IV = ReadByteArray(ms);
@@ -43,7 +46,7 @@ namespace AuthJanitor.Automation.PersistenceEncryption.SaltedAesEncryption
         public async Task<string> Encrypt(string salt, string plainText)
         {
             using (MemoryStream ms = new MemoryStream())
-            using (Aes aes = new AesManaged())
+            using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
             {
                 aes.Key = new Rfc2898DeriveBytes(_key, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 ms.Write(BitConverter.GetBytes(aes.IV.Length), 0, sizeof(int));
