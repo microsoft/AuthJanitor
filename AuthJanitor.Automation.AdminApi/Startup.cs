@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Cryptography.Default;
+using AuthJanitor.Automation.DataStores.AzureBlobs;
 using AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault;
 using AuthJanitor.Automation.Shared;
-using AuthJanitor.Automation.Shared.DataStores;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Providers;
 using McMaster.NETCore.Plugins;

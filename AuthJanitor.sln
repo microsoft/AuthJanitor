@@ -53,7 +53,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agent Service", "Agent Serv
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cryptography", "Cryptography", "{B1A0EACD-9C15-40F3-8133-85D5F45FD57C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Automation.Cryptography.Default", "AuthJanitor.Automation.Cryptography.Default\AuthJanitor.Automation.Cryptography.Default.csproj", "{59F04D4B-4D7A-4FF1-9188-B6844EE28563}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.Cryptography.Default", "AuthJanitor.Automation.Cryptography.Default\AuthJanitor.Automation.Cryptography.Default.csproj", "{59F04D4B-4D7A-4FF1-9188-B6844EE28563}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data Stores", "Data Stores", "{E7167E8D-C521-4610-832B-F14EC6E11566}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Automation.DataStores.AzureBlobs", "AuthJanitor.Automation.DataStores.AzureBlobs\AuthJanitor.Automation.DataStores.AzureBlobs.csproj", "{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +129,10 @@ Global
 		{59F04D4B-4D7A-4FF1-9188-B6844EE28563}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59F04D4B-4D7A-4FF1-9188-B6844EE28563}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59F04D4B-4D7A-4FF1-9188-B6844EE28563}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -152,6 +160,8 @@ Global
 		{0E2B33F8-6CD0-43EE-AA35-337B6798B509} = {45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}
 		{B1A0EACD-9C15-40F3-8133-85D5F45FD57C} = {E0CE9DB0-BC33-4C02-8D09-F06B7C96B402}
 		{59F04D4B-4D7A-4FF1-9188-B6844EE28563} = {B1A0EACD-9C15-40F3-8133-85D5F45FD57C}
+		{E7167E8D-C521-4610-832B-F14EC6E11566} = {E0CE9DB0-BC33-4C02-8D09-F06B7C96B402}
+		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8} = {E7167E8D-C521-4610-832B-F14EC6E11566}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0461C5FC-1885-4C0F-B202-817D99C927D2}
