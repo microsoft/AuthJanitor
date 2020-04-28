@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.PersistenceEncryption.SaltedAesEncryption;
+using AuthJanitor.Automation.Cryptography.Default;
+using AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault;
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.DataStores;
 using AuthJanitor.Automation.Shared.Models;
@@ -50,7 +51,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ExternalSignalRekeyableLeadTimeHours = 24,
                 MetadataStorageContainerName = "authjanitor",
                 SecurePersistenceContainerName = "authjanitor",
-                SecurePersistenceEncryptionKey = "iamnotastrongkey!"
+                MasterEncryptionKey = "iamnotastrongkey!"
             };
 
         public void Configure(IWebJobsBuilder builder)
@@ -76,16 +77,12 @@ namespace AuthJanitor.Automation.AdminApi
             logger.LogDebug("Registering Credential Provider Service");
             builder.Services.AddSingleton<CredentialProviderService>();
 
+            logger.LogDebug("Registering Cryptographic Implementation");
+            builder.Services.AddSingleton<ICryptographicImplementation>(
+                new DefaultCryptographicImplementation(ServiceConfiguration.MasterEncryptionKey));
+
             logger.LogDebug("Registering Secure Storage Provider");
-            builder.Services.AddSingleton<ISecureStorageProvider>(s =>
-                new SecureStorageProviders.AzureKeyVault.KeyVaultSecureStorageProvider(
-                    new SaltedAesPersistenceEncryption(
-                        s.GetRequiredService<ILoggerFactory>().CreateLogger<SaltedAesPersistenceEncryption>(),
-                        s.GetRequiredService<AuthJanitorServiceConfiguration>()
-                         .SecurePersistenceEncryptionKey),
-                    s.GetRequiredService<CredentialProviderService>(),
-                    s.GetRequiredService<AuthJanitorServiceConfiguration>()
-                     .SecurePersistenceContainerName));
+            builder.Services.AddSingleton<ISecureStorageProvider, KeyVaultSecureStorageProvider>();
 
             // -----
 

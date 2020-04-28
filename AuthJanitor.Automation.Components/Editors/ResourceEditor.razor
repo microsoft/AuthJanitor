@@ -48,7 +48,6 @@
     protected async Task ProviderTypeChanged(string providerType)
     {
         Value.ProviderType = providerType;
-        Value.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(
-            AuthJanitor.Providers.HelperMethods.SHA256HashString(providerType));
+        Value.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(providerType);
     }
 }

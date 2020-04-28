@@ -60,7 +60,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             if (!req.IsValidUser()) return new UnauthorizedResult();
 
-            var provider = _providerManager.LoadedProviders.FirstOrDefault(p => HelperMethods.SHA256HashString(p.ProviderTypeName) == providerType);
+            var provider = _providerManager.LoadedProviders.FirstOrDefault(p => p.ProviderTypeName == providerType);
             if (provider == null)
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Providers.GetBlankConfiguration), "Invalid Provider specified");

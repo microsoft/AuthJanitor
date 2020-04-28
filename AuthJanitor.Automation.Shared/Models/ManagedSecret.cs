@@ -9,8 +9,6 @@ namespace AuthJanitor.Automation.Shared.Models
 {
     public class ManagedSecret : IAuthJanitorModel
     {
-        public const int DEFAULT_NONCE_LENGTH = 64;
-
         public Guid ObjectId { get; set; } = Guid.NewGuid();
         public string Name { get; set; }
         public string Description { get; set; }
@@ -22,7 +20,7 @@ namespace AuthJanitor.Automation.Shared.Models
 
         public IEnumerable<string> AdminEmails { get; set; } = new List<string>();
 
-        public string Nonce { get; set; } = HelperMethods.GenerateCryptographicallySecureString(DEFAULT_NONCE_LENGTH);
+        public string Nonce { get; set; }
 
         public IEnumerable<Guid> ResourceIds { get; set; } = new List<Guid>();
 

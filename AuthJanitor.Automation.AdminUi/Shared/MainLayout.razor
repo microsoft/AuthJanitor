@@ -5,92 +5,95 @@
         <BarBrand>
             <img style="height: 5vh" src="css/logo.png" alt="AuthJanitor Logo" />
         </BarBrand>
-            <BarToggler Float="Float.Right" />
-            <BarMenu>
-                <BarStart>
-                    <BarItem>
-                        <BarLink To="/aj/dashboard">
-                            <Icon Name="FontAwesomeIcons.TachometerAlt" Margin="Margin.Is1.FromRight" />
-                            Dashboard
-                        </BarLink>
-                    </BarItem>
-                    <BarItem>
-                        <BarLink To="/aj/providers">
-                            <Icon Name="FontAwesomeIcons.Plug" Margin="Margin.Is1.FromRight" />
-                            Providers
-                        </BarLink>
-                    </BarItem>
-                    <BarItem>
-                        <BarLink To="/aj/resources">
-                            <Icon Name="FontAwesomeIcons.Database" Margin="Margin.Is1.FromRight" />
-                            Resources
-                        </BarLink>
-                    </BarItem>
-                    <BarItem>
-                        <BarLink To="/aj/managedSecrets">
-                            <Icon Name="FontAwesomeIcons.Key" Margin="Margin.Is1.FromRight" />
-                            Managed Secrets
-                        </BarLink>
-                    </BarItem>
-                    <BarItem>
-                        <BarLink To="/aj/rekeyingTasks">
-                            <Icon Name="FontAwesomeIcons.Tasks" Margin="Margin.Is1.FromRight" />
-                            Rekeying Tasks
-                        </BarLink>
-                    </BarItem>
-                </BarStart>
-                <BarEnd Padding="Padding.Is2.FromTop" Margin="Margin.Is2.FromTop" Class="border-top">
-                    <BarItem>
-                        <Row>
-                            @{var erroredCollapse = Metrics.TasksInError == 0 ? "collapse" : "";};
-                            <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {erroredCollapse}")" title="Tasks in Error">
-                                <Icon Class="fa-2x" Name="FontAwesomeIcons.ExclamationTriangle" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
-                                <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
-                                    @Metrics.TasksInError
-                                </Paragraph>
-                            </Column>
-                            @{var expiringSoonCollapse = Metrics.TotalExpiringSoon == 0 ? "collapse" : "";};
-                            <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {expiringSoonCollapse}")" title="Expiring Soon">
-                                <Icon Class="fa-2x" Name="FontAwesomeIcons.HourglassHalf" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
-                                <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
-                                    @Metrics.ExpiringSoon
-                                </Paragraph>
-                            </Column>
-                            <Column></Column>
-                            <Column ColumnSize="ColumnSize.IsAuto" Class="m-0 p-0">
-                                <div class="text-light p-0 mr-1 mt-1">
-                                    <img src="@GetGravatar()" style="height: 2.7em;" class="img-fluid rounded mr-2" alt="Avatar Image" />
-                                    @if (!string.IsNullOrEmpty(Metrics.SignedInRole))
-                                    {
-                                        <span title="Role: @Metrics.SignedInRole">
-                                            @Metrics.SignedInName
-                                        </span>
-                                    } else {
-                                        <span>@Metrics.SignedInName</span>
-                                    }
-                                </div>
-                            </Column>
-                            <Column ColumnSize="ColumnSize.IsAuto">
-                                <div style="padding: 6px 3px 4px 7px; border: 2px solid #656565; border-radius: 5px;">
-                                    <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank" title="Documentation">
-                                        <Icon Class="fa-2x" Name="FontAwesomeIcons.BookOpen" />
-                                    </a>
-                                    <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor" target="_blank" title="GitHub Repository">
-                                        <Icon Class="fa-2x" Name="FontAwesomeIcons.Github" />
-                                    </a>
-                                </div>
-                            </Column>
-                        </Row>
-                    </BarItem>
-                </BarEnd>
-            </BarMenu>
+        <BarToggler Float="Float.Right" />
+        <BarMenu>
+            <BarStart>
+                <BarItem>
+                    <BarLink To="/aj/dashboard">
+                        <Icon Name="FontAwesomeIcons.TachometerAlt" Margin="Margin.Is1.FromRight" />
+                        Dashboard
+                    </BarLink>
+                </BarItem>
+                <BarItem>
+                    <BarLink To="/aj/providers">
+                        <Icon Name="FontAwesomeIcons.Plug" Margin="Margin.Is1.FromRight" />
+                        Providers
+                    </BarLink>
+                </BarItem>
+                <BarItem>
+                    <BarLink To="/aj/resources">
+                        <Icon Name="FontAwesomeIcons.Database" Margin="Margin.Is1.FromRight" />
+                        Resources
+                    </BarLink>
+                </BarItem>
+                <BarItem>
+                    <BarLink To="/aj/managedSecrets">
+                        <Icon Name="FontAwesomeIcons.Key" Margin="Margin.Is1.FromRight" />
+                        Managed Secrets
+                    </BarLink>
+                </BarItem>
+                <BarItem>
+                    <BarLink To="/aj/rekeyingTasks">
+                        <Icon Name="FontAwesomeIcons.Tasks" Margin="Margin.Is1.FromRight" />
+                        Rekeying Tasks
+                    </BarLink>
+                </BarItem>
+            </BarStart>
+            <BarEnd Padding="Padding.Is2.FromTop" Margin="Margin.Is2.FromTop" Class="border-top">
+                <BarItem>
+                    <Row>
+                        @{var erroredCollapse = Metrics.TasksInError == 0 ? "collapse" : "";};
+                        <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {erroredCollapse}")" title="Tasks in Error">
+                            <Icon Class="fa-2x" Name="FontAwesomeIcons.ExclamationTriangle" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
+                            <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
+                                @Metrics.TasksInError
+                            </Paragraph>
+                        </Column>
+                        @{var expiringSoonCollapse = Metrics.TotalExpiringSoon == 0 ? "collapse" : "";};
+                        <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {expiringSoonCollapse}")" title="Expiring Soon">
+                            <Icon Class="fa-2x" Name="FontAwesomeIcons.HourglassHalf" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
+                            <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
+                                @Metrics.ExpiringSoon
+                            </Paragraph>
+                        </Column>
+                        <Column></Column>
+                        <Column ColumnSize="ColumnSize.IsAuto" Class="m-0 p-0">
+                            <div class="text-light p-0 mr-1 mt-1">
+                                <img src="@GetGravatar()" style="height: 2.7em;" class="img-fluid rounded mr-2" alt="Avatar Image" />
+                                @if (!string.IsNullOrEmpty(Metrics.SignedInRole))
+                                {
+                                    <span title="Role: @Metrics.SignedInRole">
+                                        @Metrics.SignedInName
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>@Metrics.SignedInName</span>
+                                }
+                            </div>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.IsAuto">
+                            <div style="padding: 6px 3px 4px 7px; border: 2px solid #656565; border-radius: 5px;">
+                                <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank" title="Documentation">
+                                    <Icon Class="fa-2x" Name="FontAwesomeIcons.BookOpen" />
+                                </a>
+                                <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor" target="_blank" title="GitHub Repository">
+                                    <Icon Class="fa-2x" Name="FontAwesomeIcons.Github" />
+                                </a>
+                            </div>
+                        </Column>
+                    </Row>
+                </BarItem>
+            </BarEnd>
+        </BarMenu>
     </Bar>
     <div class="app-content">
         @Body
     </div>
 </div>
 
-@using AuthJanitor.Providers
+@using System.Security.Cryptography
+@using System.Text
 @code {
     protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
 
@@ -103,6 +106,19 @@
     {
         if (Metrics == null || string.IsNullOrEmpty(Metrics.SignedInEmail))
             return string.Empty;
-        return $"https://www.gravatar.com/avatar/{HelperMethods.MD5HashString(Metrics.SignedInEmail)}.jpg";
+        return $"https://www.gravatar.com/avatar/{MD5Hash(Metrics.SignedInEmail)}.jpg";
+    }
+
+    private static string MD5Hash(string input)
+    {
+        // This is *not* FIPS-compliant
+        StringBuilder hash = new StringBuilder();
+        byte[] bytes = MD5.Create().ComputeHash(new UTF8Encoding().GetBytes(input));
+
+        for (int i = 0; i < bytes.Length; i++)
+        {
+            hash.Append(bytes[i].ToString("x2"));
+        }
+        return hash.ToString();
     }
 }

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -33,7 +34,8 @@ namespace AuthJanitor.Providers.AppServices.Functions
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = HelperMethods.GenerateCryptographicallySecureString(Configuration.KeyLength)
+                NewSecretValue = await _serviceProvider.GetRequiredService<ICryptographicImplementation>()
+                                                       .GenerateCryptographicallySecureString(Configuration.KeyLength)
             };
 
             var functionsApp = await (await GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);

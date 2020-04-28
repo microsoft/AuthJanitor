@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Providers;
 using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json;
 using System;
@@ -13,17 +14,23 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         private const string PERSISTENCE_PREFIX = "AJPersist-";
         private readonly string _vaultName;
 
-        private readonly IPersistenceEncryption _encryption;
-        private readonly CredentialProviderService _credentialProvider;
+        private readonly ICryptographicImplementation _cryptographicImplementation;
+        private readonly CredentialProviderService _credentialProviderService;
         public KeyVaultSecureStorageProvider(
-            IPersistenceEncryption encryption,
-            CredentialProviderService credentialProvider,
-            string vaultName)
+            AuthJanitorServiceConfiguration serviceConfiguration,
+            ICryptographicImplementation cryptographicImplementation,
+            CredentialProviderService credentialProviderService)
         {
-            _encryption = encryption;
-            if (_encryption == null) throw new InvalidOperationException("You must register IPersistenceEncryption, even if using no encryption!");
-            _credentialProvider = credentialProvider;
-            _vaultName = vaultName;
+            _cryptographicImplementation = cryptographicImplementation;
+            _credentialProviderService = credentialProviderService;
+
+            _vaultName = serviceConfiguration.SecurePersistenceContainerName;
+
+            if (_cryptographicImplementation == null)
+                throw new InvalidOperationException("ICryptographicImplementation must be registered!");
+
+            if (_credentialProviderService == null)
+                throw new InvalidOperationException("CredentialProviderService must be registered!");
         }
 
         public async Task Destroy(Guid persistenceId)
@@ -35,9 +42,7 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         {
             var newId = Guid.NewGuid();
             var newSecret = new KeyVaultSecret($"{PERSISTENCE_PREFIX}{newId}",
-                await _encryption.Encrypt(
-                    newId.ToString(),
-                    JsonConvert.SerializeObject(persistedObject)));
+                await _cryptographicImplementation.Encrypt(newId.ToString(), JsonConvert.SerializeObject(persistedObject)));
             newSecret.Properties.ExpiresOn = expiry;
 
             await GetClient().SetSecretAsync(newSecret);
@@ -50,14 +55,13 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
             if (secret == null || secret.Value == null)
                 throw new Exception("Secret not found");
 
-            return JsonConvert.DeserializeObject<T>(
-                await _encryption.Decrypt(persistenceId.ToString(), secret.Value.Value));
+            return JsonConvert.DeserializeObject<T>(await _cryptographicImplementation.Decrypt(persistenceId.ToString(), secret.Value.Value));
         }
 
         private SecretClient GetClient()
         {
             return new SecretClient(new Uri($"https://{_vaultName}.vault.azure.net/"),
-                _credentialProvider.GetAgentIdentity().CreateTokenCredential());
+                _credentialProviderService.GetAgentIdentity().CreateTokenCredential());
         }
     }
 }

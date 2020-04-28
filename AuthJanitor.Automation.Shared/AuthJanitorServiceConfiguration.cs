@@ -23,13 +23,17 @@ namespace AuthJanitor.Automation.Shared
         [Description("Name of container which holds secure persistence objects")]
         public string SecurePersistenceContainerName { get; set; }
 
-        [Description("Secure persistence encryption key")]
-        public string SecurePersistenceEncryptionKey { get; set; }
+        [Description("Master encryption key")]
+        public string MasterEncryptionKey { get; set; }
 
         // -----
 
         [Description("Name of storage container which holds AuthJanitor metadata")]
         public string MetadataStorageContainerName { get; set; } = "authjanitor";
 
+        // -----
+
+        [Description("Length of Secret version nonce")]
+        public int DefaultNonceLength { get; set; } = 64;
     }
 }

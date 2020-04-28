@@ -60,16 +60,15 @@
         <Column ColumnSize="ColumnSize.Is12">
             @if (Task.Attempts.Any())
             {
-                _selectedTab = HelperMethods.MD5HashString(
-                        Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString());
+                _selectedTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
                 <Card>
                     <CardHeader>Rekeying Attempts</CardHeader>
                     <CardBody>
                         <Tabs SelectedTabChanged="@OnSelectedTabChanged">
                             @foreach (var attempt in Task.Attempts)
                             {
-                                <Tab Name="@HelperMethods.MD5HashString(attempt.AttemptStarted.ToString())"
-                                     IsActive="@(HelperMethods.MD5HashString(attempt.AttemptStarted.ToString()) == _selectedTab)">
+                                <Tab Name="@attempt.AttemptStarted.ToString()"
+                                     IsActive="@(attempt.AttemptStarted.ToString() == _selectedTab)">
                                     @if (attempt.IsSuccessfulAttempt)
                                     {
                                         <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" />
@@ -86,8 +85,8 @@
                         <TabsContent @ref="attemptTabs" Padding="Padding.Is1">
                             @foreach (var attempt in Task.Attempts)
                             {
-                                <TabPanel Name="@HelperMethods.MD5HashString(attempt.AttemptStarted.ToString())"
-                                          IsActive="@(HelperMethods.MD5HashString(attempt.AttemptStarted.ToString()) == _selectedTab)">
+                                <TabPanel Name="@attempt.AttemptStarted.ToString()"
+                                          IsActive="@(attempt.AttemptStarted.ToString() == _selectedTab)">
                                     <pre><code>@attempt.LogString</code></pre>
                                     @if (!attempt.IsSuccessfulAttempt)
                                     {
