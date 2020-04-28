@@ -68,7 +68,7 @@ namespace AuthJanitor.Automation.Cryptography.Default
         public async Task<string> Decrypt(string salt, string cipherText)
         {
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(cipherText)))
-            using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
+            using (Aes aes = Aes.Create())
             {
                 aes.Key = new Rfc2898DeriveBytes(_masterKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 aes.IV = ReadByteArray(ms);
@@ -91,7 +91,7 @@ namespace AuthJanitor.Automation.Cryptography.Default
         public async Task<string> Encrypt(string salt, string plainText)
         {
             using (MemoryStream ms = new MemoryStream())
-            using (AesCryptoServiceProvider aes = new AesCryptoServiceProvider())
+            using (Aes aes = Aes.Create())
             {
                 aes.Key = new Rfc2898DeriveBytes(_masterKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 ms.Write(BitConverter.GetBytes(aes.IV.Length), 0, sizeof(int));
