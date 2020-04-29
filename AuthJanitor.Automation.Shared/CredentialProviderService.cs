@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared
@@ -142,6 +143,36 @@ namespace AuthJanitor.Automation.Shared
             return GetAccessTokenOnBehalfOfCurrentUserAsync(resource)
                 .ContinueWith(t => _secureStorageProvider.Persist(expiry, t.Result))
                 .Unwrap();
+        }
+
+        /// <summary>
+        /// Return the current user's name
+        /// </summary>
+        /// <returns>Logged in user's GivenName+Surname</returns>
+        public string GetCurrentUserName()
+        {
+            if (_httpContextAccessor.HttpContext == null ||
+                _httpContextAccessor.HttpContext.User == null)
+                return string.Empty;
+
+            var claims = _httpContextAccessor.HttpContext.User.Claims;
+            return claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value +
+                   " " +
+                   claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+        }
+
+        /// <summary>
+        /// Return the current user's e-mail address
+        /// </summary>
+        /// <returns>Logged in user's e-mail address</returns>
+        public string GetCurrentUserEmail()
+        {
+            if (_httpContextAccessor.HttpContext == null ||
+                _httpContextAccessor.HttpContext.User == null)
+                return string.Empty;
+
+            var claims = _httpContextAccessor.HttpContext.User.Claims;
+            return claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
         }
 
         /// <summary>

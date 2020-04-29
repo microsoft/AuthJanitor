@@ -140,8 +140,7 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("RekeyingTasks-Approve")]
         public async Task<IActionResult> Approve(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId,
-            ClaimsPrincipal claimsPrincipal
+            Guid taskId
         )
         {
             if (!req.IsValidUser(AuthJanitorRoles.ServiceOperator, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
@@ -163,10 +162,7 @@ namespace AuthJanitor.Automation.AdminApi
             {
                 var id = await _credentialProviderService.CacheAccessTokenOnBehalfOfCurrentUserAsync(toRekey.Expiry);
                 toRekey.PersistedCredentialId = id;
-                toRekey.PersistedCredentialUser =
-                    claimsPrincipal.FindFirst(ClaimTypes.GivenName)?.Value +
-                    " " +
-                    claimsPrincipal.FindFirst(ClaimTypes.Surname)?.Value;
+                toRekey.PersistedCredentialUser = _credentialProviderService.GetCurrentUserName();
                 await RekeyingTasks.UpdateAsync(toRekey);
             }
             else
