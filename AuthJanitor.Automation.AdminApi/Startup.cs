@@ -71,18 +71,15 @@ namespace AuthJanitor.Automation.AdminApi
             //       This is where we offload to Azure Sentinel, send emails, etc.
             //       The *entire system* offloads to the EventDispatcherService to generalize events.
 
-            logger.LogDebug("Registering Event Dispatcher");
-            builder.Services.AddSingleton<EventDispatcherService>();
-
-            logger.LogDebug("Registering Credential Provider Service");
-            builder.Services.AddSingleton<CredentialProviderService>();
-
             logger.LogDebug("Registering Cryptographic Implementation");
             builder.Services.AddSingleton<ICryptographicImplementation>(
                 new DefaultCryptographicImplementation(ServiceConfiguration.MasterEncryptionKey));
 
             logger.LogDebug("Registering Secure Storage Provider");
             builder.Services.AddSingleton<ISecureStorageProvider, KeyVaultSecureStorageProvider>();
+
+            logger.LogDebug("Registering AuthJanitor MetaServices");
+            AuthJanitorServiceRegistration.RegisterServices(builder.Services);
 
             // -----
 

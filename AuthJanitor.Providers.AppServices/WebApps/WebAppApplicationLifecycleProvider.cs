@@ -10,7 +10,7 @@ namespace AuthJanitor.Providers.AppServices.WebApps
     public abstract class WebAppApplicationLifecycleProvider<TConsumerConfiguration> : SlottableApplicationLifecycleProvider<TConsumerConfiguration>
         where TConsumerConfiguration : SlottableProviderConfiguration
     {
-        protected WebAppApplicationLifecycleProvider(ILogger logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
+        protected WebAppApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

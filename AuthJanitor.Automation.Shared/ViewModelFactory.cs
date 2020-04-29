@@ -4,8 +4,6 @@ using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -100,16 +98,14 @@ namespace AuthJanitor.Automation.Shared
 
         private static ManagedSecretViewModel GetViewModel(IServiceProvider serviceProvider, ManagedSecret secret)
         {
+            var providerManagerService = serviceProvider.GetRequiredService<ProviderManagerService>();
             var resources = secret.ResourceIds
                                 .Select(resourceId => serviceProvider.GetRequiredService<IDataStore<Resource>>()
                                                                     .GetAsync(resourceId).Result)
                                 .Select(resource => serviceProvider.GetRequiredService<Func<Resource, ResourceViewModel>>()(resource));
             foreach (var resource in resources)
             {
-                var provider = serviceProvider.GetRequiredService<Func<string, RekeyingAttemptLogger, IAuthJanitorProvider>>()(resource.ProviderType,
-                    new RekeyingAttemptLogger(serviceProvider.GetRequiredService<ILoggerFactory>()
-                    .CreateLogger("ViewModelLogger")));
-                provider.SerializedConfiguration = resource.SerializedProviderConfiguration;
+                var provider = providerManagerService.GetProviderInstance(resource.ProviderType, resource.SerializedProviderConfiguration);
                 resource.Risks = provider.GetRisks(secret.ValidPeriod);
                 resource.Description = provider.GetDescription();
             }
@@ -161,10 +157,8 @@ namespace AuthJanitor.Automation.Shared
 
         private static ResourceViewModel GetViewModel(IServiceProvider serviceProvider, Resource resource)
         {
-            var provider = serviceProvider.GetRequiredService<Func<string, RekeyingAttemptLogger, IAuthJanitorProvider>>()(resource.ProviderType,
-                    new RekeyingAttemptLogger(serviceProvider.GetRequiredService<ILoggerFactory>()
-                    .CreateLogger("ViewModelLogger")));
-            provider.SerializedConfiguration = resource.ProviderConfiguration;
+            var providerManagerService = serviceProvider.GetRequiredService<ProviderManagerService>();
+            var provider = providerManagerService.GetProviderInstance(resource.ProviderType, resource.ProviderConfiguration);
 
             return new ResourceViewModel()
             {
@@ -173,13 +167,9 @@ namespace AuthJanitor.Automation.Shared
                 Description = resource.Description,
                 IsRekeyableObjectProvider = resource.IsRekeyableObjectProvider,
                 ProviderType = resource.ProviderType,
-                ProviderDetail = serviceProvider.GetRequiredService<Func<string, LoadedProviderMetadata>>()(resource.ProviderType).Details,
-                ProviderConfiguration = serviceProvider.GetRequiredService<Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel>>()
-                    (
-                        ((AuthJanitorProviderConfiguration)JsonConvert.DeserializeObject(
-                            resource.ProviderConfiguration,
-                            serviceProvider.GetRequiredService<Func<string, AuthJanitorProviderConfiguration>>()(resource.ProviderType).GetType()))
-                    ),
+                ProviderDetail = providerManagerService.GetProviderMetadata(resource.ProviderType).Details,
+                ProviderConfiguration = serviceProvider.GetRequiredService<Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel>>()(
+                    providerManagerService.GetProviderConfiguration(resource.ProviderType, resource.ProviderConfiguration)),
                 SerializedProviderConfiguration = resource.ProviderConfiguration,
                 RuntimeDescription = provider.GetDescription(),
                 Risks = provider.GetRisks()

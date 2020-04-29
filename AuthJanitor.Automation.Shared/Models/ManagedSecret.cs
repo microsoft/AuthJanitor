@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Providers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

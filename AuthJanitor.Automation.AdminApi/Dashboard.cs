@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -16,11 +17,11 @@ namespace AuthJanitor.Automation.AdminApi
 {
     public class Dashboard : StorageIntegratedFunction
     {
-        private readonly CredentialProviderService _credentialProviderService;
+        private readonly IdentityMetaService _identityMetaService;
         private readonly ProviderManagerService _providerManager;
 
         public Dashboard(
-            CredentialProviderService credentialProviderService,
+            IdentityMetaService identityMetaService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -33,7 +34,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _credentialProviderService = credentialProviderService;
+            _identityMetaService = identityMetaService;
             _providerManager = providerManager;
         }
 
@@ -43,7 +44,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             var allSecrets = await ManagedSecrets.ListAsync();
             var allResources = await Resources.ListAsync();
@@ -54,9 +55,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             var metrics = new DashboardMetricsViewModel()
             {
-                SignedInName = _credentialProviderService.UserName,
-                SignedInEmail = _credentialProviderService.UserEmail,
-                SignedInRoles = string.Join(", ", _credentialProviderService.UserRoles),
+                SignedInName = _identityMetaService.UserName,
+                SignedInEmail = _identityMetaService.UserEmail,
+                SignedInRoles = string.Join(", ", _identityMetaService.UserRoles),
                 TotalResources = allResources.Count,
                 TotalSecrets = allSecrets.Count,
                 TotalPendingApproval = allTasks.Where(t =>

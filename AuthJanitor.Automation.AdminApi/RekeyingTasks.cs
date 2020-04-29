@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -10,7 +11,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -23,16 +23,16 @@ namespace AuthJanitor.Automation.AdminApi
     public class RekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly CredentialProviderService _credentialProviderService;
-        private readonly TaskExecutionService _taskExecutionService;
+        private readonly IdentityMetaService _identityMetaService;
+        private readonly TaskExecutionMetaService _taskExecutionMetaService;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherService _eventDispatcher;
+        private readonly EventDispatcherMetaService _eventDispatcher;
 
         public RekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            CredentialProviderService credentialProviderService,
-            TaskExecutionService taskExecutionService,
-            EventDispatcherService eventDispatcher,
+            IdentityMetaService identityMetaService,
+            TaskExecutionMetaService taskExecutionMetaService,
+            EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -46,8 +46,8 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _credentialProviderService = credentialProviderService;
-            _taskExecutionService = taskExecutionService;
+            _identityMetaService = identityMetaService;
+            _taskExecutionMetaService = taskExecutionMetaService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -55,10 +55,12 @@ namespace AuthJanitor.Automation.AdminApi
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Create")]
         public async Task<IActionResult> Create(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] Guid secretId,
-            HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] HttpRequest req,
+            Guid secretId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
@@ -94,16 +96,19 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await RekeyingTasks.ListAsync()).Select(t => GetViewModel(t)));
         }
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] Guid taskId)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
+            Guid taskId)
         {
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -116,9 +121,12 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] Guid taskId)
+        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
+            Guid taskId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -135,9 +143,12 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Approve")]
-        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] Guid taskId)
+        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
+            Guid taskId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             var toRekey = await RekeyingTasks.GetOneAsync(t => t.ObjectId == taskId);
             if (toRekey == null)
@@ -153,15 +164,10 @@ namespace AuthJanitor.Automation.AdminApi
 
             // Just cache credentials if no workflow action is required
             if (toRekey.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff)
-            {
-                var id = await _credentialProviderService.CacheAccessTokenOnBehalfOfCurrentUserAsync(toRekey.Expiry);
-                toRekey.PersistedCredentialId = id;
-                toRekey.PersistedCredentialUser = _credentialProviderService.UserName;
-                await RekeyingTasks.UpdateAsync(toRekey);
-            }
+                await _taskExecutionMetaService.CacheBackCredentialsForTaskIdAsync(toRekey.ObjectId);
             else
-                await _taskExecutionService.ExecuteRekeyingTaskWorkflow(toRekey.ObjectId);
-            
+                await _taskExecutionMetaService.ExecuteTask(toRekey.ObjectId);
+
             return new OkResult();
         }
     }

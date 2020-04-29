@@ -35,7 +35,7 @@ namespace AuthJanitor.Providers
     public abstract class ApplicationLifecycleProvider<TProviderConfiguration> : AuthJanitorProvider<TProviderConfiguration>, IApplicationLifecycleProvider
         where TProviderConfiguration : AuthJanitorProviderConfiguration
     {
-        protected ApplicationLifecycleProvider(ILogger logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
+        protected ApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

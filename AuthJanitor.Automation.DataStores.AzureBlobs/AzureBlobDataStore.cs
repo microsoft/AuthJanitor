@@ -91,15 +91,17 @@ namespace AuthJanitor.Automation.DataStores.AzureBlobs
             }
             finally
             {
-                await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
+                if (leaseId != string.Empty)
+                    await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
             }
         }
 
         private async Task<List<TDataType>> Retrieve()
         {
+            await Blob.Container.CreateIfNotExistsAsync();
             if (!await Blob.ExistsAsync())
             {
-                await Commit(new List<TDataType>());
+                await Blob.UploadTextAsync(JsonConvert.SerializeObject(new TDataType[0], Formatting.None));
                 return new List<TDataType>();
             }
             return JsonConvert.DeserializeObject<List<TDataType>>(await Blob.DownloadTextAsync());

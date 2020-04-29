@@ -12,7 +12,7 @@ namespace AuthJanitor.Providers
         /// <param name="length">Length to generate</param>
         /// <returns>Generated string</returns>
         Task<string> GenerateCryptographicallySecureString(int length);
-        
+
         /// <summary>
         /// Hash a given string
         /// </summary>

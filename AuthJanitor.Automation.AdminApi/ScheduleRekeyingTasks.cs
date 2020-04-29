@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -17,11 +18,11 @@ namespace AuthJanitor.Automation.AdminApi
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherService _eventDispatcher;
+        private readonly EventDispatcherMetaService _eventDispatcherMetaService;
 
         public ScheduleRekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            EventDispatcherService eventDispatcher,
+            EventDispatcherMetaService eventDispatcherMetaService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -35,7 +36,7 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _eventDispatcher = eventDispatcher;
+            _eventDispatcherMetaService = eventDispatcherMetaService;
             _providerManager = providerManager;
         }
 
@@ -107,9 +108,9 @@ namespace AuthJanitor.Automation.AdminApi
             {
                 var secret = await ManagedSecrets.GetAsync(task.ManagedSecretId);
                 if (task.ConfirmationType.UsesOBOTokens())
-                    await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
+                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
                 else
-                    await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForAutomation, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
+                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForAutomation, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
             }
         }
 

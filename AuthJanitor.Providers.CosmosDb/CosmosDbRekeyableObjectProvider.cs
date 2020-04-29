@@ -19,7 +19,7 @@ namespace AuthJanitor.Providers.CosmosDb
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
-        public CosmosDbRekeyableObjectProvider(ILogger logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
+        public CosmosDbRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

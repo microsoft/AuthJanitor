@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -25,11 +26,11 @@ namespace AuthJanitor.Automation.Agent
         private const int MAX_EXECUTION_SECONDS_BEFORE_RETRY = 30;
 
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly TaskExecutionService _taskExecutionService;
+        private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
         public ExternalSignal(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            TaskExecutionService taskExecutionService,
+            TaskExecutionMetaService taskExecutionMetaService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
             IDataStore<RekeyingTask> rekeyingTaskStore,
@@ -42,7 +43,7 @@ namespace AuthJanitor.Automation.Agent
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _taskExecutionService = taskExecutionService;
+            _taskExecutionMetaService = taskExecutionMetaService;
         }
 
         [FunctionName("ExternalSignal")]
@@ -81,7 +82,7 @@ namespace AuthJanitor.Automation.Agent
                         };
                         await RekeyingTasks.CreateAsync(task);
 
-                        await _taskExecutionService.ExecuteRekeyingTaskWorkflow(task.ObjectId);
+                        await _taskExecutionMetaService.ExecuteTask(task.ObjectId);
                     },
                     TaskCreationOptions.LongRunning);
                 rekeyingTask.Start();
