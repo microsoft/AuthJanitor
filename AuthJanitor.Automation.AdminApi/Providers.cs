@@ -20,10 +20,12 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class Providers : StorageIntegratedFunction
     {
+        private readonly CredentialProviderService _credentialProviderService;
         private readonly EventDispatcherService _eventDispatcher;
         private readonly ProviderManagerService _providerManager;
 
         public Providers(
+            CredentialProviderService credentialProviderService,
             EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -37,16 +39,18 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
+            _credentialProviderService = credentialProviderService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
 
         [ProtectedApiEndpoint]
         [FunctionName("Providers-List")]
-        public IActionResult List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers")] HttpRequest req)
+        public IActionResult List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers")] HttpRequest req)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult(_providerManager.LoadedProviders.Select(p => GetViewModel(p)));
         }
@@ -57,7 +61,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers/{providerType}")] HttpRequest req,
             string providerType)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             var provider = _providerManager.LoadedProviders.FirstOrDefault(p => p.ProviderTypeName == providerType);
             if (provider == null)

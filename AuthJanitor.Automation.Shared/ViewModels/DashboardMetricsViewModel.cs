@@ -8,7 +8,7 @@ namespace AuthJanitor.Automation.Shared.ViewModels
     {
         public string SignedInName { get; set; } = "John Doe";
         public string SignedInEmail { get; set; } = "john.doe@contoso.com";
-        public string SignedInRole { get; set; } = "NoRole";
+        public string SignedInRoles { get; set; } = "NoRole";
 
         public int TotalSecrets { get; set; }
         public int TotalResources { get; set; }

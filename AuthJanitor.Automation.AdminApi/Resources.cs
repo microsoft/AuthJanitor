@@ -22,10 +22,12 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class Resources : StorageIntegratedFunction
     {
+        private readonly CredentialProviderService _credentialProviderService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherService _eventDispatcher;
 
         public Resources(
+            CredentialProviderService credentialProviderService,
             EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -39,6 +41,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
+            _credentialProviderService = credentialProviderService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -49,7 +52,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
             HttpRequest req)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ResourceAdmin, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)
@@ -88,10 +91,11 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("Resources-List")]
-        public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await Resources.ListAsync()).Select(r => GetViewModel(r)));
         }
@@ -102,7 +106,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
             Guid resourceId)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -119,7 +123,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
             Guid resourceId)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ResourceAdmin, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -141,7 +145,7 @@ namespace AuthJanitor.Automation.AdminApi
             HttpRequest req,
             Guid resourceId)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ResourceAdmin, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)

@@ -26,11 +26,9 @@ namespace AuthJanitor.Automation.Agent
 
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
         private readonly TaskExecutionService _taskExecutionService;
-        private readonly EventDispatcherService _eventDispatcher;
 
         public ExternalSignal(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            EventDispatcherService eventDispatcher,
             TaskExecutionService taskExecutionService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -44,7 +42,6 @@ namespace AuthJanitor.Automation.Agent
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _eventDispatcher = eventDispatcher;
             _taskExecutionService = taskExecutionService;
         }
 

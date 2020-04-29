@@ -14,8 +14,28 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared
 {
+    public sealed class AuthJanitorRoles
+    {
+        public static readonly string GlobalAdmin = "globalAdmin";
+        public static readonly string ResourceAdmin = "resourceAdmin";
+        public static readonly string SecretAdmin = "secretAdmin";
+        public static readonly string ServiceOperator = "serviceOperator";
+        public static readonly string Auditor = "auditor";
+
+        public static readonly string[] ALL_ROLES = new string[]
+        {
+            GlobalAdmin,
+            ResourceAdmin,
+            SecretAdmin,
+            ServiceOperator,
+            Auditor
+        };
+    }
+
     /// <summary>
     /// The CredentialProviderService abstracts access to credentials for the current user, a cached user, or the app's identity.
+    /// 
+    /// This service also handles access to user identity and claims from the HttpContext.
     /// 
     /// This service expects that an ISecureStorageProvider has been registered.
     /// </summary>
@@ -41,6 +61,57 @@ namespace AuthJanitor.Automation.Shared
             _secureStorageProvider = secureStorageProvider;
             _httpContextAccessor = httpContextAccessor;
         }
+
+        /// <summary>
+        /// Return if there is currently a user logged in (with any valid AuthJanitor role)
+        /// </summary>
+        public bool IsUserLoggedIn =>
+            _httpContextAccessor.HttpContext != null &&
+            _httpContextAccessor.HttpContext.User != null &&
+            _httpContextAccessor.HttpContext.User.Claims != null &&
+            _httpContextAccessor.HttpContext.User.Claims.Any(c =>
+                c.Type == ClaimTypes.Role &&
+                AuthJanitorRoles.ALL_ROLES.Contains(c.Value));
+
+        /// <summary>
+        /// Return the current user's name
+        /// </summary>
+        public string UserName =>
+            IsUserLoggedIn ? $"{GetCurrentUserClaim(ClaimTypes.GivenName)} {GetCurrentUserClaim(ClaimTypes.Surname)}"
+            : string.Empty;
+
+        /// <summary>
+        /// Return the current user's e-mail address
+        /// </summary>
+        public string UserEmail =>
+            IsUserLoggedIn ? GetCurrentUserClaim(ClaimTypes.Email)
+            : string.Empty;
+
+        /// <summary>
+        /// Return a list of the current user's roles
+        /// </summary>
+        public string[] UserRoles =>
+            IsUserLoggedIn ? _httpContextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToArray()
+            : new string[0];
+
+        /// <summary>
+        /// If the currently logged in user has the given role (or is a GlobalAdmin)
+        /// </summary>
+        /// <param name="authJanitorRole">Role to test</param>
+        public bool CurrentUserHasRole(string authJanitorRole) =>
+            IsUserLoggedIn ? 
+                (_httpContextAccessor.HttpContext.User.IsInRole(authJanitorRole) ||
+                 _httpContextAccessor.HttpContext.User.IsInRole(AuthJanitorRoles.GlobalAdmin))
+            : false;
+
+        /// <summary>
+        /// Retrieve a Claim for the currently logged in user
+        /// </summary>
+        /// <param name="claimType">Claim type to retrieve</param>
+        /// <returns>Claim value</returns>
+        public string GetCurrentUserClaim(string claimType) =>
+            IsUserLoggedIn ? _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimType)?.Value
+                           : string.Empty;
 
         /// <summary>
         /// Get the Access Token required to fulfill a given RekeyingTask
@@ -143,36 +214,6 @@ namespace AuthJanitor.Automation.Shared
             return GetAccessTokenOnBehalfOfCurrentUserAsync(resource)
                 .ContinueWith(t => _secureStorageProvider.Persist(expiry, t.Result))
                 .Unwrap();
-        }
-
-        /// <summary>
-        /// Return the current user's name
-        /// </summary>
-        /// <returns>Logged in user's GivenName+Surname</returns>
-        public string GetCurrentUserName()
-        {
-            if (_httpContextAccessor.HttpContext == null ||
-                _httpContextAccessor.HttpContext.User == null)
-                return string.Empty;
-
-            var claims = _httpContextAccessor.HttpContext.User.Claims;
-            return claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value +
-                   " " +
-                   claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
-        }
-
-        /// <summary>
-        /// Return the current user's e-mail address
-        /// </summary>
-        /// <returns>Logged in user's e-mail address</returns>
-        public string GetCurrentUserEmail()
-        {
-            if (_httpContextAccessor.HttpContext == null ||
-                _httpContextAccessor.HttpContext.User == null)
-                return string.Empty;
-
-            var claims = _httpContextAccessor.HttpContext.User.Claims;
-            return claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
         }
 
         /// <summary>

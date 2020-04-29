@@ -58,7 +58,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] Guid secretId,
             HttpRequest req)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ServiceOperator, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
@@ -90,21 +90,20 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-List")]
-        public async Task<IActionResult> List(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await RekeyingTasks.ListAsync()).Select(t => GetViewModel(t)));
         }
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Get")]
-        public async Task<IActionResult> Get(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] Guid taskId)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -117,11 +116,9 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Delete")]
-        public async Task<IActionResult> Delete(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] Guid taskId)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ServiceOperator, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -138,12 +135,9 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Approve")]
-        public async Task<IActionResult> Approve(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId
-        )
+        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] Guid taskId)
         {
-            if (!req.IsValidUser(AuthJanitorRoles.ServiceOperator, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             var toRekey = await RekeyingTasks.GetOneAsync(t => t.ObjectId == taskId);
             if (toRekey == null)
@@ -162,7 +156,7 @@ namespace AuthJanitor.Automation.AdminApi
             {
                 var id = await _credentialProviderService.CacheAccessTokenOnBehalfOfCurrentUserAsync(toRekey.Expiry);
                 toRekey.PersistedCredentialId = id;
-                toRekey.PersistedCredentialUser = _credentialProviderService.GetCurrentUserName();
+                toRekey.PersistedCredentialUser = _credentialProviderService.UserName;
                 await RekeyingTasks.UpdateAsync(toRekey);
             }
             else
