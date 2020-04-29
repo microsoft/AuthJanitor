@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared
 {
-    public class TaskExecutionManager
+    public class TaskExecutionService
     {
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
         private readonly IDataStore<ManagedSecret> _managedSecrets;
@@ -19,7 +19,7 @@ namespace AuthJanitor.Automation.Shared
         private readonly EventDispatcherService _eventDispatcher;
         private readonly CredentialProviderService _credentialProvider;
 
-        public TaskExecutionManager(
+        public TaskExecutionService(
             ProviderManagerService providerManager,
             EventDispatcherService eventDispatcher,
             CredentialProviderService credentialProvider,
@@ -43,38 +43,23 @@ namespace AuthJanitor.Automation.Shared
             await _rekeyingTasks.UpdateAsync(task);
 
             AccessTokenCredential credential = null;
+            try
+            {
+                credential = await _credentialProvider.GetAccessTokenAsync(task);
+                if (credential == null)
+                    throw new NotSupportedException("Access Token not found");
+            }
+            catch (Exception ex)
+            {
+                log.LogCritical(ex, "Exception retrieving Access Token");
+                log.OuterException = GetExceptionSerialized(new Exception("Exception retrieving Access Token", ex));
+            }
+
+            log.UserDisplayName = credential.Username;
+            log.UserEmail = credential.Username;
+
             if (task.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff)
-            {
-                if (task.PersistedCredentialId == default)
-                {
-                    log.LogError("Cached sign-off is preferred but no credentials were persisted!");
-                    log.OuterException = GetExceptionSerialized(new Exception("Cached sign-off is preferred but no credentials were persisted!"));
-                    return;
-                }
-                credential = await _credentialProvider.GetCachedIdentity(task.PersistedCredentialId);
-
                 log.UserDisplayName = task.PersistedCredentialUser;
-                log.UserEmail = credential.Username;
-            }
-            else if (task.ConfirmationType == TaskConfirmationStrategies.AdminSignsOffJustInTime)
-            {
-                credential = _credentialProvider.GetUserIdentity();
-                log.UserDisplayName = credential.Username;
-                log.UserEmail = credential.Username;
-            }
-            else if (task.ConfirmationType.UsesServicePrincipal())
-            {
-                credential = _credentialProvider.GetAgentIdentity();
-                log.UserDisplayName = "AGENT.IDENTITY";
-                log.UserEmail = "nop@agent.identity";
-            }
-
-            if (credential == null)
-            {
-                log.LogError("No credentials were able to be loaded for this operation!");
-                log.OuterException = GetExceptionSerialized(new Exception("No credentials were able to be loaded for this operation!"));
-                return;
-            }
 
             var secret = await _managedSecrets.GetAsync(task.ManagedSecretId);
             log.LogInformation("Beginning rekeying of secret ID {0}", task.ManagedSecretId);
@@ -101,7 +86,7 @@ namespace AuthJanitor.Automation.Shared
                     if (task.PersistedCredentialId != default)
                     {
                         log.LogInformation("Destroying persisted credential");
-                        await _credentialProvider.DestroyCachedIdentity(task.PersistedCredentialId);
+                        await _credentialProvider.DestroyCachedAccessTokenAsync(task.PersistedCredentialId);
                     }
 
                     log.LogInformation("Completed rekeying workflow for ManagedSecret '{0}' (ID {1})", secret.Name, secret.ObjectId);
@@ -110,12 +95,12 @@ namespace AuthJanitor.Automation.Shared
                     await _rekeyingTasks.UpdateAsync(task);
 
                     if (task.ConfirmationType.UsesOBOTokens())
-                        await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCompletedManually, nameof(TaskExecutionManager.ExecuteRekeyingTaskWorkflow), task);
+                        await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCompletedManually, nameof(TaskExecutionService.ExecuteRekeyingTaskWorkflow), task);
                     else
-                        await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCompletedAutomatically, nameof(TaskExecutionManager.ExecuteRekeyingTaskWorkflow), task);
+                        await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCompletedAutomatically, nameof(TaskExecutionService.ExecuteRekeyingTaskWorkflow), task);
                 }
                 else
-                    await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionManager.ExecuteRekeyingTaskWorkflow), task);
+                    await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionService.ExecuteRekeyingTaskWorkflow), task);
             }
             catch (Exception ex)
             {

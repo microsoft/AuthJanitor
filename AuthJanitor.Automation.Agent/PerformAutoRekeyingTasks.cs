@@ -14,13 +14,11 @@ namespace AuthJanitor.Automation.Agent
     public class PerformAutoRekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly TaskExecutionManager _taskExecutionManager;
-        private readonly EventDispatcherService _eventDispatcher;
+        private readonly TaskExecutionService _taskExecutionService;
 
         public PerformAutoRekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            EventDispatcherService eventDispatcher,
-            TaskExecutionManager taskExecutionManager,
+            TaskExecutionService taskExecutionService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
             IDataStore<RekeyingTask> rekeyingTaskStore,
@@ -33,8 +31,7 @@ namespace AuthJanitor.Automation.Agent
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _eventDispatcher = eventDispatcher;
-            _taskExecutionManager = taskExecutionManager;
+            _taskExecutionService = taskExecutionService;
         }
 
         [FunctionName("PerformAutoRekeyingTasks")]
@@ -52,7 +49,7 @@ namespace AuthJanitor.Automation.Agent
 
             foreach (var task in toRekey)
             {
-                await _taskExecutionManager.ExecuteRekeyingTaskWorkflow(task.ObjectId);
+                await _taskExecutionService.ExecuteRekeyingTaskWorkflow(task.ObjectId);
             }
         }
     }

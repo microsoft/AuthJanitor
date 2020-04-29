@@ -8,19 +8,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.AdminApi
 {
     public class Dashboard : StorageIntegratedFunction
     {
+        private readonly CredentialProviderService _credentialProviderService;
         private readonly ProviderManagerService _providerManager;
 
         public Dashboard(
+            CredentialProviderService credentialProviderService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -33,19 +33,17 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
+            _credentialProviderService = credentialProviderService;
             _providerManager = providerManager;
         }
 
         [ProtectedApiEndpoint]
         [FunctionName("Dashboard")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req,
-            ClaimsPrincipal claimsPrincipal,
-            ILogger log)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req)
         {
-            if (!req.IsValidUser()) return new UnauthorizedResult();
+            _ = req;
 
-            log.LogInformation("Requested Dashboard metrics");
+            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
 
             var allSecrets = await ManagedSecrets.ListAsync();
             var allResources = await Resources.ListAsync();
@@ -56,12 +54,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             var metrics = new DashboardMetricsViewModel()
             {
-                SignedInName =
-                    claimsPrincipal.FindFirst(ClaimTypes.GivenName)?.Value +
-                    " " +
-                    claimsPrincipal.FindFirst(ClaimTypes.Surname)?.Value,
-                SignedInEmail = claimsPrincipal.FindFirst(ClaimTypes.Email)?.Value,
-                SignedInRole = AuthJanitorRoleExtensions.GetUserRole(req),
+                SignedInName = _credentialProviderService.UserName,
+                SignedInEmail = _credentialProviderService.UserEmail,
+                SignedInRoles = string.Join(", ", _credentialProviderService.UserRoles),
                 TotalResources = allResources.Count,
                 TotalSecrets = allSecrets.Count,
                 TotalPendingApproval = allTasks.Where(t =>
