@@ -22,13 +22,13 @@ namespace AuthJanitor.Automation.AdminApi
     public class RekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly TaskExecutionManager _taskExecutionManager;
+        private readonly TaskExecutionService _taskExecutionService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherService _eventDispatcher;
 
         public RekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            TaskExecutionManager taskExecutionManager,
+            TaskExecutionService taskExecutionService,
             EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -43,7 +43,7 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _taskExecutionManager = taskExecutionManager;
+            _taskExecutionService = taskExecutionService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -153,7 +153,7 @@ namespace AuthJanitor.Automation.AdminApi
                 return new BadRequestErrorMessageResult("Task does not support Administrator approval");
             }
 
-            await _taskExecutionManager.ExecuteRekeyingTaskWorkflow(toRekey.ObjectId);
+            await _taskExecutionService.ExecuteRekeyingTaskWorkflow(toRekey.ObjectId);
             return new OkResult();
         }
     }

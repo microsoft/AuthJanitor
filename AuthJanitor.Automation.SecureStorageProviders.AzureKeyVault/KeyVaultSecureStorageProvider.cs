@@ -35,7 +35,8 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
 
         public async Task Destroy(Guid persistenceId)
         {
-            await GetClient().StartDeleteSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
+            var client = await GetClient();
+            await client.StartDeleteSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
         }
 
         public async Task<Guid> Persist<T>(DateTimeOffset expiry, T persistedObject)
@@ -45,23 +46,26 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
                 await _cryptographicImplementation.Encrypt(newId.ToString(), JsonConvert.SerializeObject(persistedObject)));
             newSecret.Properties.ExpiresOn = expiry;
 
-            await GetClient().SetSecretAsync(newSecret);
+            var client = await GetClient();
+            await client.SetSecretAsync(newSecret);
             return newId;
         }
 
         public async Task<T> Retrieve<T>(Guid persistenceId)
         {
-            var secret = await GetClient().GetSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
+            var client = await GetClient();
+            var secret = await client.GetSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
             if (secret == null || secret.Value == null)
                 throw new Exception("Secret not found");
 
             return JsonConvert.DeserializeObject<T>(await _cryptographicImplementation.Decrypt(persistenceId.ToString(), secret.Value.Value));
         }
 
-        private SecretClient GetClient()
-        {
-            return new SecretClient(new Uri($"https://{_vaultName}.vault.azure.net/"),
-                _credentialProviderService.GetAgentIdentity().CreateTokenCredential());
-        }
+        private Task<SecretClient> GetClient() =>
+            _credentialProviderService.GetAccessTokenForApplicationAsync()
+                .ContinueWith(t => t.Result.CreateTokenCredential())
+                .ContinueWith(t => new SecretClient(
+                    new Uri($"https://{_vaultName}.vault.azure.net/"),
+                    t.Result));
     }
 }
