@@ -83,16 +83,17 @@ namespace AuthJanitor.Automation.DataStores.AzureBlobs
 
         private async Task Commit(List<TDataType> data)
         {
+            await Blob.Container.CreateIfNotExistsAsync();
             string leaseId = string.Empty;
             try
             {
-                leaseId = await Blob.AcquireLeaseAsync(TimeSpan.FromSeconds(30), null);
-                await Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None));
+                leaseId = await LockBlob(Blob, TimeSpan.FromSeconds(15));
+                await Blob.UploadTextAsync(JsonConvert.SerializeObject(data, Formatting.None), AccessCondition.GenerateLeaseCondition(leaseId), null, null);
             }
             finally
             {
                 if (leaseId != string.Empty)
-                    await Blob.ReleaseLeaseAsync(new AccessCondition() { LeaseId = leaseId });
+                    await Blob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId));
             }
         }
 
@@ -104,7 +105,41 @@ namespace AuthJanitor.Automation.DataStores.AzureBlobs
                 await Blob.UploadTextAsync(JsonConvert.SerializeObject(new TDataType[0], Formatting.None));
                 return new List<TDataType>();
             }
-            return JsonConvert.DeserializeObject<List<TDataType>>(await Blob.DownloadTextAsync());
+
+            List<TDataType> result;
+            string leaseId = string.Empty;
+            try
+            {
+                leaseId = await LockBlob(Blob, TimeSpan.FromSeconds(15));
+                var blobText = await Blob.DownloadTextAsync(AccessCondition.GenerateLeaseCondition(leaseId), null, null);
+                result = JsonConvert.DeserializeObject<List<TDataType>>(blobText);
+            }
+            finally
+            {
+                if (leaseId != string.Empty)
+                    await Blob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId));
+            }
+            return result;
+        }
+
+        private async static Task<string> LockBlob(CloudBlockBlob blob, TimeSpan leaseTime, string requestedLeaseId = null)
+        {
+            while (true)
+            {
+                try
+                {
+                    var leaseId = await blob.AcquireLeaseAsync(leaseTime, requestedLeaseId);
+                    if (string.IsNullOrEmpty(leaseId))
+                        await Task.Delay(TimeSpan.FromMilliseconds(new Random((int)DateTime.Now.Ticks).Next(250, 1000)));
+                    else
+                        return leaseId;
+                }
+                catch (StorageException ex)
+                {
+                    if (ex.RequestInformation.HttpStatusCode != 409)
+                        throw;
+                }
+            }
         }
     }
 }
