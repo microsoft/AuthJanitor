@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -22,12 +23,14 @@ namespace AuthJanitor.Automation.AdminApi
     public class RekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly CredentialProviderService _credentialProviderService;
         private readonly TaskExecutionService _taskExecutionService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherService _eventDispatcher;
 
         public RekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
+            CredentialProviderService credentialProviderService,
             TaskExecutionService taskExecutionService,
             EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
@@ -43,6 +46,7 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
+            _credentialProviderService = credentialProviderService;
             _taskExecutionService = taskExecutionService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
@@ -136,7 +140,8 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("RekeyingTasks-Approve")]
         public async Task<IActionResult> Approve(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId
+            Guid taskId,
+            ClaimsPrincipal claimsPrincipal
         )
         {
             if (!req.IsValidUser(AuthJanitorRoles.ServiceOperator, AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
@@ -153,7 +158,20 @@ namespace AuthJanitor.Automation.AdminApi
                 return new BadRequestErrorMessageResult("Task does not support Administrator approval");
             }
 
-            await _taskExecutionService.ExecuteRekeyingTaskWorkflow(toRekey.ObjectId);
+            // Just cache credentials if no workflow action is required
+            if (toRekey.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff)
+            {
+                var id = await _credentialProviderService.CacheAccessTokenOnBehalfOfCurrentUserAsync(toRekey.Expiry);
+                toRekey.PersistedCredentialId = id;
+                toRekey.PersistedCredentialUser =
+                    claimsPrincipal.FindFirst(ClaimTypes.GivenName)?.Value +
+                    " " +
+                    claimsPrincipal.FindFirst(ClaimTypes.Surname)?.Value;
+                await RekeyingTasks.UpdateAsync(toRekey);
+            }
+            else
+                await _taskExecutionService.ExecuteRekeyingTaskWorkflow(toRekey.ObjectId);
+            
             return new OkResult();
         }
     }
