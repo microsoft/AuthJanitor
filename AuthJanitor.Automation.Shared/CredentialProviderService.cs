@@ -62,10 +62,17 @@ namespace AuthJanitor.Automation.Shared
             _httpContextAccessor = httpContextAccessor;
         }
 
+#if DEBUG
+        private static bool IsRunningLocally => string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
+#endif
+
         /// <summary>
         /// Return if there is currently a user logged in (with any valid AuthJanitor role)
         /// </summary>
         public bool IsUserLoggedIn =>
+#if DEBUG
+            IsRunningLocally ? true :
+#endif
             _httpContextAccessor.HttpContext != null &&
             _httpContextAccessor.HttpContext.User != null &&
             _httpContextAccessor.HttpContext.User.Claims != null &&
@@ -91,14 +98,20 @@ namespace AuthJanitor.Automation.Shared
         /// Return a list of the current user's roles
         /// </summary>
         public string[] UserRoles =>
+#if DEBUG
+            IsRunningLocally ? new string[] { AuthJanitorRoles.GlobalAdmin } :
+#endif
             IsUserLoggedIn ? _httpContextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToArray()
-            : new string[0];
+                           : new string[0];
 
-        /// <summary>
-        /// If the currently logged in user has the given role (or is a GlobalAdmin)
-        /// </summary>
-        /// <param name="authJanitorRole">Role to test</param>
-        public bool CurrentUserHasRole(string authJanitorRole) =>
+    /// <summary>
+    /// If the currently logged in user has the given role (or is a GlobalAdmin)
+    /// </summary>
+    /// <param name="authJanitorRole">Role to test</param>
+    public bool CurrentUserHasRole(string authJanitorRole) =>
+#if DEBUG
+            IsRunningLocally ? true : 
+#endif
             IsUserLoggedIn ? 
                 (_httpContextAccessor.HttpContext.User.IsInRole(authJanitorRole) ||
                  _httpContextAccessor.HttpContext.User.IsInRole(AuthJanitorRoles.GlobalAdmin))
@@ -110,6 +123,9 @@ namespace AuthJanitor.Automation.Shared
         /// <param name="claimType">Claim type to retrieve</param>
         /// <returns>Claim value</returns>
         public string GetCurrentUserClaim(string claimType) =>
+#if DEBUG
+            IsRunningLocally ? "#DEBUG#" :
+#endif
             IsUserLoggedIn ? _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == claimType)?.Value
                            : string.Empty;
 
