@@ -12,7 +12,7 @@ namespace AuthJanitor.Providers
         ApplicationLifecycleProvider<TSlottableProviderConfiguration>
         where TSlottableProviderConfiguration : SlottableProviderConfiguration
     {
-        protected SlottableApplicationLifecycleProvider(ILogger logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
+        protected SlottableApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Providers;
 using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json;
@@ -14,23 +15,21 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         private const string PERSISTENCE_PREFIX = "AJPersist-";
         private readonly string _vaultName;
 
+        private readonly IdentityMetaService _identityMetaService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
-        private readonly CredentialProviderService _credentialProviderService;
+
         public KeyVaultSecureStorageProvider(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            ICryptographicImplementation cryptographicImplementation,
-            CredentialProviderService credentialProviderService)
+            IdentityMetaService identityMetaService,
+            ICryptographicImplementation cryptographicImplementation)
         {
+            _identityMetaService = identityMetaService;
             _cryptographicImplementation = cryptographicImplementation;
-            _credentialProviderService = credentialProviderService;
 
             _vaultName = serviceConfiguration.SecurePersistenceContainerName;
 
             if (_cryptographicImplementation == null)
                 throw new InvalidOperationException("ICryptographicImplementation must be registered!");
-
-            if (_credentialProviderService == null)
-                throw new InvalidOperationException("CredentialProviderService must be registered!");
         }
 
         public async Task Destroy(Guid persistenceId)
@@ -62,7 +61,7 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         }
 
         private Task<SecretClient> GetClient() =>
-            _credentialProviderService.GetAccessTokenForApplicationAsync()
+            _identityMetaService.GetAccessTokenForApplicationAsync()
                 .ContinueWith(t => t.Result.CreateTokenCredential())
                 .ContinueWith(t => new SecretClient(
                     new Uri($"https://{_vaultName}.vault.azure.net/"),

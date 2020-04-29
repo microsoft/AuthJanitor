@@ -15,7 +15,7 @@ namespace AuthJanitor.Automation.Shared
                 span.Duration().Minutes > 0 ? string.Format(shortText ? "{0:0}m " : "{0:0} minute{1}, ", span.Minutes, span.Minutes == 1 ? string.Empty : "s") : string.Empty,
                 span.Duration().Seconds > 0 ? string.Format(shortText ? "{0:0}s" : "{0:0} second{1}", span.Seconds, span.Seconds == 1 ? string.Empty : "s") : string.Empty);
 
-            if (formatted.EndsWith(", ")) formatted = formatted.Substring(0, formatted.Length - 2);
+            if (formatted.EndsWith(", ")) formatted = formatted[0..^2];
 
             if (string.IsNullOrEmpty(formatted)) formatted = "Enter a duration in minutes.";
 

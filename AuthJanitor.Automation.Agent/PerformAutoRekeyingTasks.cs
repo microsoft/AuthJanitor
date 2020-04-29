@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -14,11 +15,11 @@ namespace AuthJanitor.Automation.Agent
     public class PerformAutoRekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly TaskExecutionService _taskExecutionService;
+        private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
         public PerformAutoRekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            TaskExecutionService taskExecutionService,
+            TaskExecutionMetaService taskExecutionMetaService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
             IDataStore<RekeyingTask> rekeyingTaskStore,
@@ -31,7 +32,7 @@ namespace AuthJanitor.Automation.Agent
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _taskExecutionService = taskExecutionService;
+            _taskExecutionMetaService = taskExecutionMetaService;
         }
 
         [FunctionName("PerformAutoRekeyingTasks")]
@@ -49,7 +50,7 @@ namespace AuthJanitor.Automation.Agent
 
             foreach (var task in toRekey)
             {
-                await _taskExecutionService.ExecuteRekeyingTaskWorkflow(task.ObjectId);
+                await _taskExecutionMetaService.ExecuteTask(task.ObjectId);
             }
         }
     }

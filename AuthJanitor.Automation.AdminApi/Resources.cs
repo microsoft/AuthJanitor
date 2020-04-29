@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -22,13 +23,13 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class Resources : StorageIntegratedFunction
     {
-        private readonly CredentialProviderService _credentialProviderService;
+        private readonly IdentityMetaService _identityMetaService;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherService _eventDispatcher;
+        private readonly EventDispatcherMetaService _eventDispatcher;
 
         public Resources(
-            CredentialProviderService credentialProviderService,
-            EventDispatcherService eventDispatcher,
+            IdentityMetaService identityMetaService,
+            EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -41,7 +42,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _credentialProviderService = credentialProviderService;
+            _identityMetaService = identityMetaService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -52,7 +53,9 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
             HttpRequest req)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)
@@ -95,7 +98,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await Resources.ListAsync()).Select(r => GetViewModel(r)));
         }
@@ -106,7 +109,9 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
             Guid resourceId)
         {
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -123,7 +128,9 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
             Guid resourceId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -145,7 +152,9 @@ namespace AuthJanitor.Automation.AdminApi
             HttpRequest req,
             Guid resourceId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)

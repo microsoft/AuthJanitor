@@ -5,18 +5,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared
+namespace AuthJanitor.Automation.Shared.MetaServices
 {
-    public class EventDispatcherService
+    public class EventDispatcherMetaService
     {
         private readonly ILogger _logger;
         private readonly IEnumerable<IEventSink> _eventSinks;
 
-        public EventDispatcherService(
+        public EventDispatcherMetaService(
             ILoggerFactory loggerFactory,
             IEnumerable<IEventSink> eventSinks)
         {
-            _logger = loggerFactory.CreateLogger<EventDispatcherService>();
+            _logger = loggerFactory.CreateLogger<EventDispatcherMetaService>();
             _eventSinks = eventSinks;
         }
 

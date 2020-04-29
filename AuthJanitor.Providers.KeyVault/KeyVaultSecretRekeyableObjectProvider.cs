@@ -16,7 +16,7 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultSecretConfiguration>
     {
-        public KeyVaultSecretRekeyableObjectProvider(ILogger logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
+        public KeyVaultSecretRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
         {
         }
 
@@ -42,7 +42,7 @@ namespace AuthJanitor.Providers.KeyVault
 
             // Create a new version of the Secret
             KeyVaultSecret newSecret = new KeyVaultSecret(
-                Configuration.SecretName, 
+                Configuration.SecretName,
                 await _serviceProvider.GetRequiredService<ICryptographicImplementation>()
                                       .GenerateCryptographicallySecureString(Configuration.SecretLength));
 

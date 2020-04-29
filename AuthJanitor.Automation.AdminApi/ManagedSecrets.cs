@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
+using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Providers;
@@ -21,16 +22,16 @@ namespace AuthJanitor.Automation.AdminApi
     public class ManagedSecrets : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly CredentialProviderService _credentialProviderService;
+        private readonly IdentityMetaService _identityMetaService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherService _eventDispatcher;
+        private readonly EventDispatcherMetaService _eventDispatcher;
 
         public ManagedSecrets(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            CredentialProviderService credentialProviderService,
+            IdentityMetaService identityMetaService,
             ICryptographicImplementation cryptographicImplementation,
-            EventDispatcherService eventDispatcher,
+            EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -44,7 +45,7 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _credentialProviderService = credentialProviderService;
+            _identityMetaService = identityMetaService;
             _cryptographicImplementation = cryptographicImplementation;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
@@ -54,7 +55,7 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("ManagedSecrets-Create")]
         public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
             var resources = await Resources.ListAsync();
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
@@ -88,16 +89,19 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await ManagedSecrets.ListAsync()).Select(s => GetViewModel(s)));
         }
 
         [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] Guid secretId)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
+            Guid secretId)
         {
-            if (!_credentialProviderService.IsUserLoggedIn) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
@@ -110,9 +114,12 @@ namespace AuthJanitor.Automation.AdminApi
 
         [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] Guid secretId)
+        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
+            Guid secretId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
+            _ = req;
+
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
@@ -133,7 +140,7 @@ namespace AuthJanitor.Automation.AdminApi
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
             Guid secretId)
         {
-            if (!_credentialProviderService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
+            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
