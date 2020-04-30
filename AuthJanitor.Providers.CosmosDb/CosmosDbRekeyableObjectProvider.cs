@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Helpers.Azure;
 using Microsoft.Azure.Management.CosmosDB.Fluent;
 using Microsoft.Extensions.Logging;
 using System;
@@ -88,7 +89,7 @@ namespace AuthJanitor.Providers.CosmosDb
             $"key while rekeying is taking place. The {GetOtherKeyKind(Configuration.KeyKind)} " +
             $"key will {(Configuration.SkipScramblingOtherKey ? "not" : "also")} be rotated.";
 
-        private Task<ICosmosDBAccount> CosmosDbAccount => GetAzure().ContinueWith(az => az.Result.CosmosDBAccounts.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
+        private Task<ICosmosDBAccount> CosmosDbAccount => this.GetAzure().ContinueWith(az => az.Result.CosmosDBAccounts.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
 
         private string GetKeyKindString(CosmosDbKeyConfiguration.CosmosDbKeyKinds keyKind) => keyKind switch
         {

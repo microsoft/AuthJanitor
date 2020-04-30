@@ -21,12 +21,12 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class Providers : StorageIntegratedFunction
     {
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
         private readonly EventDispatcherMetaService _eventDispatcher;
         private readonly ProviderManagerService _providerManager;
 
         public Providers(
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -40,7 +40,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -51,7 +51,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult(_providerManager.LoadedProviders.Select(p => GetViewModel(p)));
         }
@@ -64,7 +64,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             var provider = _providerManager.LoadedProviders.FirstOrDefault(p => p.ProviderTypeName == providerType);
             if (provider == null)

@@ -57,7 +57,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.Cryp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data Stores", "Data Stores", "{E7167E8D-C521-4610-832B-F14EC6E11566}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Automation.DataStores.AzureBlobs", "AuthJanitor.Automation.DataStores.AzureBlobs\AuthJanitor.Automation.DataStores.AzureBlobs.csproj", "{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.DataStores.AzureBlobs", "AuthJanitor.Automation.DataStores.AzureBlobs\AuthJanitor.Automation.DataStores.AzureBlobs.csproj", "{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Helpers.Azure", "AuthJanitor.Helpers.Azure\AuthJanitor.Helpers.Azure.csproj", "{6B28FEDD-BF44-4322-A431-EE0CCB069173}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration Helpers", "Integration Helpers", "{0E45AFB6-DB83-4EFF-AF7C-9A1F4483D955}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity Services", "Identity Services", "{0BF8F136-A809-473F-9382-A3348FFA71C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Automation.IdentityServices.AzureAD", "AuthJanitor.Automation.IdentityServices.AzureAD\AuthJanitor.Automation.IdentityServices.AzureAD.csproj", "{B2FB930B-A73E-4571-8D93-678C0689E6B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -133,6 +141,14 @@ Global
 		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B28FEDD-BF44-4322-A431-EE0CCB069173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B28FEDD-BF44-4322-A431-EE0CCB069173}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B28FEDD-BF44-4322-A431-EE0CCB069173}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B28FEDD-BF44-4322-A431-EE0CCB069173}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2FB930B-A73E-4571-8D93-678C0689E6B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2FB930B-A73E-4571-8D93-678C0689E6B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2FB930B-A73E-4571-8D93-678C0689E6B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2FB930B-A73E-4571-8D93-678C0689E6B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -162,6 +178,9 @@ Global
 		{59F04D4B-4D7A-4FF1-9188-B6844EE28563} = {B1A0EACD-9C15-40F3-8133-85D5F45FD57C}
 		{E7167E8D-C521-4610-832B-F14EC6E11566} = {E0CE9DB0-BC33-4C02-8D09-F06B7C96B402}
 		{47B45F92-57AB-4A33-88E7-960CF0A3AAA8} = {E7167E8D-C521-4610-832B-F14EC6E11566}
+		{6B28FEDD-BF44-4322-A431-EE0CCB069173} = {0E45AFB6-DB83-4EFF-AF7C-9A1F4483D955}
+		{0BF8F136-A809-473F-9382-A3348FFA71C1} = {E0CE9DB0-BC33-4C02-8D09-F06B7C96B402}
+		{B2FB930B-A73E-4571-8D93-678C0689E6B9} = {0BF8F136-A809-473F-9382-A3348FFA71C1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0461C5FC-1885-4C0F-B202-817D99C927D2}

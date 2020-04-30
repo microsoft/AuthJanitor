@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Helpers.Azure;
 using Microsoft.Azure.Management.Storage.Fluent;
 using Microsoft.Azure.Management.Storage.Fluent.Models;
 using Microsoft.Extensions.Logging;
@@ -94,7 +95,7 @@ namespace AuthJanitor.Providers.Storage
             await (await StorageAccount).GetKeysAsync()
                                         .ContinueWith(keys => keys.Result.FirstOrDefault(k => k.KeyName == keyName));
 
-        private Task<IStorageAccount> StorageAccount => GetAzure().ContinueWith(az => az.Result.StorageAccounts.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
+        private Task<IStorageAccount> StorageAccount => this.GetAzure().ContinueWith(az => az.Result.StorageAccounts.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
 
         private string KeyName => Configuration.KeyType switch
         {

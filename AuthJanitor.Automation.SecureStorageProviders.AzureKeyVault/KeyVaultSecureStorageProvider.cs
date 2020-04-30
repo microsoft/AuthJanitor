@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
-using AuthJanitor.Automation.Shared.MetaServices;
+using AuthJanitor.Helpers.Azure;
 using AuthJanitor.Providers;
 using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json;
@@ -15,15 +15,15 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         private const string PERSISTENCE_PREFIX = "AJPersist-";
         private readonly string _vaultName;
 
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
 
         public KeyVaultSecureStorageProvider(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             ICryptographicImplementation cryptographicImplementation)
         {
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _cryptographicImplementation = cryptographicImplementation;
 
             _vaultName = serviceConfiguration.SecurePersistenceContainerName;
@@ -61,7 +61,7 @@ namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
         }
 
         private Task<SecretClient> GetClient() =>
-            _identityMetaService.GetAccessTokenForApplicationAsync()
+            _identityService.GetAccessTokenForApplicationAsync()
                 .ContinueWith(t => t.Result.CreateTokenCredential())
                 .ContinueWith(t => new SecretClient(
                     new Uri($"https://{_vaultName}.vault.azure.net/"),

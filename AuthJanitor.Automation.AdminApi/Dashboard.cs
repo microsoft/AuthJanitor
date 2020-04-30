@@ -17,11 +17,11 @@ namespace AuthJanitor.Automation.AdminApi
 {
     public class Dashboard : StorageIntegratedFunction
     {
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
 
         public Dashboard(
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -34,7 +34,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _providerManager = providerManager;
         }
 
@@ -44,7 +44,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             var allSecrets = await ManagedSecrets.ListAsync();
             var allResources = await Resources.ListAsync();
@@ -55,9 +55,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             var metrics = new DashboardMetricsViewModel()
             {
-                SignedInName = _identityMetaService.UserName,
-                SignedInEmail = _identityMetaService.UserEmail,
-                SignedInRoles = string.Join(", ", _identityMetaService.UserRoles),
+                SignedInName = _identityService.UserName,
+                SignedInEmail = _identityService.UserEmail,
+                SignedInRoles = string.Join(", ", _identityService.UserRoles),
                 TotalResources = allResources.Count,
                 TotalSecrets = allSecrets.Count,
                 TotalPendingApproval = allTasks.Where(t =>

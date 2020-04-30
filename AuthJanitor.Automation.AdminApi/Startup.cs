@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Cryptography.Default;
 using AuthJanitor.Automation.DataStores.AzureBlobs;
+using AuthJanitor.Automation.IdentityServices.AzureAD;
 using AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault;
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.Models;
@@ -64,6 +65,10 @@ namespace AuthJanitor.Automation.AdminApi
             // TODO: Load ServiceConfguration from somewhere; right now these are just system defaults.
             logger.LogDebug("Registering Service Configuration");
             builder.Services.AddSingleton(ServiceConfiguration);
+
+            // TODO: Load tenant and app client id/secret here
+            logger.LogDebug("Registering Azure AD Identity Service");
+            builder.Services.AddSingleton<IIdentityService, AzureADIdentityService>();
 
             logger.LogDebug("Registering Event Sinks");
 
