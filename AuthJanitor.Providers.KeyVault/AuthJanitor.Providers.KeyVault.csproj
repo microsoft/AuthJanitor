@@ -11,8 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AuthJanitor.Extensions.Azure\AuthJanitor.Extensions.Azure.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Integrations\AuthJanitor.Integrations.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Helpers.Azure\AuthJanitor.Helpers.Azure.csproj" />
   </ItemGroup>
 
 </Project>

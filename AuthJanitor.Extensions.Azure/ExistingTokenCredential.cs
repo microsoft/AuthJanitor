@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Helpers.Azure
+namespace AuthJanitor.Extensions.Azure
 {
     public class ExistingTokenCredential : TokenCredential
     {

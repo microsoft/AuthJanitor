@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Cryptography.Default;
 using AuthJanitor.Automation.DataStores.AzureBlobs;
-using AuthJanitor.Automation.IdentityServices.AzureAD;
-using AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault;
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.Integrations;
+using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Integrations.CryptographicImplementations.Default;
+using AuthJanitor.Integrations.IdentityServices;
+using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
+using AuthJanitor.Integrations.SecureStorage;
+using AuthJanitor.Integrations.SecureStorage.AzureKeyVault;
 using AuthJanitor.Providers;
 using McMaster.NETCore.Plugins;
 using Microsoft.Azure.WebJobs;
@@ -81,7 +85,7 @@ namespace AuthJanitor.Automation.Agent
                 new DefaultCryptographicImplementation(ServiceConfiguration.MasterEncryptionKey));
 
             logger.LogDebug("Registering Secure Storage Provider");
-            builder.Services.AddSingleton<ISecureStorageProvider, KeyVaultSecureStorageProvider>();
+            builder.Services.AddSingleton<ISecureStorage, KeyVaultSecureStorageProvider>();
 
             logger.LogDebug("Registering AuthJanitor MetaServices");
             AuthJanitorServiceRegistration.RegisterServices(builder.Services);

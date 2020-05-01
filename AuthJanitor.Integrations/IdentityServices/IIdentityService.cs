@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Providers;
+using AuthJanitor.Shared;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared
+namespace AuthJanitor.Integrations.IdentityServices
 {
     public interface IIdentityService
     {

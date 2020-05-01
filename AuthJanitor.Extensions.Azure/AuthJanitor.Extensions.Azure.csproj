@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
-    <ProjectReference Include="E:\AuthJanitor\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Shared\AuthJanitor.Shared.csproj" />
   </ItemGroup>
 
 </Project>

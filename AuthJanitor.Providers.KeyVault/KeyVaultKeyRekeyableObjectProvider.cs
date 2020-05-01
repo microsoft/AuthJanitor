@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Helpers.Azure;
+using AuthJanitor.Extensions.Azure;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Extensions.Logging;
 using System;

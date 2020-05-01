@@ -3,9 +3,9 @@
 using AuthJanitor.Providers;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Helpers.Azure
+namespace AuthJanitor.Extensions.Azure
 {
-    public static class AzureHelperIAuthJanitorProviderExtensions
+    public static class AzureIAuthJanitorProviderExtensions
     {
         public static async Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzure(this IAuthJanitorProvider provider)
         {

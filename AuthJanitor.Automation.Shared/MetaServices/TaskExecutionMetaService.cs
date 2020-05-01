@@ -1,7 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.Integrations.EventSinks;
+using AuthJanitor.Integrations.IdentityServices;
+using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Providers;
+using AuthJanitor.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -16,7 +20,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
         private readonly IDataStore<Resource> _resources;
-        private readonly ISecureStorageProvider _secureStorageProvider;
+        private readonly ISecureStorage _secureStorageProvider;
 
         private readonly ProviderManagerService _providerManagerService;
 
@@ -30,7 +34,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             IDataStore<ManagedSecret> managedSecrets,
             IDataStore<RekeyingTask> rekeyingTasks,
             IDataStore<Resource> resources,
-            ISecureStorageProvider secureStorageProvider)
+            ISecureStorage secureStorageProvider)
         {
             _eventDispatcherMetaService = eventDispatcherMetaService;
             _identityService = identityService;

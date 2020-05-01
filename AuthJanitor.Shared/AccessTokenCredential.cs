@@ -3,7 +3,7 @@
 using Newtonsoft.Json;
 using System;
 
-namespace AuthJanitor.Providers
+namespace AuthJanitor.Shared
 {
     public class AccessTokenCredential
     {

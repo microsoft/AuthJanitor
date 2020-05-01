@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Providers;
 using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Cryptography.Default
+namespace AuthJanitor.Integrations.CryptographicImplementations.Default
 {
     /// <summary>
     /// The default AuthJanitor cryptographic implementation.
