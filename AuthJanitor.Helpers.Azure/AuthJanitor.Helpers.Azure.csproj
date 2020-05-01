@@ -2,16 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.33.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Helpers.Azure\AuthJanitor.Helpers.Azure.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
+    <ProjectReference Include="E:\AuthJanitor\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
   </ItemGroup>
 
 </Project>

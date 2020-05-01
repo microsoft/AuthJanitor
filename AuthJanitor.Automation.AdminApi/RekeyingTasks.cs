@@ -23,14 +23,14 @@ namespace AuthJanitor.Automation.AdminApi
     public class RekeyingTasks : StorageIntegratedFunction
     {
         private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
 
         public RekeyingTasks(
             AuthJanitorServiceConfiguration serviceConfiguration,
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             TaskExecutionMetaService taskExecutionMetaService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
@@ -46,7 +46,7 @@ namespace AuthJanitor.Automation.AdminApi
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
             _serviceConfiguration = serviceConfiguration;
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _taskExecutionMetaService = taskExecutionMetaService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
@@ -60,7 +60,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await ManagedSecrets.ContainsIdAsync(secretId))
             {
@@ -96,7 +96,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await RekeyingTasks.ListAsync()).Select(t => GetViewModel(t)));
         }
@@ -108,7 +108,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -126,7 +126,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             if (!await RekeyingTasks.ContainsIdAsync(taskId))
             {
@@ -148,7 +148,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
             var toRekey = await RekeyingTasks.GetOneAsync(t => t.ObjectId == taskId);
             if (toRekey == null)

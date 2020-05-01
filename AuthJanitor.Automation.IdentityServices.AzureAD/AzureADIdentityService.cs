@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Automation.Shared;
 using AuthJanitor.Providers;
+using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -11,27 +13,12 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared.MetaServices
+namespace AuthJanitor.Automation.IdentityServices.AzureAD
 {
-    public sealed class AuthJanitorRoles
-    {
-        public static readonly string GlobalAdmin = "globalAdmin";
-        public static readonly string ResourceAdmin = "resourceAdmin";
-        public static readonly string SecretAdmin = "secretAdmin";
-        public static readonly string ServiceOperator = "serviceOperator";
-        public static readonly string Auditor = "auditor";
-
-        public static readonly string[] ALL_ROLES = new string[]
-        {
-            GlobalAdmin,
-            ResourceAdmin,
-            SecretAdmin,
-            ServiceOperator,
-            Auditor
-        };
-    }
-
-    public class IdentityMetaService
+    /// <summary>
+    /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory
+    /// </summary>
+    public class AzureADIdentityService : IIdentityService
     {
         public const string AGENT_CREDENTIAL_USERNAME = "application.identity@local";
         public const string DEFAULT_OBO_RESOURCE = "https://management.core.windows.net";
@@ -41,7 +28,10 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public IdentityMetaService(IHttpContextAccessor httpContextAccessor)
+        /// <summary>
+        /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory
+        /// </summary>
+        public AzureADIdentityService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
@@ -66,14 +56,14 @@ namespace AuthJanitor.Automation.Shared.MetaServices
         /// Return the current user's name
         /// </summary>
         public string UserName =>
-            IsUserLoggedIn ? $"{GetCurrentUserClaim(ClaimTypes.GivenName)} {GetCurrentUserClaim(ClaimTypes.Surname)}"
+            IsUserLoggedIn ? $"{GetClaimInternal(ClaimTypes.GivenName)} {GetClaimInternal(ClaimTypes.Surname)}"
             : string.Empty;
 
         /// <summary>
         /// Return the current user's e-mail address
         /// </summary>
         public string UserEmail =>
-            IsUserLoggedIn ? GetCurrentUserClaim(ClaimTypes.Email)
+            IsUserLoggedIn ? GetClaimInternal(ClaimTypes.Email)
             : string.Empty;
 
         /// <summary>
@@ -98,13 +88,6 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                            : false;
 
         /// <summary>
-        /// Retrieve a Claim for the currently logged in user
-        /// </summary>
-        /// <param name="claimType">Claim type to retrieve</param>
-        /// <returns>Claim value</returns>
-        public string GetCurrentUserClaim(string claimType) => GetClaimsInternal(claimType).FirstOrDefault();
-
-        /// <summary>
         /// Retrieve the Access Token for the current underlying MSI/SP identity
         /// </summary>
         /// <param name="scopes">Scopes to request with Access Token</param>
@@ -117,7 +100,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 ExcludeInteractiveBrowserCredential = true,
                 ExcludeManagedIdentityCredential = false,
                 ExcludeSharedTokenCacheCredential = true
-            }).GetTokenAsync(new Azure.Core.TokenRequestContext(scopes))
+            }).GetTokenAsync(new TokenRequestContext(scopes))
               .AsTask()
               .ContinueWith(t => new AccessTokenCredential()
               {
@@ -174,5 +157,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                         .Select(c => c.Value)
                         .Distinct()
                         .ToArray();
+
+        private string GetClaimInternal(string claimType) => GetClaimsInternal(claimType).FirstOrDefault();
     }
 }

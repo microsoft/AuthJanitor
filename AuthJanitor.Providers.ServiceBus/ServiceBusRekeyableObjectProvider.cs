@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Helpers.Azure;
 using Microsoft.Azure.Management.ServiceBus.Fluent;
 using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
 using Microsoft.Extensions.Logging;
@@ -101,7 +102,7 @@ namespace AuthJanitor.Providers.ServiceBus
         private Task<IAuthorizationKeys> Get() =>
             AuthorizationRule.ContinueWith(rule => rule.Result.GetKeysAsync()).Unwrap();
 
-        private Task<IServiceBusNamespace> ServiceBusNamespace => GetAzure().ContinueWith(az => az.Result.ServiceBusNamespaces.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
+        private Task<IServiceBusNamespace> ServiceBusNamespace => this.GetAzure().ContinueWith(az => az.Result.ServiceBusNamespaces.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
         private Task<INamespaceAuthorizationRule> AuthorizationRule => ServiceBusNamespace.ContinueWith(ns => ns.Result.AuthorizationRules.GetByNameAsync(Configuration.AuthorizationRuleName)).Unwrap();
 
         private string GetKeyValue(Policykey key, IAuthorizationKeys keys) => key switch

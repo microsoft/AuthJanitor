@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Helpers.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -19,7 +20,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 
         public override async Task Test()
         {
-            var functionsApp = await (await GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);
+            var functionsApp = await (await this.GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);
             if (functionsApp == null)
                 throw new Exception($"Cannot locate Functions application called '{ResourceName}' in group '{ResourceGroup}'");
             var keys = await functionsApp.ListFunctionKeysAsync(Configuration.FunctionName);
@@ -38,7 +39,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
                                                        .GenerateCryptographicallySecureString(Configuration.KeyLength)
             };
 
-            var functionsApp = await (await GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);
+            var functionsApp = await (await this.GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);
             if (functionsApp == null)
                 throw new Exception($"Cannot locate Functions application called '{ResourceName}' in group '{ResourceGroup}'");
 

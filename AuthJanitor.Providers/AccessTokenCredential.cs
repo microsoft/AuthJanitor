@@ -1,13 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Azure.Core;
-using Microsoft.Azure.Management.ResourceManager.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
-using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
 {
@@ -61,34 +55,5 @@ namespace AuthJanitor.Providers
 
         [JsonProperty("token_type")]
         public string TokenType { get; set; }
-
-        public AzureCredentials CreateAzureCredentials() =>
-            new AzureCredentials(
-                new TokenCredentials(this.AccessToken, this.TokenType),
-                new TokenCredentials(this.AccessToken, this.TokenType),
-                Environment.GetEnvironmentVariable("TENANT_ID", EnvironmentVariableTarget.Process),
-                AzureEnvironment.AzureGlobalCloud);
-
-        public TokenCredential CreateTokenCredential() =>
-            new ExistingTokenCredential(this.AccessToken, this.ExpiresOnDateTime);
-
-        public class ExistingTokenCredential : TokenCredential
-        {
-            private AccessToken _accessToken;
-            public ExistingTokenCredential(string accessToken, DateTimeOffset expiresOn)
-            {
-                _accessToken = new AccessToken(accessToken, expiresOn);
-            }
-
-            public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
-            {
-                return _accessToken;
-            }
-
-            public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
-            {
-                return new ValueTask<AccessToken>(_accessToken);
-            }
-        }
     }
 }

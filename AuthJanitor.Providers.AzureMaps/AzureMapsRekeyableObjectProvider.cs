@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Helpers.Azure;
 using Microsoft.Azure.Management.Maps;
 using Microsoft.Azure.Management.Maps.Models;
 using Microsoft.Extensions.Logging;

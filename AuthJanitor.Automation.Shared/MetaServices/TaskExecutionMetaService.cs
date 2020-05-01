@@ -21,11 +21,11 @@ namespace AuthJanitor.Automation.Shared.MetaServices
         private readonly ProviderManagerService _providerManagerService;
 
         private readonly EventDispatcherMetaService _eventDispatcherMetaService;
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
 
         public TaskExecutionMetaService(
             EventDispatcherMetaService eventDispatcherMetaService,
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             ProviderManagerService providerManagerService,
             IDataStore<ManagedSecret> managedSecrets,
             IDataStore<RekeyingTask> rekeyingTasks,
@@ -33,7 +33,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             ISecureStorageProvider secureStorageProvider)
         {
             _eventDispatcherMetaService = eventDispatcherMetaService;
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _providerManagerService = providerManagerService;
             _managedSecrets = managedSecrets;
             _rekeyingTasks = rekeyingTasks;
@@ -52,14 +52,13 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
             if (_secureStorageProvider == null)
                 throw new NotSupportedException("Must register an ISecureStorageProvider");
-
-            var resource = IdentityMetaService.DEFAULT_OBO_RESOURCE;
-            var credentialId = await _identityMetaService.GetAccessTokenOnBehalfOfCurrentUserAsync(resource)
+            
+            var credentialId = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync()
                                        .ContinueWith(t => _secureStorageProvider.Persist(task.Expiry, t.Result))
                                        .Unwrap();
 
             task.PersistedCredentialId = credentialId;
-            task.PersistedCredentialUser = _identityMetaService.UserName;
+            task.PersistedCredentialUser = _identityService.UserName;
 
             await _rekeyingTasks.UpdateAsync(task);
         }
@@ -88,9 +87,9 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                     credential = await _secureStorageProvider.Retrieve<AccessTokenCredential>(task.PersistedCredentialId);
                 }
                 else if (task.ConfirmationType == TaskConfirmationStrategies.AdminSignsOffJustInTime)
-                    credential = await _identityMetaService.GetAccessTokenOnBehalfOfCurrentUserAsync();
+                    credential = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync();
                 else if (task.ConfirmationType.UsesServicePrincipal())
-                    credential = await _identityMetaService.GetAccessTokenForApplicationAsync();
+                    credential = await _identityService.GetAccessTokenForApplicationAsync();
                 else
                     throw new NotSupportedException("No Access Tokens could be generated for this Task!");
 

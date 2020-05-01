@@ -26,12 +26,6 @@
   <ItemGroup>
     <ProjectReference Include="..\AuthJanitor.Automation.Components\AuthJanitor.Automation.Components.csproj" />
     <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.AzureAD\AuthJanitor.Providers.AzureAD.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.CosmosDb\AuthJanitor.Providers.CosmosDb.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.KeyVault\AuthJanitor.Providers.KeyVault.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.ServiceBus\AuthJanitor.Providers.ServiceBus.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers.Storage\AuthJanitor.Providers.Storage.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
   </ItemGroup>
 </Project>

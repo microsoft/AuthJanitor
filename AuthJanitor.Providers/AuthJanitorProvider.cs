@@ -136,13 +136,5 @@ namespace AuthJanitor.Providers
         /// </summary>
         /// <returns></returns>
         public virtual IList<RiskyConfigurationItem> GetRisks() => new List<RiskyConfigurationItem>();
-
-        protected async Task<Microsoft.Azure.Management.Fluent.IAzure> GetAzure()
-        {
-            return await Microsoft.Azure.Management.Fluent.Azure
-                .Configure()
-                .Authenticate(Credential.CreateAzureCredentials())
-                .WithDefaultSubscriptionAsync();
-        }
     }
 }

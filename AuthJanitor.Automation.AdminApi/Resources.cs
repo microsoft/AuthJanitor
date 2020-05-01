@@ -23,12 +23,12 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class Resources : StorageIntegratedFunction
     {
-        private readonly IdentityMetaService _identityMetaService;
+        private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
 
         public Resources(
-            IdentityMetaService identityMetaService,
+            IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -42,7 +42,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _identityMetaService = identityMetaService;
+            _identityService = identityService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
         }
@@ -55,7 +55,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)
@@ -98,7 +98,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult((await Resources.ListAsync()).Select(r => GetViewModel(r)));
         }
@@ -111,7 +111,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.IsUserLoggedIn) return new UnauthorizedResult();
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -130,7 +130,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             if (!await Resources.ContainsIdAsync(resourceId))
             {
@@ -154,7 +154,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             _ = req;
 
-            if (!_identityMetaService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
+            if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
             var provider = _providerManager.GetProviderMetadata(resource.ProviderType);
             if (provider == null)

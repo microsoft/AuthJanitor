@@ -10,7 +10,6 @@ namespace AuthJanitor.Automation.Shared
         public static void RegisterServices(IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<EventDispatcherMetaService>();
-            serviceCollection.AddSingleton<IdentityMetaService>();
             serviceCollection.AddSingleton<TaskExecutionMetaService>();
         }
     }
