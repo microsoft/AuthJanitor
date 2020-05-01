@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Providers;
+using AuthJanitor.Shared;
 using Azure.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Rest;
 using System;
 
-namespace AuthJanitor.Helpers.Azure
+namespace AuthJanitor.Extensions.Azure
 {
-    public static class AzureHelperAccessTokenCredentialExtensions
+    public static class AzureAccessTokenCredentialExtensions
     {
         public static AzureCredentials CreateAzureCredentials(this AccessTokenCredential accessTokenCredential) =>
             new AzureCredentials(

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
+using AuthJanitor.Integrations.EventSinks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SendGrid;
@@ -8,7 +8,7 @@ using SendGrid.Helpers.Mail;
 using System;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.EventSinks.SendGrid
+namespace AuthJanitor.Integrations.EventSinks.SendGrid
 {
     public class SendGridEventSink : IEventSink
     {

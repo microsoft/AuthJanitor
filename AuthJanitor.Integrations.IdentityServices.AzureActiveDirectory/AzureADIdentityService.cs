@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
-using AuthJanitor.Providers;
+using AuthJanitor.Shared;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +12,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.IdentityServices.AzureAD
+namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
 {
     /// <summary>
     /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-namespace AuthJanitor.Automation.Shared
+namespace AuthJanitor.Integrations.IdentityServices
 {
     public sealed class AuthJanitorRoles
     {

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.EventSinks;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;

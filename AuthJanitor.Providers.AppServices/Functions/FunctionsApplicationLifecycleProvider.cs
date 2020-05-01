@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Helpers.Azure;
+using AuthJanitor.Extensions.Azure;
 using Microsoft.Azure.Management.AppService.Fluent;
 using System;
 using System.Threading.Tasks;

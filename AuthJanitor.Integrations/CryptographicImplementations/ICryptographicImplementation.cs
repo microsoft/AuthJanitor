@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Providers
+namespace AuthJanitor.Integrations.CryptographicImplementations
 {
     public interface ICryptographicImplementation
     {

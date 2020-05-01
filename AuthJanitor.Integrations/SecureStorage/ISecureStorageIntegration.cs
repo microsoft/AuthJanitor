@@ -3,9 +3,9 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.Shared
+namespace AuthJanitor.Integrations.SecureStorage
 {
-    public interface ISecureStorageProvider
+    public interface ISecureStorage
     {
         /// <summary>
         /// Persist sensitive content to secure storage

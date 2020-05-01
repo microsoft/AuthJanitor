@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Helpers.Azure;
+using AuthJanitor.Extensions.Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 using System;
@@ -39,7 +39,7 @@ namespace AuthJanitor.Providers.KeyVault
                 if (currentSecret != null && currentSecret.Value != null)
                 {
                     newKvSecret.Properties.ContentType = currentSecret.Value.Properties.ContentType;
-                    foreach (System.Collections.Generic.KeyValuePair<string, string> tag in currentSecret.Value.Properties.Tags)
+                    foreach (KeyValuePair<string, string> tag in currentSecret.Value.Properties.Tags)
                     {
                         newKvSecret.Properties.Tags.Add(tag.Key, tag.Value);
                     }

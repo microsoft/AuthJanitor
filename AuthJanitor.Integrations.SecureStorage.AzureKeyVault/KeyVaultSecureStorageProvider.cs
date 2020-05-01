@@ -1,16 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
-using AuthJanitor.Helpers.Azure;
-using AuthJanitor.Providers;
+using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Integrations.IdentityServices;
 using Azure.Security.KeyVault.Secrets;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Automation.SecureStorageProviders.AzureKeyVault
+namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 {
-    public class KeyVaultSecureStorageProvider : ISecureStorageProvider
+    public class KeyVaultSecureStorageProvider : ISecureStorage
     {
         private const string PERSISTENCE_PREFIX = "AJPersist-";
         private readonly string _vaultName;
