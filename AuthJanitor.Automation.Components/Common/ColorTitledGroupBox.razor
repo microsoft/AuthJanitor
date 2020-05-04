@@ -1,0 +1,26 @@
+﻿<span class="border @BorderColorClass p-2 confirmationGroup @CssClass">
+    <span class="groupTitle @TextColorClass @BackgroundColorClass">@Title</span>
+    @ChildContent
+</span>
+
+@code
+{
+    [Parameter]
+    public string CssClass { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "New Group Box";
+
+    [Parameter]
+    public Background BackgroundColor { get; set; } = Background.Primary;
+
+    [Parameter]
+    public TextColor TextColor { get; set; } = TextColor.Dark;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    protected string BackgroundColorClass => $"bg-{BackgroundColor.ToString().ToLower()}";
+    protected string BorderColorClass => $"border-{BackgroundColor.ToString().ToLower()}";
+    protected string TextColorClass => $"text-{TextColor.ToString().ToLower()}";
+}
