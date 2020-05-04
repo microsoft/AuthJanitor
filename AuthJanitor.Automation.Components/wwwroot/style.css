@@ -4,13 +4,18 @@
 /* Confirmation Strategy Groups */
 span.confirmationGroup {
     position: relative;
+    border-radius: 0.25rem 0.25rem 0.25rem 0rem;
+    border-width: 2px !important;
+    padding-bottom: 12px !important;
 }
 
     span.confirmationGroup .groupTitle {
         font-size: 11px;
         position: absolute;
-        bottom: -1.3em;
-        left: -0.1em
+        bottom: -1.6em;
+        left: -0.2em;
+        padding: 0.2em 0.3em;
+        border-radius: 0rem 0rem 0.25rem 0.25rem;
     }
 
 /* "Group Box" Headers */
