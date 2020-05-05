@@ -6,6 +6,7 @@ using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
 using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
@@ -61,7 +62,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            var resources = await Resources.ListAsync();
+            var resources = await Resources.Get();
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -80,7 +81,7 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
             };
 
-            await ManagedSecrets.CreateAsync(newManagedSecret);
+            await ManagedSecrets.Create(newManagedSecret);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(AdminApi.ManagedSecrets.Create), newManagedSecret);
 
@@ -95,7 +96,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await ManagedSecrets.ListAsync()).Select(s => GetViewModel(s)));
+            return new OkObjectResult((await ManagedSecrets.Get()).Select(s => GetViewModel(s)));
         }
 
         [ProtectedApiEndpoint]
@@ -107,13 +108,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsIdAsync(secretId))
+            if (!await ManagedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Get), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            return new OkObjectResult(GetViewModel(await ManagedSecrets.GetAsync(secretId)));
+            return new OkObjectResult(GetViewModel(await ManagedSecrets.GetOne(secretId)));
         }
 
         [ProtectedApiEndpoint]
@@ -125,13 +126,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsIdAsync(secretId))
+            if (!await ManagedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Delete), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            await ManagedSecrets.DeleteAsync(secretId);
+            await ManagedSecrets.Delete(secretId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(AdminApi.ManagedSecrets.Delete), secretId);
 
@@ -146,13 +147,13 @@ namespace AuthJanitor.Automation.AdminApi
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsIdAsync(secretId))
+            if (!await ManagedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Update), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var resources = await Resources.ListAsync();
+            var resources = await Resources.Get();
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -171,7 +172,7 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
             };
 
-            await ManagedSecrets.UpdateAsync(newManagedSecret);
+            await ManagedSecrets.Update(newManagedSecret);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(AdminApi.ManagedSecrets.Update), newManagedSecret);
 

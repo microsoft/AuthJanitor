@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.DataStores.AzureBlobs;
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.Data.AzureBlobStorage;
 using AuthJanitor.Integrations;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
 using AuthJanitor.Integrations.SecureStorage;
@@ -95,22 +96,22 @@ namespace AuthJanitor.Automation.AdminApi
             logger.LogDebug("Registering DataStores");
             var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process);
             builder.Services.AddSingleton<IDataStore<ManagedSecret>>(
-                new AzureBlobDataStore<ManagedSecret>(
+                new AzureBlobStorageDataStore<ManagedSecret>(
                     connectionString,
                     ServiceConfiguration.MetadataStorageContainerName,
                     MANAGED_SECRETS_BLOB_NAME));
             builder.Services.AddSingleton<IDataStore<RekeyingTask>>(
-                new AzureBlobDataStore<RekeyingTask>(
+                new AzureBlobStorageDataStore<RekeyingTask>(
                     connectionString,
                     ServiceConfiguration.MetadataStorageContainerName,
                     REKEYING_TASKS_BLOB_NAME));
             builder.Services.AddSingleton<IDataStore<Resource>>(
-                new AzureBlobDataStore<Resource>(
+                new AzureBlobStorageDataStore<Resource>(
                     connectionString,
                     ServiceConfiguration.MetadataStorageContainerName,
                     RESOURCES_BLOB_NAME));
             builder.Services.AddSingleton<IDataStore<ScheduleWindow>>(
-                new AzureBlobDataStore<ScheduleWindow>(
+                new AzureBlobStorageDataStore<ScheduleWindow>(
                     connectionString,
                     ServiceConfiguration.MetadataStorageContainerName,
                     SCHEDULES_BLOB_NAME));

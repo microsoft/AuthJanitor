@@ -11,9 +11,9 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.6" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Automation.DataStores.AzureBlobs\AuthJanitor.Automation.DataStores.AzureBlobs.csproj" />
     <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
     <ProjectReference Include="..\AuthJanitor.Integrations.CryptographicImplementations.Default\AuthJanitor.Integrations.CryptographicImplementations.Default.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Integrations.DataStores.AzureBlobStorage\AuthJanitor.Integrations.DataStores.AzureBlobStorage.csproj" />
     <ProjectReference Include="..\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory.csproj" />
     <ProjectReference Include="..\AuthJanitor.Integrations.SecureStorage.AzureKeyVault\AuthJanitor.Integrations.SecureStorage.AzureKeyVault.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />

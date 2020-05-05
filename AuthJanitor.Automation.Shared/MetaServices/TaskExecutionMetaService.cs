@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.SecureStorage;
@@ -47,7 +48,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
         public async Task CacheBackCredentialsForTaskIdAsync(Guid taskId)
         {
-            var task = await _rekeyingTasks.GetAsync(taskId);
+            var task = await _rekeyingTasks.GetOne(taskId);
             if (task == null)
                 throw new KeyNotFoundException("Task not found");
 
@@ -64,17 +65,17 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             task.PersistedCredentialId = credentialId;
             task.PersistedCredentialUser = _identityService.UserName;
 
-            await _rekeyingTasks.UpdateAsync(task);
+            await _rekeyingTasks.Update(task);
         }
 
         public async Task ExecuteTask(Guid taskId)
         {
             // Prepare record
-            var task = await _rekeyingTasks.GetAsync(taskId);
+            var task = await _rekeyingTasks.GetOne(taskId);
             task.RekeyingInProgress = true;
             var rekeyingAttemptLog = new RekeyingAttemptLogger();
             task.Attempts.Add(rekeyingAttemptLog);
-            await _rekeyingTasks.UpdateAsync(task);
+            await _rekeyingTasks.Update(task);
 
             // Retrieve credentials for Task
             AccessTokenCredential credential = null;
@@ -114,9 +115,9 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
 
             // Retrieve targets
-            var secret = await _managedSecrets.GetAsync(task.ManagedSecretId);
+            var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
             rekeyingAttemptLog.LogInformation("Beginning rekeying of secret ID {0}", task.ManagedSecretId);
-            var resources = await _resources.GetAsync(r => secret.ResourceIds.Contains(r.ObjectId));
+            var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId));
 
             // Execute rekeying workflow
             try
@@ -136,7 +137,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             task.RekeyingCompleted = rekeyingAttemptLog.IsSuccessfulAttempt;
             task.RekeyingFailed = !rekeyingAttemptLog.IsSuccessfulAttempt;
 
-            await _rekeyingTasks.UpdateAsync(task);
+            await _rekeyingTasks.Update(task);
 
             // Run cleanup if Task is complete
             if (task.RekeyingCompleted)
@@ -144,7 +145,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 try
                 {
                     secret.LastChanged = DateTimeOffset.UtcNow;
-                    await _managedSecrets.UpdateAsync(secret);
+                    await _managedSecrets.Update(secret);
 
                     if (task.PersistedCredentialId != default && task.PersistedCredentialId != Guid.Empty)
                     {
@@ -158,7 +159,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                     rekeyingAttemptLog.LogInformation("Completed rekeying workflow for ManagedSecret '{0}' (ID {1})", secret.Name, secret.ObjectId);
                     rekeyingAttemptLog.LogInformation("Rekeying task completed");
 
-                    await _rekeyingTasks.UpdateAsync(task);
+                    await _rekeyingTasks.Update(task);
                 }
                 catch (Exception ex)
                 {
@@ -182,7 +183,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             myAttempt.OuterException = JsonConvert.SerializeObject(ex, Formatting.Indented);
             task.RekeyingInProgress = false;
             task.RekeyingFailed = true;
-            await _rekeyingTasks.UpdateAsync(task);
+            await _rekeyingTasks.Update(task);
         }
     }
 }

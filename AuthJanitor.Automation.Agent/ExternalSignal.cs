@@ -5,6 +5,7 @@ using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -58,13 +59,13 @@ namespace AuthJanitor.Automation.Agent
 
             log.LogInformation("External signal called to check ManagedSecret ID {0} against nonce {1}", managedSecretId, nonce);
 
-            var secret = await ManagedSecrets.GetAsync(managedSecretId);
+            var secret = await ManagedSecrets.GetOne(managedSecretId);
             if (secret == null)
                 return new BadRequestErrorMessageResult("Invalid ManagedSecret ID");
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.ExternalSignal))
                 return new BadRequestErrorMessageResult("This ManagedSecret cannot be used with External Signals");
 
-            if ((await RekeyingTasks.GetAsync(t => t.ManagedSecretId == secret.ObjectId))
+            if ((await RekeyingTasks.Get(t => t.ManagedSecretId == secret.ObjectId))
                                     .Any(t => t.RekeyingInProgress))
             {
                 return new OkObjectResult(RETURN_RETRY_SHORTLY);
@@ -81,7 +82,7 @@ namespace AuthJanitor.Automation.Agent
                             Queued = DateTimeOffset.UtcNow,
                             RekeyingInProgress = true
                         };
-                        await RekeyingTasks.CreateAsync(task);
+                        await RekeyingTasks.Create(task);
 
                         await _taskExecutionMetaService.ExecuteTask(task.ObjectId);
                     },

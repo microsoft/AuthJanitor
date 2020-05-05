@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using System;
 
