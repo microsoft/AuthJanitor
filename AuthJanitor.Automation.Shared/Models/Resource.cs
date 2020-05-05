@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.DataStores;
 using System;
 
 namespace AuthJanitor.Automation.Shared.Models

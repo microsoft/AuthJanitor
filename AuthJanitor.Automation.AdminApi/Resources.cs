@@ -4,6 +4,7 @@ using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
@@ -87,7 +88,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await Resources.CreateAsync(newResource);
+            await Resources.Create(newResource);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(AdminApi.Resources.Create), newResource);
 
@@ -102,7 +103,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await Resources.ListAsync()).Select(r => GetViewModel(r)));
+            return new OkObjectResult((await Resources.Get()).Select(r => GetViewModel(r)));
         }
 
         [ProtectedApiEndpoint]
@@ -115,13 +116,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await Resources.ContainsIdAsync(resourceId))
+            if (!await Resources.ContainsId(resourceId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Get), "Resource not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(GetViewModel(await Resources.GetAsync(resourceId)));
+            return new OkObjectResult(GetViewModel(await Resources.GetOne(resourceId)));
         }
 
         [ProtectedApiEndpoint]
@@ -134,13 +135,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
-            if (!await Resources.ContainsIdAsync(resourceId))
+            if (!await Resources.ContainsId(resourceId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Delete), "Resource not found");
                 return new NotFoundResult();
             }
 
-            await Resources.DeleteAsync(resourceId);
+            await Resources.Delete(resourceId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(AdminApi.Resources.Delete), resourceId);
 
@@ -180,7 +181,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await Resources.UpdateAsync(newResource);
+            await Resources.Update(newResource);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(AdminApi.Resources.Update), newResource);
 

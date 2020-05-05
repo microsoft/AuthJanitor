@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 using System;
 
-namespace AuthJanitor.Automation.Shared.Models
+namespace AuthJanitor.Integrations.DataStores
 {
     public interface IAuthJanitorModel
     {

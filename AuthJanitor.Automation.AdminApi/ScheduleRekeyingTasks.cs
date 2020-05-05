@@ -5,6 +5,7 @@ using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
@@ -104,11 +105,11 @@ namespace AuthJanitor.Automation.AdminApi
         private async Task CreateAndNotify(IEnumerable<RekeyingTask> tasks)
         {
             if (!tasks.Any()) return;
-            await Task.WhenAll(tasks.Select(t => RekeyingTasks.CreateAsync(t)));
+            await Task.WhenAll(tasks.Select(t => RekeyingTasks.Create(t)));
 
             foreach (var task in tasks)
             {
-                var secret = await ManagedSecrets.GetAsync(task.ManagedSecretId);
+                var secret = await ManagedSecrets.GetOne(task.ManagedSecretId);
                 if (task.ConfirmationType.UsesOBOTokens())
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
                 else
@@ -131,11 +132,11 @@ namespace AuthJanitor.Automation.AdminApi
             TaskConfirmationStrategies taskConfirmationStrategies,
             int leadTimeHours)
         {
-            var secretsToRotate = await ManagedSecrets.GetAsync(s =>
+            var secretsToRotate = await ManagedSecrets.Get(s =>
                 s.TaskConfirmationStrategies.HasFlag(taskConfirmationStrategies) &&
                 s.Expiry < DateTimeOffset.UtcNow + TimeSpan.FromHours(leadTimeHours));
 
-            var rekeyingTasks = await RekeyingTasks.ListAsync();
+            var rekeyingTasks = await RekeyingTasks.Get();
             return secretsToRotate
                         .Where(s => !rekeyingTasks.Any(t =>
                             t.ManagedSecretId == s.ObjectId &&

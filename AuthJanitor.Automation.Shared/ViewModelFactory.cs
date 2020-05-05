@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -101,7 +102,7 @@ namespace AuthJanitor.Automation.Shared
             var providerManagerService = serviceProvider.GetRequiredService<ProviderManagerService>();
             var resources = secret.ResourceIds
                                 .Select(resourceId => serviceProvider.GetRequiredService<IDataStore<Resource>>()
-                                                                    .GetAsync(resourceId).Result)
+                                                                    .GetOne(resourceId).Result)
                                 .Select(resource => serviceProvider.GetRequiredService<Func<Resource, ResourceViewModel>>()(resource));
             foreach (var resource in resources)
             {
@@ -129,7 +130,7 @@ namespace AuthJanitor.Automation.Shared
             try
             {
                 secret = serviceProvider.GetRequiredService<Func<ManagedSecret, ManagedSecretViewModel>>()(
-                             serviceProvider.GetRequiredService<IDataStore<ManagedSecret>>().GetAsync(rekeyingTask.ManagedSecretId).Result);
+                             serviceProvider.GetRequiredService<IDataStore<ManagedSecret>>().GetOne(rekeyingTask.ManagedSecretId).Result);
             }
             catch (Exception) { secret = new ManagedSecretViewModel() { ObjectId = Guid.Empty }; }
             string errorMessage = string.Empty;

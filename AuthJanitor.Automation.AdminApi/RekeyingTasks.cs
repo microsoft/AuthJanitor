@@ -5,6 +5,7 @@ using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
@@ -65,13 +66,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsIdAsync(secretId))
+            if (!await ManagedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Create), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var secret = await ManagedSecrets.GetAsync(secretId);
+            var secret = await ManagedSecrets.GetOne(secretId);
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminCachesSignOff) &&
                 !secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime))
             {
@@ -86,7 +87,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ManagedSecretId = secret.ObjectId
             };
 
-            await RekeyingTasks.CreateAsync(newTask);
+            await RekeyingTasks.Create(newTask);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ManagedSecrets.Create), newTask);
 
@@ -101,7 +102,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await RekeyingTasks.ListAsync()).Select(t => GetViewModel(t)));
+            return new OkObjectResult((await RekeyingTasks.Get()).Select(t => GetViewModel(t)));
         }
 
         [ProtectedApiEndpoint]
@@ -113,13 +114,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await RekeyingTasks.ContainsIdAsync(taskId))
+            if (!await RekeyingTasks.ContainsId(taskId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Get), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(GetViewModel((await RekeyingTasks.GetAsync(taskId))));
+            return new OkObjectResult(GetViewModel((await RekeyingTasks.GetOne(taskId))));
         }
 
         [ProtectedApiEndpoint]
@@ -131,13 +132,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await RekeyingTasks.ContainsIdAsync(taskId))
+            if (!await RekeyingTasks.ContainsId(taskId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            await RekeyingTasks.DeleteAsync(taskId);
+            await RekeyingTasks.Delete(taskId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskDeleted, nameof(AdminApi.RekeyingTasks.Delete), taskId);
 
@@ -153,7 +154,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            var toRekey = await RekeyingTasks.GetOneAsync(t => t.ObjectId == taskId);
+            var toRekey = await RekeyingTasks.GetOne(t => t.ObjectId == taskId);
             if (toRekey == null)
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");

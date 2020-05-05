@@ -5,6 +5,7 @@ using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ namespace AuthJanitor.Automation.Agent
 
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            var toRekey = await RekeyingTasks.GetAsync(t =>
+            var toRekey = await RekeyingTasks.Get(t =>
                 (t.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingAsNeeded ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingScheduled) &&

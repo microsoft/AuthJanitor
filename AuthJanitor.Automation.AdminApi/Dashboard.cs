@@ -4,6 +4,7 @@ using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
@@ -47,9 +48,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            var allSecrets = await ManagedSecrets.ListAsync();
-            var allResources = await Resources.ListAsync();
-            var allTasks = await RekeyingTasks.ListAsync();
+            var allSecrets = await ManagedSecrets.Get();
+            var allResources = await Resources.Get();
+            var allTasks = await RekeyingTasks.Get();
 
             var expiringInNextWeek = allSecrets.Where(s => DateTimeOffset.UtcNow.AddDays(7) < (s.LastChanged + s.ValidPeriod));
             var expired = allSecrets.Where(s => !s.IsValid);
