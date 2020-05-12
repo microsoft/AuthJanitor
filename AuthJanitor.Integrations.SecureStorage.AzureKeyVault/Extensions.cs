@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using Microsoft.Extensions.DependencyInjection;
 using System;
 
 namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
