@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -17,15 +18,16 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
     public class DefaultCryptographicImplementation : ICryptographicImplementation
     {
         private const string CHARS_ALPHANUMERIC_ONLY = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private string _masterKey;
+
+        private DefaultCryptographicImplementationConfiguration Configuration { get; }
 
         /// <summary>
         /// The default AuthJanitor cryptographic implementation
         /// </summary>
-        /// <param name="masterKey">Encryption master key</param>
-        public DefaultCryptographicImplementation(string masterKey)
+        public DefaultCryptographicImplementation(
+            IOptions<DefaultCryptographicImplementationConfiguration> configuration)
         {
-            _masterKey = masterKey;
+            Configuration = configuration.Value;
         }
 
         /// <summary>
@@ -96,7 +98,7 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(cipherText)))
             using (Aes aes = Aes.Create())
             {
-                aes.Key = new Rfc2898DeriveBytes(_masterKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
+                aes.Key = new Rfc2898DeriveBytes(Configuration.MasterEncryptionKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 aes.IV = ReadByteArray(ms);
                 CryptoStream cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
                 StreamReader reader = new StreamReader(cs, Encoding.Unicode);
@@ -127,7 +129,7 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
             using (MemoryStream ms = new MemoryStream())
             using (Aes aes = Aes.Create())
             {
-                aes.Key = new Rfc2898DeriveBytes(_masterKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
+                aes.Key = new Rfc2898DeriveBytes(Configuration.MasterEncryptionKey, Encoding.UTF8.GetBytes(salt)).GetBytes(128 / 8);
                 ms.Write(BitConverter.GetBytes(aes.IV.Length), 0, sizeof(int));
                 ms.Write(aes.IV, 0, aes.IV.Length);
 

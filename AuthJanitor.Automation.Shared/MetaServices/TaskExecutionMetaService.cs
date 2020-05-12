@@ -111,7 +111,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             // Embed credential context in attempt log
             rekeyingAttemptLog.UserDisplayName = credential.Username;
             rekeyingAttemptLog.UserEmail = credential.Username;
-            if (task.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff)
+            if (task.ConfirmationType.UsesOBOTokens())
                 rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
 
             // Retrieve targets
@@ -122,14 +122,19 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             // Execute rekeying workflow
             try
             {
-                var providers = resources.Select(r => _providerManagerService.GetProviderInstance(r.ProviderType, r.ProviderConfiguration));
-                await _providerManagerService.ExecuteRekeyingWorkflow(rekeyingAttemptLog, secret.ValidPeriod, providers.ToArray());
+                var providers = resources.Select(r => _providerManagerService.GetProviderInstance(
+                    r.ProviderType, 
+                    r.ProviderConfiguration)).ToList();
+
+                // Link in automation bindings from the outer flow
+                providers.ForEach(p => p.Credential = credential);
+
+                await _providerManagerService.ExecuteRekeyingWorkflow(rekeyingAttemptLog, secret.ValidPeriod, providers);
             }
             catch (Exception ex)
             {
                 await EmbedException(task, ex, "Error executing rekeying workflow!");
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
-                return;
             }
 
             // Update Task record

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -21,7 +22,8 @@ namespace AuthJanitor.Automation.AdminApi
         public override Task OnExecutingAsync(FunctionExecutingContext executingContext, CancellationToken cancellationToken)
 #pragma warning restore CS0618 // Type or member is obsolete
         {
-            var request = (executingContext.Arguments.First(a => a.Value is HttpRequest)).Value as HttpRequest;
+            var httpContextAccessor = Startup.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
+            var request = httpContextAccessor.HttpContext.Request;
 
             if (!request.Headers.ContainsKey(HEADER_NAME) ||
                 request.Headers[HEADER_NAME].First() != HEADER_VALUE)

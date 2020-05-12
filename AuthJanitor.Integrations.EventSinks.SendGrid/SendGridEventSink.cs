@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.EventSinks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SendGrid;
 using SendGrid.Helpers.Mail;
@@ -12,21 +12,12 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
 {
     public class SendGridEventSink : IEventSink
     {
-        private string _apiKey;
-        private string _fromEmail;
-        private string _fromName;
-        private string[] _adminAddresses;
-        private LogLevel _minLevel;
+        private SendGridEventSinkConfiguration Configuration { get; }
 
-        private EmailAddress From => new EmailAddress(_fromEmail, _fromName);
-
-        public SendGridEventSink(string apiKey, string fromEmail, string fromName, string[] adminAddresses, LogLevel minLevel = LogLevel.Warning)
+        public SendGridEventSink(
+            IOptions<SendGridEventSinkConfiguration> configuration)
         {
-            _apiKey = apiKey;
-            _fromEmail = fromEmail;
-            _fromName = fromName;
-            _adminAddresses = adminAddresses;
-            _minLevel = minLevel;
+            Configuration = configuration.Value;
         }
 
         public async Task LogEvent(LogLevel logLevel, string source, string eventMessage)
@@ -41,7 +32,7 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
                 "Source: " + source + Environment.NewLine +
                 "Message: " + eventMessage + Environment.NewLine;
 
-            if (logLevel > _minLevel)
+            if (logLevel > Configuration.MinimumLogLevel)
                 await SendMail("AuthJanitor Event", nonHtmlTemplate, htmlTemplate);
         }
 
@@ -57,7 +48,7 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
                 "Source: " + source + Environment.NewLine +
                 "Message: " + details + Environment.NewLine;
 
-            if (_minLevel > LogLevel.Information && systemEvent == AuthJanitorSystemEvents.AnomalousEventOccurred)
+            if (Configuration.MinimumLogLevel > LogLevel.Information && systemEvent == AuthJanitorSystemEvents.AnomalousEventOccurred)
                 return;
             else
                 await SendMail("AuthJanitor Event", nonHtmlTemplate, htmlTemplate);
@@ -76,7 +67,7 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
                 "Object: " + Environment.NewLine +
                 JsonConvert.SerializeObject(detailObject, Formatting.Indented);
 
-            if (_minLevel > LogLevel.Information && systemEvent == AuthJanitorSystemEvents.AnomalousEventOccurred)
+            if (Configuration.MinimumLogLevel > LogLevel.Information && systemEvent == AuthJanitorSystemEvents.AnomalousEventOccurred)
                 return;
             else
                 await SendMail("AuthJanitor Event", nonHtmlTemplate, htmlTemplate);
@@ -86,11 +77,15 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
         {
             if (htmlBody == default) htmlBody = body;
 
-            var client = new SendGridClient(_apiKey);
-            foreach (var address in _adminAddresses)
+            var client = new SendGridClient(Configuration.ApiKey);
+
+            // TODO: Better way of handling e-mail addresses ???
+            foreach (var address in Configuration.AdminEmailAddresses)
             {
                 var to = new EmailAddress(address);
-                var email = MailHelper.CreateSingleEmail(From, to, subject, body, htmlBody);
+                var email = MailHelper.CreateSingleEmail(
+                    new EmailAddress(Configuration.FromEmail, Configuration.FromName),
+                    to, subject, body, htmlBody);
                 await client.SendEmailAsync(email);
             }
         }

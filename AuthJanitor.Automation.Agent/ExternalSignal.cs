@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,11 +28,11 @@ namespace AuthJanitor.Automation.Agent
 
         private const int MAX_EXECUTION_SECONDS_BEFORE_RETRY = 30;
 
-        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
         public ExternalSignal(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<AuthJanitorCoreConfiguration> configuration,
             TaskExecutionMetaService taskExecutionMetaService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -44,7 +45,7 @@ namespace AuthJanitor.Automation.Agent
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _serviceConfiguration = serviceConfiguration;
+            _configuration = configuration.Value;
             _taskExecutionMetaService = taskExecutionMetaService;
         }
 
@@ -71,7 +72,7 @@ namespace AuthJanitor.Automation.Agent
                 return new OkObjectResult(RETURN_RETRY_SHORTLY);
             }
 
-            if ((secret.IsValid && secret.TimeRemaining <= TimeSpan.FromHours(_serviceConfiguration.ExternalSignalRekeyableLeadTimeHours)) || !secret.IsValid)
+            if ((secret.IsValid && secret.TimeRemaining <= TimeSpan.FromHours(_configuration.ExternalSignalRekeyableLeadTimeHours)) || !secret.IsValid)
             {
                 var rekeyingTask = new Task(async () =>
                     {

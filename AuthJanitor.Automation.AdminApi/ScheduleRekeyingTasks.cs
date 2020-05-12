@@ -10,6 +10,7 @@ using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,12 +20,12 @@ namespace AuthJanitor.Automation.AdminApi
 {
     public class ScheduleRekeyingTasks : StorageIntegratedFunction
     {
-        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcherMetaService;
 
         public ScheduleRekeyingTasks(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<AuthJanitorCoreConfiguration> configuration,
             EventDispatcherMetaService eventDispatcherMetaService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -38,7 +39,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _serviceConfiguration = serviceConfiguration;
+            _configuration = configuration.Value;
             _eventDispatcherMetaService = eventDispatcherMetaService;
             _providerManager = providerManager;
         }
@@ -58,7 +59,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminSignsOffJustInTime,
-                _serviceConfiguration.ApprovalRequiredLeadTimeHours);
+                _configuration.ApprovalRequiredLeadTimeHours);
             log.LogInformation("Creating {0} tasks for just-in-time administrator approval", jitCandidates.Count);
             await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
 
@@ -68,7 +69,7 @@ namespace AuthJanitor.Automation.AdminApi
             //     expiry.
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminCachesSignOff,
-                _serviceConfiguration.ApprovalRequiredLeadTimeHours);
+                _configuration.ApprovalRequiredLeadTimeHours);
             log.LogInformation("Creating {0} tasks for cached administrator approval", cachedCandidates.Count);
             await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
         }
@@ -77,7 +78,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingAsNeeded,
-                _serviceConfiguration.AutomaticRekeyableTaskCreationLeadTimeHours);
+                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
             log.LogInformation("Creating {0} tasks for just-in-time auto-rekeying", jitCandidates.Count);
             await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
 
@@ -87,7 +88,7 @@ namespace AuthJanitor.Automation.AdminApi
             //     expiry.
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingScheduled,
-                _serviceConfiguration.AutomaticRekeyableTaskCreationLeadTimeHours);
+                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
             log.LogInformation("Creating {0} tasks for scheduled auto-rekeying", cachedCandidates.Count);
             await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
         }

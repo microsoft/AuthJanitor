@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,14 +27,14 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class ManagedSecrets : StorageIntegratedFunction
     {
-        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
 
         public ManagedSecrets(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<AuthJanitorCoreConfiguration> configuration,
             IIdentityService identityService,
             ICryptographicImplementation cryptographicImplementation,
             EventDispatcherMetaService eventDispatcher,
@@ -49,7 +50,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _serviceConfiguration = serviceConfiguration;
+            _configuration = configuration.Value;
             _identityService = identityService;
             _cryptographicImplementation = cryptographicImplementation;
             _eventDispatcher = eventDispatcher;
@@ -78,7 +79,7 @@ namespace AuthJanitor.Automation.AdminApi
                 LastChanged = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
             await ManagedSecrets.Create(newManagedSecret);
@@ -169,7 +170,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ValidPeriod = TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_serviceConfiguration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
             await ManagedSecrets.Update(newManagedSecret);

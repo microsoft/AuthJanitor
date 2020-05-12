@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.WebAppBase.Update;
@@ -64,7 +64,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
                 throw new Exception("Multiple secrets sent to Provider but without distinct UserHints!");
             }
 
-            IUpdate<IFunctionDeploymentSlot> updateBase = (await GetDeploymentSlot(TemporarySlotName)).Update();
+            IUpdate<IFunctionDeploymentSlot> updateBase = (await GetDeploymentSlot(slotName)).Update();
             foreach (RegeneratedSecret secret in secrets)
             {
                 var connectionStringName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.ConnectionStringName : $"{Configuration.ConnectionStringName}-{secret.UserHint}";
@@ -76,8 +76,8 @@ namespace AuthJanitor.Providers.AppServices.Functions
             Logger.LogInformation("Applying changes.");
             await updateBase.ApplyAsync();
 
-            Logger.LogInformation("Swapping to '{0}'", TemporarySlotName);
-            await (await GetFunctionsApp()).SwapAsync(TemporarySlotName);
+            Logger.LogInformation("Swapping to '{0}'", slotName);
+            await (await GetFunctionsApp()).SwapAsync(slotName);
         }
     }
 }

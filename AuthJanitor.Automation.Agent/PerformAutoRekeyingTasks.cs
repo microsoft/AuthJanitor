@@ -9,6 +9,7 @@ using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 
@@ -16,11 +17,11 @@ namespace AuthJanitor.Automation.Agent
 {
     public class PerformAutoRekeyingTasks : StorageIntegratedFunction
     {
-        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
         public PerformAutoRekeyingTasks(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<AuthJanitorCoreConfiguration> configuration,
             TaskExecutionMetaService taskExecutionMetaService,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
@@ -33,7 +34,7 @@ namespace AuthJanitor.Automation.Agent
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _serviceConfiguration = serviceConfiguration;
+            _configuration = configuration.Value;
             _taskExecutionMetaService = taskExecutionMetaService;
         }
 
@@ -48,7 +49,7 @@ namespace AuthJanitor.Automation.Agent
                 (t.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingAsNeeded ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingScheduled) &&
-                DateTimeOffset.UtcNow + TimeSpan.FromHours(_serviceConfiguration.AutomaticRekeyableJustInTimeLeadTimeHours) > t.Expiry);
+                DateTimeOffset.UtcNow + TimeSpan.FromHours(_configuration.AutomaticRekeyableJustInTimeLeadTimeHours) > t.Expiry);
 
             foreach (var task in toRekey)
             {

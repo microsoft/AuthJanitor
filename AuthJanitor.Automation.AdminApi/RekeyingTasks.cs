@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,14 +27,14 @@ namespace AuthJanitor.Automation.AdminApi
     /// </summary>
     public class RekeyingTasks : StorageIntegratedFunction
     {
-        private readonly AuthJanitorServiceConfiguration _serviceConfiguration;
+        private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
 
         public RekeyingTasks(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<AuthJanitorCoreConfiguration> configuration,
             IIdentityService identityService,
             TaskExecutionMetaService taskExecutionMetaService,
             EventDispatcherMetaService eventDispatcher,
@@ -49,7 +50,7 @@ namespace AuthJanitor.Automation.AdminApi
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
                 base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
         {
-            _serviceConfiguration = serviceConfiguration;
+            _configuration = configuration.Value;
             _identityService = identityService;
             _taskExecutionMetaService = taskExecutionMetaService;
             _eventDispatcher = eventDispatcher;

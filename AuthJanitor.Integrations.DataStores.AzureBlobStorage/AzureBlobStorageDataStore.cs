@@ -1,37 +1,33 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.DataStores;
-using Azure;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Data.AzureBlobStorage
+namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
 {
     public class AzureBlobStorageDataStore<TStoredModel> : IDataStore<TStoredModel> where TStoredModel : IAuthJanitorModel
     {
-        private const string PREFERRED_LEASE_NAME = "AuthJanitorBlobStorage";
-
         private bool _isInitialized = false;
-        private readonly string _connectionString;
-        private readonly string _containerName;
-        private readonly string _blobName;
+
+        private AzureBlobStorageDataStoreConfiguration Configuration { get; }
 
         protected BlockBlobClient Blob { get; private set; }
+
         protected List<TStoredModel> CachedCollection { get; private set; } = new List<TStoredModel>();
 
-        public AzureBlobStorageDataStore(string connectionString, string container, string name)
+        public AzureBlobStorageDataStore(
+            IOptions<AzureBlobStorageDataStoreConfiguration> configuration)
         {
-            _connectionString = connectionString;
-            _containerName = container;
-            _blobName = name;
+            Configuration = configuration.Value;
         }
 
         public async Task<bool> ContainsId(Guid objectId)
@@ -107,51 +103,112 @@ namespace AuthJanitor.Data.AzureBlobStorage
             return model;
         }
 
-        private Task Commit()
+        private async Task Commit()
         {
-            lock (CachedCollection)
+            await RunLeaseInterlockedAction(() =>
             {
-                return WithLease(TimeSpan.FromSeconds(15), async (lease) =>
+                using (var ms = new MemoryStream())
                 {
                     var serialized = JsonConvert.SerializeObject(CachedCollection, Formatting.None);
-                    using (var ms = new MemoryStream())
-                    {
-                        await ms.WriteAsync(Encoding.UTF8.GetBytes(serialized));
-                        ms.Seek(0, SeekOrigin.Begin);
-                        await Blob.UploadAsync(ms);
-                    }
-                });
-            }
+                    ms.Write(Encoding.UTF8.GetBytes(serialized));
+                    ms.Seek(0, SeekOrigin.Begin);
+                    Blob.Upload(ms);
+                }
+            });
         }
 
-        private Task Cache()
+        private async Task Cache()
         {
-            lock (CachedCollection)
+            await InitializeIfRequired();
+
+            var blobText = Blob.Download();
+            using (var ms = new MemoryStream())
             {
-                return WithLease(TimeSpan.FromSeconds(15), async (lease) =>
-                {
-                    var blobText = await Blob.DownloadAsync(conditions: new BlobRequestConditions() { LeaseId = lease.LeaseId });
-                    using (var ms = new MemoryStream())
-                    {
-                        await blobText.Value.Content.CopyToAsync(ms);
-                        ms.Seek(0, SeekOrigin.Begin);
-                        var str = Encoding.UTF8.GetString(ms.ToArray());
-                        CachedCollection = JsonConvert.DeserializeObject<List<TStoredModel>>(str);
-                    }
-                });
+                blobText.Value.Content.CopyTo(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                var str = Encoding.UTF8.GetString(ms.ToArray());
+                CachedCollection = JsonConvert.DeserializeObject<List<TStoredModel>>(str);
             }
         }
 
-        private async Task WithLease(TimeSpan leaseTime, Action<BlobLease> action)
+        private static TimeSpan LEASE_ABANDON_TIME = TimeSpan.FromSeconds(60);
+        private static TimeSpan MAX_ATTEMPT_TIME = TimeSpan.FromSeconds(30);
+        private const int MIN_BACKOFF_TIME_MS = 750;
+        private const int MAX_BACKOFF_TIME_MS = 2500;
+        private static Random _rng = new Random((int)DateTimeOffset.UtcNow.Ticks);
+
+        private const string METADATA_TAG = "ajUpdate";
+
+        private async Task RunLeaseInterlockedAction(Action action)
+        {
+            await InitializeIfRequired();
+
+            var startedAttempt = DateTimeOffset.UtcNow;
+            bool success = false;
+            while ((DateTimeOffset.UtcNow - startedAttempt) < MAX_ATTEMPT_TIME)
+            {
+                var metadata = (await Blob.GetPropertiesAsync())?.Value?.Metadata;
+                if (metadata == null)
+                {
+                    // Could be broken, could be system busy
+                    await Task.Delay(_rng.Next(MIN_BACKOFF_TIME_MS, MAX_BACKOFF_TIME_MS));
+                    continue;
+                }
+
+                if (metadata.ContainsKey(METADATA_TAG) &&
+                    !string.IsNullOrEmpty(metadata[METADATA_TAG]))
+                {
+                    // Lease exists
+                    var leaseStarted = DateTimeOffset.Parse(metadata[METADATA_TAG]);
+                    if ((DateTimeOffset.UtcNow - leaseStarted) < LEASE_ABANDON_TIME)
+                    {
+                        // Lease has not yet been abandoned
+                        await Task.Delay(_rng.Next(MIN_BACKOFF_TIME_MS, MAX_BACKOFF_TIME_MS));
+                        continue;
+                    }
+                }
+
+                // Set lease tag
+                await Blob.SetMetadataAsync(new Dictionary<string, string>()
+                {
+                    { METADATA_TAG, DateTimeOffset.UtcNow.ToString() }
+                });
+
+                // Action!
+                try
+                {
+                    action();
+                    success = true;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    // Release
+                    await Blob.SetMetadataAsync(new Dictionary<string, string>()
+                    {
+                        { METADATA_TAG, string.Empty }
+                    });
+                }
+            }
+            if (!success)
+            {
+                throw new Exception("Could not acquire lease in time!");
+            }
+        }
+
+        private async Task InitializeIfRequired()
         {
             if (!_isInitialized)
             {
-                var blobServiceClient = new BlobServiceClient(_connectionString);
+                var blobServiceClient = new BlobServiceClient(Configuration.ConnectionString);
 
-                var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+                var containerClient = blobServiceClient.GetBlobContainerClient(Configuration.Container);
                 await containerClient.CreateIfNotExistsAsync();
 
-                Blob = containerClient.GetBlockBlobClient(_blobName);
+                Blob = containerClient.GetBlockBlobClient(typeof(TStoredModel).Name.ToLower());
                 if (!await Blob.ExistsAsync())
                 {
                     using (var ms = new MemoryStream())
@@ -163,33 +220,6 @@ namespace AuthJanitor.Data.AzureBlobStorage
                     CachedCollection = new List<TStoredModel>();
                 }
                 _isInitialized = true;
-            }
-
-            var leaseClient = Blob.GetBlobLeaseClient(PREFERRED_LEASE_NAME);
-            BlobLease lease = null;
-            try
-            {
-                while (lease == null || string.IsNullOrEmpty(lease.LeaseId))
-                {
-                    try
-                    {
-                        lease = await leaseClient.AcquireAsync(leaseTime);
-                        if (lease == null || string.IsNullOrEmpty(lease.LeaseId))
-                            await Task.Delay(TimeSpan.FromMilliseconds(new Random((int)DateTime.Now.Ticks).Next(250, 1000)));
-                    }
-                    catch (RequestFailedException ex)
-                    {
-                        if (ex.Status != 409)
-                            throw;
-                    }
-                }
-
-                action(lease);
-            }
-            finally
-            {
-                if (lease != null && !string.IsNullOrEmpty(lease.LeaseId))
-                    await leaseClient.ReleaseAsync();
             }
         }
     }
