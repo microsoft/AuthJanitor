@@ -40,7 +40,6 @@ namespace AuthJanitor.Automation.AdminApi
             _providerManager = providerManager;
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Dashboard")]
         public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req)
         {

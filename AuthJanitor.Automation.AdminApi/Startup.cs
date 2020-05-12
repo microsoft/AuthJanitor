@@ -45,8 +45,6 @@ namespace AuthJanitor.Automation.AdminApi
             typeof(ILogger)
         };
 
-        public static IServiceProvider ServiceProvider { get; set; }
-
         public void Configure(IWebJobsBuilder builder)
         {
             builder.Services.AddOptions();
@@ -115,10 +113,6 @@ namespace AuthJanitor.Automation.AdminApi
             logger.LogInformation("Found {0} providers: {1}", providerTypes.Count(), string.Join("  ", providerTypes.Select(t => t.Name)));
             logger.LogInformation("Registering Provider Manager Service");
             ProviderManagerService.ConfigureServices(builder.Services, providerTypes);
-
-            // -----
-
-            ServiceProvider = builder.Services.BuildServiceProvider();
         }
     }
 }
