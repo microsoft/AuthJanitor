@@ -4,6 +4,7 @@ using AuthJanitor.Shared;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -25,13 +26,17 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
         private const string ROLES_CLAIM = "roles";
         private const string ID_TOKEN_OBO_HEADER_NAME = "X-MS-TOKEN-AAD-ID-TOKEN";
 
+        private AzureADIdentityServiceConfiguration Configuration { get; }
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         /// <summary>
         /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory
         /// </summary>
-        public AzureADIdentityService(IHttpContextAccessor httpContextAccessor)
+        public AzureADIdentityService(
+            IOptions<AzureADIdentityServiceConfiguration> configuration,
+            IHttpContextAccessor httpContextAccessor)
         {
+            Configuration = configuration.Value;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -126,15 +131,15 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
             var dict = new Dictionary<string, string>()
             {
                 { "grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer" },
-                { "client_id", Environment.GetEnvironmentVariable("CLIENT_ID", EnvironmentVariableTarget.Process) },
-                { "client_secret", Environment.GetEnvironmentVariable("CLIENT_SECRET", EnvironmentVariableTarget.Process) },
+                { "client_id", Configuration.ClientId },
+                { "client_secret", Configuration.ClientSecret },
                 { "assertion", idToken },
                 { "resource", resource },
                 { "requested_token_use", "on_behalf_of" }
             };
 
             var result = await new HttpClient().PostAsync("https://login.microsoftonline.com/" +
-                Environment.GetEnvironmentVariable("TENANT_ID", EnvironmentVariableTarget.Process) +
+                Configuration.TenantId +
                 "/oauth2/token",
                 new FormUrlEncodedContent(dict));
             var tokenResponse = JsonConvert.DeserializeObject<AccessTokenCredential>(

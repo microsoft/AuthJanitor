@@ -1,4 +1,4 @@
-﻿<Modal @bind-IsOpen="@Visible">
+﻿<Modal Visible="@Visible">
     <ModalBackdrop />
     <ModalContent IsCentered="true">
         <ModalHeader>
@@ -41,14 +41,17 @@
     {
         ResultClicked.InvokeAsync(true);
         Visible = false;
+        VisibleChanged.InvokeAsync(Visible);
     }
     protected void NoButtonClicked()
     {
         ResultClicked.InvokeAsync(false);
         Visible = false;
+        VisibleChanged.InvokeAsync(Visible);
     }
     protected void CloseButtonClicked()
     {
         Visible = false;
+        VisibleChanged.InvokeAsync(Visible);
     }
 }

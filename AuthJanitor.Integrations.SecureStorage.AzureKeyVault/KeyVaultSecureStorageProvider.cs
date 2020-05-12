@@ -4,6 +4,7 @@ using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.IdentityServices;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -12,21 +13,18 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 {
     public class KeyVaultSecureStorageProvider : ISecureStorage
     {
-        private const string PERSISTENCE_PREFIX = "AJPersist-";
-        private readonly string _vaultName;
-
+        private KeyVaultSecureStorageProviderConfiguration Configuration { get; }
         private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
 
         public KeyVaultSecureStorageProvider(
-            AuthJanitorServiceConfiguration serviceConfiguration,
+            IOptions<KeyVaultSecureStorageProviderConfiguration> configuration,
             IIdentityService identityService,
             ICryptographicImplementation cryptographicImplementation)
         {
+            Configuration = configuration.Value;
             _identityService = identityService;
             _cryptographicImplementation = cryptographicImplementation;
-
-            _vaultName = serviceConfiguration.SecurePersistenceContainerName;
 
             if (_cryptographicImplementation == null)
                 throw new InvalidOperationException("ICryptographicImplementation must be registered!");
@@ -35,13 +33,13 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
         public async Task Destroy(Guid persistenceId)
         {
             var client = await GetClient();
-            await client.StartDeleteSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
+            await client.StartDeleteSecretAsync($"{Configuration.Prefix}{persistenceId}");
         }
 
         public async Task<Guid> Persist<T>(DateTimeOffset expiry, T persistedObject)
         {
             var newId = Guid.NewGuid();
-            var newSecret = new KeyVaultSecret($"{PERSISTENCE_PREFIX}{newId}",
+            var newSecret = new KeyVaultSecret($"{Configuration.Prefix}{newId}",
                 await _cryptographicImplementation.Encrypt(newId.ToString(), JsonConvert.SerializeObject(persistedObject)));
             newSecret.Properties.ExpiresOn = expiry;
 
@@ -53,7 +51,7 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
         public async Task<T> Retrieve<T>(Guid persistenceId)
         {
             var client = await GetClient();
-            var secret = await client.GetSecretAsync($"{PERSISTENCE_PREFIX}{persistenceId}");
+            var secret = await client.GetSecretAsync($"{Configuration.Prefix}{persistenceId}");
             if (secret == null || secret.Value == null)
                 throw new Exception("Secret not found");
 
@@ -64,7 +62,7 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
             _identityService.GetAccessTokenForApplicationAsync()
                 .ContinueWith(t => t.Result.CreateTokenCredential())
                 .ContinueWith(t => new SecretClient(
-                    new Uri($"https://{_vaultName}.vault.azure.net/"),
+                    new Uri($"https://{Configuration.VaultName}.vault.azure.net/"),
                     t.Result));
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.WebAppBase.Update;
@@ -32,8 +32,6 @@ namespace AuthJanitor.Providers.AppServices.Functions
             await ApplySecrets(TemporarySlotName, temporaryUseSecrets);
             Logger.LogInformation("BeforeRekeying completed!");
         }
-
-
 
         /// <summary>
         /// Call to commit the newly generated secret

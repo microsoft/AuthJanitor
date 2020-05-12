@@ -2,11 +2,10 @@
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Data.AzureBlobStorage;
-using AuthJanitor.Integrations;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
 using AuthJanitor.Integrations.DataStores;
+using AuthJanitor.Integrations.DataStores.AzureBlobStorage;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
 using AuthJanitor.Integrations.SecureStorage;
@@ -48,32 +47,24 @@ namespace AuthJanitor.Automation.AdminApi
 
         public static IServiceProvider ServiceProvider { get; set; }
 
-        private static AuthJanitorServiceConfiguration ServiceConfiguration =>
-            new AuthJanitorServiceConfiguration()
-            {
-                ApprovalRequiredLeadTimeHours = 24 * 7,
-                AutomaticRekeyableJustInTimeLeadTimeHours = 24 * 2,
-                AutomaticRekeyableTaskCreationLeadTimeHours = 24 * 7,
-                ExternalSignalRekeyableLeadTimeHours = 24,
-                MetadataStorageContainerName = "authjanitor",
-                SecurePersistenceContainerName = "authjanitor",
-                MasterEncryptionKey = "iamnotastrongkey!"
-            };
-
         public void Configure(IWebJobsBuilder builder)
         {
+            builder.Services.AddOptions();
+
+            builder.Services.AddHttpContextAccessor();
+
             var logger = new LoggerFactory().CreateLogger(nameof(Startup));
 
             logger.LogDebug("Registering LoggerFactory");
             builder.Services.AddSingleton<ILoggerFactory>(new LoggerFactory());
 
-            // TODO: Load ServiceConfguration from somewhere; right now these are just system defaults.
-            logger.LogDebug("Registering Service Configuration");
-            builder.Services.AddSingleton(ServiceConfiguration);
-
-            // TODO: Load tenant and app client id/secret here
             logger.LogDebug("Registering Azure AD Identity Service");
-            builder.Services.AddSingleton<IIdentityService, AzureADIdentityService>();
+            builder.Services.AddAJAzureActiveDirectory<AzureADIdentityServiceConfiguration>(o =>
+            {
+                o.ClientId = Environment.GetEnvironmentVariable("CLIENT_ID", EnvironmentVariableTarget.Process);
+                o.ClientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET", EnvironmentVariableTarget.Process);
+                o.TenantId = Environment.GetEnvironmentVariable("TENANT_ID", EnvironmentVariableTarget.Process);
+            });
 
             logger.LogDebug("Registering Event Sinks");
 
@@ -82,11 +73,16 @@ namespace AuthJanitor.Automation.AdminApi
             //       The *entire system* offloads to the EventDispatcherService to generalize events.
 
             logger.LogDebug("Registering Cryptographic Implementation");
-            builder.Services.AddSingleton<ICryptographicImplementation>(
-                new DefaultCryptographicImplementation(ServiceConfiguration.MasterEncryptionKey));
+            builder.Services.AddAJDefaultCryptographicImplementation<DefaultCryptographicImplementationConfiguration>(o =>
+            {
+                o.MasterEncryptionKey = "weakkey";
+            });
 
             logger.LogDebug("Registering Secure Storage Provider");
-            builder.Services.AddSingleton<ISecureStorage, KeyVaultSecureStorageProvider>();
+            builder.Services.AddAJAzureKeyVault<KeyVaultSecureStorageProviderConfiguration>(o =>
+            {
+                o.VaultName = "vault";
+            });
 
             logger.LogDebug("Registering AuthJanitor MetaServices");
             AuthJanitorServiceRegistration.RegisterServices(builder.Services);
@@ -94,27 +90,11 @@ namespace AuthJanitor.Automation.AdminApi
             // -----
 
             logger.LogDebug("Registering DataStores");
-            var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process);
-            builder.Services.AddSingleton<IDataStore<ManagedSecret>>(
-                new AzureBlobStorageDataStore<ManagedSecret>(
-                    connectionString,
-                    ServiceConfiguration.MetadataStorageContainerName,
-                    MANAGED_SECRETS_BLOB_NAME));
-            builder.Services.AddSingleton<IDataStore<RekeyingTask>>(
-                new AzureBlobStorageDataStore<RekeyingTask>(
-                    connectionString,
-                    ServiceConfiguration.MetadataStorageContainerName,
-                    REKEYING_TASKS_BLOB_NAME));
-            builder.Services.AddSingleton<IDataStore<Resource>>(
-                new AzureBlobStorageDataStore<Resource>(
-                    connectionString,
-                    ServiceConfiguration.MetadataStorageContainerName,
-                    RESOURCES_BLOB_NAME));
-            builder.Services.AddSingleton<IDataStore<ScheduleWindow>>(
-                new AzureBlobStorageDataStore<ScheduleWindow>(
-                    connectionString,
-                    ServiceConfiguration.MetadataStorageContainerName,
-                    SCHEDULES_BLOB_NAME));
+            builder.Services.AddAJAzureBlobStorage<AzureBlobStorageDataStoreConfiguration>(o =>
+            {
+                o.ConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage", EnvironmentVariableTarget.Process);
+                o.Container = "authjanitor";
+            });
 
             // -----
 
