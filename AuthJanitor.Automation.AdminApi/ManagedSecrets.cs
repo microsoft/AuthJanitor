@@ -57,7 +57,6 @@ namespace AuthJanitor.Automation.AdminApi
             _providerManager = providerManager;
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Create")]
         public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret)
         {
@@ -89,7 +88,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(GetViewModel(newManagedSecret));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-List")]
         public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req)
         {
@@ -100,7 +98,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult((await ManagedSecrets.Get()).Select(s => GetViewModel(s)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Get")]
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
             Guid secretId)
@@ -118,7 +115,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(GetViewModel(await ManagedSecrets.GetOne(secretId)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Delete")]
         public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
             Guid secretId)
@@ -140,7 +136,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkResult();
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("ManagedSecrets-Update")]
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
