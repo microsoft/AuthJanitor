@@ -19,6 +19,11 @@ namespace AuthJanitor.Providers.AzureMaps
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public AzureMapsRekeyableObjectProvider(ILogger<AzureMapsRekeyableObjectProvider> logger)
         {
             Logger = logger;

@@ -19,6 +19,11 @@ namespace AuthJanitor.Providers.KeyVault
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
 
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public KeyVaultSecretRekeyableObjectProvider(
             ILogger<KeyVaultSecretRekeyableObjectProvider> logger,
             ICryptographicImplementation cryptographicImplementation)

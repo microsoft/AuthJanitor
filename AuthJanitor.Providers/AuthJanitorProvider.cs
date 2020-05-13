@@ -98,11 +98,6 @@ namespace AuthJanitor.Providers
         public AccessTokenCredential Credential { get; set; }
 
         /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; set; }
-
-        /// <summary>
         /// Test if the current credentials can execute an Extension 
         /// </summary>
         /// <returns></returns>

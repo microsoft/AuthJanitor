@@ -14,6 +14,11 @@ namespace AuthJanitor.Providers.AzureAD
     [ProviderImage(ProviderImages.AZURE_AD_SVG)]
     public class AccessTokenRekeyableObjectProvider : RekeyableObjectProvider<AccessTokenConfiguration>
     {
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public AccessTokenRekeyableObjectProvider(ILogger<AccessTokenRekeyableObjectProvider> logger)
         {
             Logger = logger;

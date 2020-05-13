@@ -16,6 +16,11 @@ namespace AuthJanitor.Providers.ServiceBus
     [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
     public class ServiceBusRekeyableObjectProvider : RekeyableObjectProvider<ServiceBusKeyConfiguration>
     {
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger)
         {
             Logger = logger;

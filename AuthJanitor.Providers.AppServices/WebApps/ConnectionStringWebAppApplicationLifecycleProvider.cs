@@ -16,6 +16,11 @@ namespace AuthJanitor.Providers.AppServices.WebApps
     [ProviderImage(ProviderImages.WEBAPPS_SVG)]
     public class ConnectionStringWebAppApplicationLifecycleProvider : WebAppApplicationLifecycleProvider<ConnectionStringConfiguration>
     {
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public ConnectionStringWebAppApplicationLifecycleProvider(ILogger<ConnectionStringWebAppApplicationLifecycleProvider> logger)
         {
             Logger = logger;

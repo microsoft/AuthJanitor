@@ -17,6 +17,11 @@ namespace AuthJanitor.Providers.AppServices.Functions
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
 
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public FunctionKeyRekeyableObjectProvider(
             ILogger<FunctionKeyRekeyableObjectProvider> logger,
             ICryptographicImplementation cryptographicImplementation)

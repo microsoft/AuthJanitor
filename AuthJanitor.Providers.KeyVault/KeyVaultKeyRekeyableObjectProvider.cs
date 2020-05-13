@@ -16,6 +16,11 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultKeyRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultKeyConfiguration>
     {
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public KeyVaultKeyRekeyableObjectProvider(ILogger<KeyVaultKeyRekeyableObjectProvider> logger)
         {
             Logger = logger;

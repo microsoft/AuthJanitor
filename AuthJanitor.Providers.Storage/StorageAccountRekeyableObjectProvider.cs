@@ -22,6 +22,11 @@ namespace AuthJanitor.Providers.Storage
         private const string KERB1 = "kerb1";
         private const string KERB2 = "kerb2";
 
+        /// <summary>
+        /// Logger implementation
+        /// </summary>
+        protected ILogger Logger { get; }
+
         public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger)
         {
             Logger = logger;
