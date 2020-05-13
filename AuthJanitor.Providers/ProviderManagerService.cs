@@ -76,10 +76,15 @@ namespace AuthJanitor.Providers
             IEnumerable<IAuthJanitorProvider> providers)
         {
             logger.LogInformation("########## BEGIN REKEYING WORKFLOW ##########");
-            var rkoProviders = providers.Where(p => p is IRekeyableObjectProvider).Cast<IRekeyableObjectProvider>();
-            var alcProviders = providers.Where(p => p is IApplicationLifecycleProvider).Cast<IApplicationLifecycleProvider>();
-            logger.LogInformation("RKO: {0}", string.Join(", ", rkoProviders.Select(p => p.GetType().Name)));
-            logger.LogInformation("ALC: {0}", string.Join(", ", alcProviders.Select(p => p.GetType().Name)));
+            var rkoProviders = providers.OfType<IRekeyableObjectProvider>().ToList();
+            var alcProviders = providers.OfType<IApplicationLifecycleProvider>().ToList();
+
+            // NOTE: avoid costs of generating list of providers if information logging not turned on
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation("RKO: {0}", string.Join(", ", rkoProviders.Select(p => p.GetType().Name)));
+                logger.LogInformation("ALC: {0}", string.Join(", ", alcProviders.Select(p => p.GetType().Name)));
+            }
 
             // -----
 
@@ -98,16 +103,22 @@ namespace AuthJanitor.Providers
             await PerformProviderActions(
                 logger,
                 rkoProviders,
-                p => p.GetSecretToUseDuringRekeying().ContinueWith(s => temporarySecrets.Add(s.Result)),
+                p => p.GetSecretToUseDuringRekeying()
+                        .ContinueWith(t =>
+                        {
+                            if (t.Result != null)
+                            {
+                                temporarySecrets.Add(t.Result);
+                            }
+                        }),
                 "Error getting temporary secret from provider '{0}'",
                 "Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
 
-            temporarySecrets.RemoveAll(s => s == null);
             logger.LogInformation("{0} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
 
             // ---
 
-            logger.LogInformation("### Preparing {0} Application Lifecycle Providers for rekeying...", alcProviders.Count());
+            logger.LogInformation("### Preparing {0} Application Lifecycle Providers for rekeying...", alcProviders.Count);
             await PerformProviderActions(
                 logger,
                 alcProviders,
@@ -117,23 +128,29 @@ namespace AuthJanitor.Providers
 
             // -----
 
-            logger.LogInformation("### Rekeying {0} Rekeyable Object Providers...", rkoProviders.Count());
+            logger.LogInformation("### Rekeying {0} Rekeyable Object Providers...", rkoProviders.Count);
             var newSecrets = new List<RegeneratedSecret>();
             await PerformProviderActions(
                 logger,
                 rkoProviders,
-                p => p.Rekey(validPeriod),
+                p => p.Rekey(validPeriod)
+                        .ContinueWith(t => 
+                        { 
+                            if (t.Result != null) 
+                            {
+                                newSecrets.Add(t.Result);
+                            } 
+                        }),
                 "Error rekeying provider '{0}'",
                 "Error rekeying one or more Rekeyable Object Providers!");
 
-            newSecrets.RemoveAll(s => s == null);
             logger.LogInformation("{0} secrets were regenerated.", newSecrets.Count);
 
             // -----
 
             logger.LogInformation("### Committing {0} regenerated secrets to {1} Application Lifecycle Providers...",
                 newSecrets.Count,
-                alcProviders.Count());
+                alcProviders.Count);
 
             await PerformProviderActions(
                 logger,
