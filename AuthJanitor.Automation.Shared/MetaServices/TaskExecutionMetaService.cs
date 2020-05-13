@@ -98,7 +98,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 else
                     throw new NotSupportedException("No Access Tokens could be generated for this Task!");
 
-                if (credential == null)
+                if (credential == null || string.IsNullOrEmpty(credential.AccessToken))
                     throw new InvalidOperationException("Access Token was found, but was blank or invalid");
             }
             catch (Exception ex)
