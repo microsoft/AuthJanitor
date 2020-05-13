@@ -48,7 +48,6 @@ namespace AuthJanitor.Automation.AdminApi
             _providerManager = providerManager;
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Providers-List")]
         public IActionResult List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers")] HttpRequest req)
         {
@@ -59,7 +58,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(_providerManager.LoadedProviders.Select(p => GetViewModel(p)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Providers-GetBlankConfiguration")]
         public async Task<IActionResult> GetBlankConfiguration(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers/{providerType}")] HttpRequest req,

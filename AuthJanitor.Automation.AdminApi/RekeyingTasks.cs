@@ -57,7 +57,6 @@ namespace AuthJanitor.Automation.AdminApi
             _providerManager = providerManager;
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Create")]
         public async Task<IActionResult> Create(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] HttpRequest req,
@@ -95,7 +94,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(newTask);
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-List")]
         public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req)
         {
@@ -106,7 +104,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult((await RekeyingTasks.Get()).Select(t => GetViewModel(t)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Get")]
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
             Guid taskId)
@@ -124,7 +121,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(GetViewModel((await RekeyingTasks.GetOne(taskId))));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Delete")]
         public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
             Guid taskId)
@@ -146,7 +142,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkResult();
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("RekeyingTasks-Approve")]
         public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
             Guid taskId)

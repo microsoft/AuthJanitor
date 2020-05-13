@@ -20,6 +20,9 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
     /// </summary>
     public class AzureADIdentityService : IIdentityService
     {
+        private const string HTTP_HEADER_NAME = "AuthJanitor";
+        private const string HTTP_HEADER_VALUE = "administrator";
+
         public const string AGENT_CREDENTIAL_USERNAME = "application.identity@local";
         public const string DEFAULT_OBO_RESOURCE = "https://management.core.windows.net";
 
@@ -51,9 +54,8 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
 #if DEBUG
             IsRunningLocally ? true :
 #endif
-            _httpContextAccessor.HttpContext != null &&
-            _httpContextAccessor.HttpContext.User != null &&
-            _httpContextAccessor.HttpContext.User.Claims != null &&
+            (_httpContextAccessor.HttpContext?.Request?.Headers[HTTP_HEADER_NAME] ?? string.Empty) == HTTP_HEADER_VALUE &&
+            _httpContextAccessor.HttpContext?.User.Claims != null &&
             GetClaimsInternal(ROLES_CLAIM).Any(r => AuthJanitorRoles.ALL_ROLES.Contains(r));
 
         /// <summary>

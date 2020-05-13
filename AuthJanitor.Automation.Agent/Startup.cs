@@ -47,8 +47,6 @@ namespace AuthJanitor.Automation.Agent
             typeof(ILogger)
         };
 
-        public static IServiceProvider ServiceProvider { get; set; }
-
         private static IFunctionsHostBuilder AddConfiguration(IFunctionsHostBuilder builder, Func<IConfigurationBuilder, IConfiguration> configurationBuilderFunc)
         {
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
@@ -128,10 +126,6 @@ namespace AuthJanitor.Automation.Agent
             logger.LogInformation("Found {0} providers: {1}", providerTypes.Count(), string.Join("  ", providerTypes.Select(t => t.Name)));
             logger.LogInformation("Registering Provider Manager Service");
             ProviderManagerService.ConfigureServices(builder.Services, providerTypes);
-
-            // -----
-
-            ServiceProvider = builder.Services.BuildServiceProvider();
         }
     }
 }

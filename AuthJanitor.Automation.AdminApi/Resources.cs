@@ -50,7 +50,6 @@ namespace AuthJanitor.Automation.AdminApi
             _providerManager = providerManager;
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Resources-Create")]
         public async Task<IActionResult> Create(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
@@ -95,7 +94,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(GetViewModel(newResource));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Resources-List")]
         public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
         {
@@ -106,7 +104,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult((await Resources.Get()).Select(r => GetViewModel(r)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Resources-Get")]
         public async Task<IActionResult> Get(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
@@ -125,7 +122,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkObjectResult(GetViewModel(await Resources.GetOne(resourceId)));
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Resources-Delete")]
         public async Task<IActionResult> Delete(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
@@ -148,7 +144,6 @@ namespace AuthJanitor.Automation.AdminApi
             return new OkResult();
         }
 
-        [ProtectedApiEndpoint]
         [FunctionName("Resources-Update")]
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId:guid}")] ResourceViewModel resource,
