@@ -77,11 +77,6 @@ namespace AuthJanitor.Providers
         public TConfiguration Configuration
         {
             get => _cachedConfigurationInstance ??= JsonConvert.DeserializeObject<TConfiguration>(SerializedConfiguration);
-            set
-            {
-                _cachedConfigurationInstance = value;
-                SerializedConfiguration = JsonConvert.SerializeObject(value);
-            }
         }
 
         /// <summary>
