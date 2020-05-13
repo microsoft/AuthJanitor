@@ -84,97 +84,112 @@ namespace AuthJanitor.Providers
             // -----
 
             logger.LogInformation("### Performing Provider Tests.");
-            var testTasks = providers.Select(p => p.Test().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error running sanity test on provider '{0}'", p.ProviderMetadata.Name);
-            }));
-            await Task.WhenAll(testTasks.ToArray());
-            if (testTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error running one or more sanity tests!");
 
-            // -----
+            await PerformProviderActions(
+                logger, 
+                providers,
+                p => p.Test(),
+                "Error running sanity test on provider '{0}'",
+                "Error running one or more sanity tests!");
 
-            logger.LogInformation("### Getting temporary secrets from {0} Rekeyable Object Lifecycle Providers...", rkoProviders.Count());
-            var tempSecretTasks = rkoProviders.Select(p => p.GetSecretToUseDuringRekeying().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error getting temporary secret from provider '{0}'", p.ProviderMetadata.Name);
-                return t.Result;
-            }));
-            await Task.WhenAll(tempSecretTasks.ToArray());
-            if (tempSecretTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
+            logger.LogInformation("### Retrieving/generating temporary secrets.");
 
-            logger.LogInformation("{0} temporary secrets were created/read to be used during operation.", tempSecretTasks.Count(t => t.Result != null));
+            var temporarySecrets = new List<RegeneratedSecret>();
+            await PerformProviderActions(
+                logger,
+                rkoProviders,
+                p => p.GetSecretToUseDuringRekeying().ContinueWith(s => temporarySecrets.Add(s.Result)),
+                "Error getting temporary secret from provider '{0}'",
+                "Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
 
-            // -----
+            temporarySecrets.RemoveAll(s => s == null);
+            logger.LogInformation("{0} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
+
+            // ---
 
             logger.LogInformation("### Preparing {0} Application Lifecycle Providers for rekeying...", alcProviders.Count());
-            var prepareTasks = alcProviders.Select(p => p.BeforeRekeying(tempSecretTasks.Select(t => t.Result).ToList()).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error preparing ALC provider '{0}'", p.GetType().Name);
-            }));
-            await Task.WhenAll(prepareTasks.ToArray());
-            if (prepareTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error preparing one or more Application Lifecycle Providers for rekeying!");
+            await PerformProviderActions(
+                logger,
+                alcProviders,
+                p => p.BeforeRekeying(temporarySecrets),
+                "Error preparing ALC provider '{0}'",
+                "Error preparing one or more Application Lifecycle Providers for rekeying!");
 
             // -----
 
             logger.LogInformation("### Rekeying {0} Rekeyable Object Providers...", rkoProviders.Count());
-            var rekeyingTasks = rkoProviders.Select(p => p.Rekey(validPeriod).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error rekeying provider '{0}'", p.GetType().Name);
-                return t.Result;
-            }));
-            await Task.WhenAll(rekeyingTasks.ToArray());
-            if (rekeyingTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error rekeying one or more Rekeyable Object Providers!");
+            var newSecrets = new List<RegeneratedSecret>();
+            await PerformProviderActions(
+                logger,
+                rkoProviders,
+                p => p.Rekey(validPeriod),
+                "Error rekeying provider '{0}'",
+                "Error rekeying one or more Rekeyable Object Providers!");
 
-            logger.LogInformation("{0} secrets were regenerated.", rekeyingTasks.Count(t => t.Result != null));
+            newSecrets.RemoveAll(s => s == null);
+            logger.LogInformation("{0} secrets were regenerated.", newSecrets.Count);
 
             // -----
 
             logger.LogInformation("### Committing {0} regenerated secrets to {1} Application Lifecycle Providers...",
-                rekeyingTasks.Count(t => t.Result != null),
+                newSecrets.Count,
                 alcProviders.Count());
-            var commitTasks = alcProviders.Select(p => p.CommitNewSecrets(rekeyingTasks.Select(t => t.Result).ToList()).ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error committing to provider '{0}'", p.GetType().Name);
-            }));
-            await Task.WhenAll(commitTasks.ToArray());
-            if (commitTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error committing regenerated secrets!");
+
+            await PerformProviderActions(
+                logger,
+                alcProviders,
+                p => p.CommitNewSecrets(newSecrets),
+                "Error committing to provider '{0}'",
+                "Error committing regenerated secrets!");
 
             // -----
 
             logger.LogInformation("### Completing post-rekey operations on Application Lifecycle Providers...");
-            var postRekeyTasks = alcProviders.Select(p => p.AfterRekeying().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error running post-rekey operations on provider '{0}'", p.GetType().Name);
-            }));
-            await Task.WhenAll(postRekeyTasks.ToArray());
-            if (postRekeyTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error running post-rekey operations on one or more Application Lifecycle Providers!");
 
+            await PerformProviderActions(
+                logger,
+                alcProviders,
+                p => p.AfterRekeying(),
+                "Error running post-rekey operations on provider '{0}'",
+                "Error running post-rekey operations on one or more Application Lifecycle Providers!");
+            
             // -----
 
             logger.LogInformation("### Completing finalizing operations on Rekeyable Object Providers...");
-            var afterSwapTasks = rkoProviders.Select(p => p.OnConsumingApplicationSwapped().ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                    logger.LogError(t.Exception, "Error running after-swap operations on provider '{0}'", p.GetType().Name);
-            }));
-            await Task.WhenAll(afterSwapTasks.ToArray());
-            if (afterSwapTasks.Any(t => t.IsFaulted))
-                throw new Exception("Error running after-swap operations on one or more Rekeyable Object Providers!");
 
+            await PerformProviderActions(
+                logger,
+                rkoProviders,
+                p => p.OnConsumingApplicationSwapped(),
+                "Error running after-swap operations on provider '{0}'",
+                "Error running after-swap operations on one or more Rekeyable Object Providers!");
 
             logger.LogInformation("########## END REKEYING WORKFLOW ##########");
+        }
+
+        private static async Task PerformProviderActions<TProviderType>(
+            ILogger logger, 
+            IEnumerable<TProviderType> providers, 
+            Func<TProviderType, Task> providerAction, 
+            string individualFailureErrorLogMessageTemplate, 
+            string anyFailureExceptionMessage)
+            where TProviderType : IAuthJanitorProvider
+        {
+            var providerActions = providers.Select(p => providerAction(p)
+                .ContinueWith(t =>
+                {
+                    logger.LogError(t.Exception, individualFailureErrorLogMessageTemplate, p.GetType().Name);
+                },
+                TaskContinuationOptions.OnlyOnFaulted));
+
+            try
+            {
+                await Task.WhenAll(providerActions);
+            }
+            catch (Exception exception)
+            {
+                throw new Exception(anyFailureExceptionMessage, exception);
+            }
         }
     }
 }
