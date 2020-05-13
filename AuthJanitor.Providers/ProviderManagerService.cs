@@ -192,12 +192,19 @@ namespace AuthJanitor.Providers
             string anyFailureExceptionMessage)
             where TProviderType : IAuthJanitorProvider
         {
-            var providerActions = providers.Select(p => providerAction(p)
-                .ContinueWith(t =>
+            var providerActions = providers.Select(async p =>
+            {
+                try
                 {
-                    logger.LogError(t.Exception, individualFailureErrorLogMessageTemplate, p.GetType().Name);
-                },
-                TaskContinuationOptions.OnlyOnFaulted));
+                    await providerAction(p);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, p.GetType().Name);
+
+                    throw;
+                }
+            });
 
             try
             {
