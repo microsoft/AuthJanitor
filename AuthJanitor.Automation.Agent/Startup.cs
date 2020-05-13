@@ -1,38 +1,25 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
-using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
-using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.DataStores.AzureBlobStorage;
-using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
-using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Integrations.SecureStorage.AzureKeyVault;
 using AuthJanitor.Providers;
 using McMaster.NETCore.Plugins;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata;
 
 [assembly: FunctionsStartup(typeof(AuthJanitor.Automation.Agent.Startup))]
 namespace AuthJanitor.Automation.Agent
 {
     public class Startup : FunctionsStartup
     {
-        private const string RESOURCES_BLOB_NAME = "resources";
-        private const string MANAGED_SECRETS_BLOB_NAME = "secrets";
-        private const string REKEYING_TASKS_BLOB_NAME = "tasks";
-        private const string SCHEDULES_BLOB_NAME = "schedules";
-
         private const string PROVIDER_SEARCH_MASK = "AuthJanitor.Providers.*.dll";
         private static readonly string PROVIDER_SEARCH_PATH = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ".."));
         private static readonly Type[] PROVIDER_SHARED_TYPES = new Type[]
@@ -47,27 +34,15 @@ namespace AuthJanitor.Automation.Agent
             typeof(ILogger)
         };
 
-        private static IFunctionsHostBuilder AddConfiguration(IFunctionsHostBuilder builder, Func<IConfigurationBuilder, IConfiguration> configurationBuilderFunc)
-        {
-            IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-            var configurationService = builder.Services.FirstOrDefault(d => d.ServiceType == typeof(IConfiguration));
-            if (configurationService?.ImplementationInstance is IConfiguration configRoot)
-                configurationBuilder.AddConfiguration(configRoot);
-            configurationBuilder = configurationBuilder.SetBasePath(PROVIDER_SEARCH_PATH);
-
-            builder.Services.Replace(
-                ServiceDescriptor.Singleton(typeof(IConfiguration), configurationBuilderFunc(configurationBuilder)));
-            return builder;
-        }
-
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            var logger = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug)
+                       .AddConsole();
+            }).CreateLogger<Startup>();
+
             builder.Services.AddOptions();
-
-            var logger = new LoggerFactory().CreateLogger(nameof(Startup));
-
-            logger.LogDebug("Registering LoggerFactory");
-            builder.Services.AddSingleton<ILoggerFactory>(new LoggerFactory());
 
             logger.LogDebug("Registering Azure AD Identity Service");
             builder.Services.AddAJAzureActiveDirectory<AzureADIdentityServiceConfiguration>(o =>
