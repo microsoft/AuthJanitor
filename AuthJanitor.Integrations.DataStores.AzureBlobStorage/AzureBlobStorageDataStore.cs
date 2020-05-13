@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using Azure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -105,16 +107,34 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
 
         private async Task Commit()
         {
-            await RunLeaseInterlockedAction(() =>
+            await InitializeIfRequired();
+
+            var startedAttempt = DateTimeOffset.UtcNow;
+            bool success = false;
+            while ((DateTimeOffset.UtcNow - startedAttempt) < TimeSpan.FromSeconds(5))
             {
-                using (var ms = new MemoryStream())
+                try
                 {
-                    var serialized = JsonConvert.SerializeObject(CachedCollection, Formatting.None);
-                    ms.Write(Encoding.UTF8.GetBytes(serialized));
-                    ms.Seek(0, SeekOrigin.Begin);
-                    Blob.Upload(ms);
+                    var etag = (await Blob.GetPropertiesAsync())?.Value?.ETag;
+                    using (var ms = new MemoryStream())
+                    {
+                        var serialized = JsonConvert.SerializeObject(CachedCollection, Formatting.None);
+                        ms.Write(Encoding.UTF8.GetBytes(serialized));
+                        ms.Seek(0, SeekOrigin.Begin);
+                        Blob.Upload(ms, conditions: new BlobRequestConditions() { IfMatch = etag });
+                        success = true;
+                    }
                 }
-            });
+                catch (RequestFailedException)
+                {
+                }
+                catch (Exception ex) { throw ex; }
+
+                if (success)
+                    break;
+
+                await Task.Delay(100);
+            }
         }
 
         private async Task Cache()
@@ -128,74 +148,6 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
                 ms.Seek(0, SeekOrigin.Begin);
                 var str = Encoding.UTF8.GetString(ms.ToArray());
                 CachedCollection = JsonConvert.DeserializeObject<List<TStoredModel>>(str);
-            }
-        }
-
-        private static TimeSpan LEASE_ABANDON_TIME = TimeSpan.FromSeconds(60);
-        private static TimeSpan MAX_ATTEMPT_TIME = TimeSpan.FromSeconds(30);
-        private const int MIN_BACKOFF_TIME_MS = 750;
-        private const int MAX_BACKOFF_TIME_MS = 2500;
-        private static Random _rng = new Random((int)DateTimeOffset.UtcNow.Ticks);
-
-        private const string METADATA_TAG = "ajUpdate";
-
-        private async Task RunLeaseInterlockedAction(Action action)
-        {
-            await InitializeIfRequired();
-
-            var startedAttempt = DateTimeOffset.UtcNow;
-            bool success = false;
-            while ((DateTimeOffset.UtcNow - startedAttempt) < MAX_ATTEMPT_TIME)
-            {
-                var metadata = (await Blob.GetPropertiesAsync())?.Value?.Metadata;
-                if (metadata == null)
-                {
-                    // Could be broken, could be system busy
-                    await Task.Delay(_rng.Next(MIN_BACKOFF_TIME_MS, MAX_BACKOFF_TIME_MS));
-                    continue;
-                }
-
-                if (metadata.ContainsKey(METADATA_TAG) &&
-                    !string.IsNullOrEmpty(metadata[METADATA_TAG]))
-                {
-                    // Lease exists
-                    var leaseStarted = DateTimeOffset.Parse(metadata[METADATA_TAG]);
-                    if ((DateTimeOffset.UtcNow - leaseStarted) < LEASE_ABANDON_TIME)
-                    {
-                        // Lease has not yet been abandoned
-                        await Task.Delay(_rng.Next(MIN_BACKOFF_TIME_MS, MAX_BACKOFF_TIME_MS));
-                        continue;
-                    }
-                }
-
-                // Set lease tag
-                await Blob.SetMetadataAsync(new Dictionary<string, string>()
-                {
-                    { METADATA_TAG, DateTimeOffset.UtcNow.ToString() }
-                });
-
-                // Action!
-                try
-                {
-                    action();
-                    success = true;
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    // Release
-                    await Blob.SetMetadataAsync(new Dictionary<string, string>()
-                    {
-                        { METADATA_TAG, string.Empty }
-                    });
-                }
-            }
-            if (!success)
-            {
-                throw new Exception("Could not acquire lease in time!");
             }
         }
 
