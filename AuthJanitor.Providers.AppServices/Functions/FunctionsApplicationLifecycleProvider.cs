@@ -11,9 +11,6 @@ namespace AuthJanitor.Providers.AppServices.Functions
         where TConsumerConfiguration : SlottableProviderConfiguration
     {
         private const string PRODUCTION_SLOT_NAME = "production";
-        protected FunctionsApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
 
         public override async Task Test()
         {

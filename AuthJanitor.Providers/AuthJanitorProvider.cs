@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Shared;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -101,14 +100,7 @@ namespace AuthJanitor.Providers
         /// <summary>
         /// Logger implementation
         /// </summary>
-        protected ILogger Logger { get; }
-
-        protected IServiceProvider _serviceProvider;
-        protected AuthJanitorProvider(IServiceProvider serviceProvider)
-        {
-            Logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(GetType().Name);
-            _serviceProvider = serviceProvider;
-        }
+        protected ILogger Logger { get; set; }
 
         /// <summary>
         /// Test if the current credentials can execute an Extension 

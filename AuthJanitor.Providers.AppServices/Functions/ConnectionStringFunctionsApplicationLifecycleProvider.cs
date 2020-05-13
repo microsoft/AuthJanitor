@@ -16,8 +16,9 @@ namespace AuthJanitor.Providers.AppServices.Functions
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
     public class ConnectionStringFunctionsApplicationLifecycleProvider : FunctionsApplicationLifecycleProvider<ConnectionStringConfiguration>
     {
-        public ConnectionStringFunctionsApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public ConnectionStringFunctionsApplicationLifecycleProvider(ILogger<ConnectionStringFunctionsApplicationLifecycleProvider> logger)
         {
+            Logger = logger;
         }
 
         /// <summary>

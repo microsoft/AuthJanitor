@@ -20,8 +20,9 @@ namespace AuthJanitor.Providers.CosmosDb
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
-        public CosmosDbRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public CosmosDbRekeyableObjectProvider(ILogger<CosmosDbRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

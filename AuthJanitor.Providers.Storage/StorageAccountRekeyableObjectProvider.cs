@@ -22,8 +22,9 @@ namespace AuthJanitor.Providers.Storage
         private const string KERB1 = "kerb1";
         private const string KERB2 = "kerb2";
 
-        public StorageAccountRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

@@ -14,8 +14,9 @@ namespace AuthJanitor.Providers.AzureAD
     [ProviderImage(ProviderImages.AZURE_AD_SVG)]
     public class AccessTokenRekeyableObjectProvider : RekeyableObjectProvider<AccessTokenConfiguration>
     {
-        public AccessTokenRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public AccessTokenRekeyableObjectProvider(ILogger<AccessTokenRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)

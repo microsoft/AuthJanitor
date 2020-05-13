@@ -19,8 +19,9 @@ namespace AuthJanitor.Providers.AzureMaps
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
-        public AzureMapsRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public AzureMapsRekeyableObjectProvider(ILogger<AzureMapsRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

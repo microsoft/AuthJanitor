@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -34,10 +33,6 @@ namespace AuthJanitor.Providers
     /// </summary>
     public abstract class RekeyableObjectProvider<TConfiguration> : AuthJanitorProvider<TConfiguration>, IRekeyableObjectProvider where TConfiguration : AuthJanitorProviderConfiguration
     {
-        protected RekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
-
         /// <summary>
         /// Call before Rekeying occurs to get a secondary secret which will continue
         /// to work while Rekeying is taking place (if any).

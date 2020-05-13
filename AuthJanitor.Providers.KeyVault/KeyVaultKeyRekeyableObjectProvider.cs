@@ -16,8 +16,9 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultKeyRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultKeyConfiguration>
     {
-        public KeyVaultKeyRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public KeyVaultKeyRekeyableObjectProvider(ILogger<KeyVaultKeyRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

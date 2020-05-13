@@ -15,8 +15,9 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretApplicationLifecycleProvider : ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>
     {
-        public KeyVaultSecretApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public KeyVaultSecretApplicationLifecycleProvider(ILogger<KeyVaultSecretApplicationLifecycleProvider> logger)
         {
+            Logger = logger;
         }
 
         /// <summary>

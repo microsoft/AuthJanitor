@@ -15,8 +15,14 @@ namespace AuthJanitor.Providers.AppServices.Functions
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
     public class FunctionKeyRekeyableObjectProvider : RekeyableObjectProvider<FunctionKeyConfiguration>
     {
-        public FunctionKeyRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly ICryptographicImplementation _cryptographicImplementation;
+
+        public FunctionKeyRekeyableObjectProvider(
+            ILogger<FunctionKeyRekeyableObjectProvider> logger,
+            ICryptographicImplementation cryptographicImplementation)
         {
+            Logger = logger;
+            _cryptographicImplementation = cryptographicImplementation;
         }
 
         public override async Task Test()
@@ -36,8 +42,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = await _serviceProvider.GetRequiredService<ICryptographicImplementation>()
-                                                       .GenerateCryptographicallySecureString(Configuration.KeyLength)
+                NewSecretValue = await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.KeyLength)
             };
 
             var functionsApp = await (await this.GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);

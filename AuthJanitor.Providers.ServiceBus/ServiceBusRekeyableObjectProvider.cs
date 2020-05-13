@@ -16,8 +16,9 @@ namespace AuthJanitor.Providers.ServiceBus
     [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
     public class ServiceBusRekeyableObjectProvider : RekeyableObjectProvider<ServiceBusKeyConfiguration>
     {
-        public ServiceBusRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger)
         {
+            Logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

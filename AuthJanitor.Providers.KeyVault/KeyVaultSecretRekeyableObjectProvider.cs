@@ -3,7 +3,6 @@
 using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,8 +17,14 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultSecretConfiguration>
     {
-        public KeyVaultSecretRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly ICryptographicImplementation _cryptographicImplementation;
+
+        public KeyVaultSecretRekeyableObjectProvider(
+            ILogger<KeyVaultSecretRekeyableObjectProvider> logger,
+            ICryptographicImplementation cryptographicImplementation)
         {
+            Logger = logger;
+            _cryptographicImplementation = cryptographicImplementation;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
@@ -45,8 +50,7 @@ namespace AuthJanitor.Providers.KeyVault
             // Create a new version of the Secret
             KeyVaultSecret newSecret = new KeyVaultSecret(
                 Configuration.SecretName,
-                await _serviceProvider.GetRequiredService<ICryptographicImplementation>()
-                                      .GenerateCryptographicallySecureString(Configuration.SecretLength));
+                await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.SecretLength));
 
             // Copy in metadata from the old Secret if it existed
             if (currentSecret != null && currentSecret.Value != null)
