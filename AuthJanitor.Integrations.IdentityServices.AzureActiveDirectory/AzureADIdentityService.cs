@@ -55,7 +55,9 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
             IsRunningLocally ? true :
 #endif
             _httpContextAccessor.HttpContext != null &&
-            _httpContextAccessor.HttpContext.Request != null &&
+            (_httpContextAccessor.HttpContext?.Request?.Headers[HTTP_HEADER_NAME] ?? string.Empty) == HTTP_HEADER_VALUE &&
+            _httpContextAccessor.HttpContext?.User.Claims != null &&
+            GetClaimsInternal(ROLES_CLAIM).Any(r => AuthJanitorRoles.ALL_ROLES.Contains(r));
             _httpContextAccessor.HttpContext.Request.Headers.ContainsKey(HTTP_HEADER_NAME) &&
             _httpContextAccessor.HttpContext.Request.Headers[HTTP_HEADER_NAME] == HTTP_HEADER_VALUE &&
             _httpContextAccessor.HttpContext.User != null &&
