@@ -1,14 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
-using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
-using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.DataStores.AzureBlobStorage;
-using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
-using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Integrations.SecureStorage.AzureKeyVault;
 using AuthJanitor.Providers;
 using McMaster.NETCore.Plugins;
@@ -26,11 +21,6 @@ namespace AuthJanitor.Automation.AdminApi
 {
     public class Startup : IWebJobsStartup
     {
-        private const string RESOURCES_BLOB_NAME = "resources";
-        private const string MANAGED_SECRETS_BLOB_NAME = "secrets";
-        private const string REKEYING_TASKS_BLOB_NAME = "tasks";
-        private const string SCHEDULES_BLOB_NAME = "schedules";
-
         private const string PROVIDER_SEARCH_MASK = "AuthJanitor.Providers.*.dll";
         private static readonly string PROVIDER_SEARCH_PATH = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ".."));
         private static readonly Type[] PROVIDER_SHARED_TYPES = new Type[]
@@ -47,14 +37,15 @@ namespace AuthJanitor.Automation.AdminApi
 
         public void Configure(IWebJobsBuilder builder)
         {
+            var logger = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug)
+                       .AddConsole();
+            }).CreateLogger<Startup>();
+
             builder.Services.AddOptions();
 
             builder.Services.AddHttpContextAccessor();
-
-            var logger = new LoggerFactory().CreateLogger(nameof(Startup));
-
-            logger.LogDebug("Registering LoggerFactory");
-            builder.Services.AddSingleton<ILoggerFactory>(new LoggerFactory());
 
             logger.LogDebug("Registering Azure AD Identity Service");
             builder.Services.AddAJAzureActiveDirectory<AzureADIdentityServiceConfiguration>(o =>
