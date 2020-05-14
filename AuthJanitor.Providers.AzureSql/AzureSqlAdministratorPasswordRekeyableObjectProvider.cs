@@ -104,7 +104,7 @@ namespace AuthJanitor.Providers.AzureSql
         }
 
         public override string GetDescription() =>
-            $"Regenerates the administrator password for a SQL Azure server called " +
+            $"Regenerates the administrator password for an Azure SQL server called " +
             $"'{ResourceName}' (Resource Group '{ResourceGroup}'). " +
             $"There is no interim key available while this is taking place, so some downtime may occur.";
 
