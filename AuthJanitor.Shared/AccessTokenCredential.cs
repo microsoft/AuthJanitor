@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Newtonsoft.Json;
 using System;
+using System.Text.Json.Serialization;
 
 namespace AuthJanitor.Shared
 {
@@ -9,15 +9,15 @@ namespace AuthJanitor.Shared
     {
         public string Username { get; set; }
 
-        [JsonProperty("access_token")]
+        [JsonPropertyName("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
 
         public TimeSpan ExpiresInTimeSpan => TimeSpan.FromSeconds(ExpiresIn);
 
-        [JsonProperty("expires_on")]
+        [JsonPropertyName("expires_on")]
         public long ExpiresOn { get; set; }
 
         public DateTimeOffset ExpiresOnDateTime
@@ -26,7 +26,7 @@ namespace AuthJanitor.Shared
             set => ExpiresOn = value.ToUnixTimeSeconds();
         }
 
-        [JsonProperty("ext_expires_in")]
+        [JsonPropertyName("ext_expires_in")]
         public int ExtExpiresIn { get; set; }
 
         public TimeSpan ExtExpiresInTimeSpan
@@ -35,7 +35,7 @@ namespace AuthJanitor.Shared
             set => ExtExpiresIn = (int)value.TotalSeconds;
         }
 
-        [JsonProperty("not_before")]
+        [JsonPropertyName("not_before")]
         public long NotBefore { get; set; }
 
         public DateTimeOffset NotBeforeDateTime
@@ -44,16 +44,16 @@ namespace AuthJanitor.Shared
             set => NotBefore = value.ToUnixTimeSeconds();
         }
 
-        [JsonProperty("refresh_token")]
+        [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
 
-        [JsonProperty("resource")]
+        [JsonPropertyName("resource")]
         public string Resource { get; set; }
 
-        [JsonProperty("scope")]
+        [JsonPropertyName("scope")]
         public string Scope { get; set; }
 
-        [JsonProperty("token_type")]
+        [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
     }
 }

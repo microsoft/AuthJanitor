@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.ViewModels;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared
@@ -14,6 +13,13 @@ namespace AuthJanitor.Automation.Shared
     {
         public const string HEADER_NAME = "AuthJanitor";
         public const string HEADER_VALUE = "administrator";
+
+        private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
+        {
+            WriteIndented = false,
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         private static readonly Dictionary<Type, string> ApiFormatStrings = new Dictionary<Type, string>()
         {
@@ -27,6 +33,7 @@ namespace AuthJanitor.Automation.Shared
 
         public AuthJanitorHttpClient() : base()
         {
+            SerializerOptions.Converters.Add(new TimeSpanConverter());
             if (!DefaultRequestHeaders.Contains(HEADER_NAME))
                 DefaultRequestHeaders.Add(HEADER_NAME, HEADER_VALUE);
         }
@@ -93,13 +100,7 @@ namespace AuthJanitor.Automation.Shared
             return this;
         }
 
-        private string Serialize<T>(T obj) =>
-            JsonConvert.SerializeObject(obj, new JsonSerializerSettings()
-            {
-                Formatting = Formatting.None,
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-        private T Deserialize<T>(string str) =>
-            JsonConvert.DeserializeObject<T>(str);
+        private string Serialize<T>(T obj) => JsonSerializer.Serialize(obj);
+        private T Deserialize<T>(string str) => JsonSerializer.Deserialize<T>(str);
     }
 }

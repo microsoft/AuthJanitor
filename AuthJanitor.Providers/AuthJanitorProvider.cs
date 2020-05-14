@@ -3,10 +3,10 @@
 using AuthJanitor.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
@@ -76,7 +76,7 @@ namespace AuthJanitor.Providers
         /// </summary>
         public TConfiguration Configuration
         {
-            get => _cachedConfigurationInstance ??= JsonConvert.DeserializeObject<TConfiguration>(SerializedConfiguration);
+            get => _cachedConfigurationInstance ??= JsonSerializer.Deserialize<TConfiguration>(SerializedConfiguration);
         }
 
         /// <summary>

@@ -5,12 +5,12 @@ using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
@@ -144,7 +144,7 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
                 Configuration.TenantId +
                 "/oauth2/token",
                 new FormUrlEncodedContent(dict));
-            var tokenResponse = JsonConvert.DeserializeObject<AccessTokenCredential>(
+            var tokenResponse = JsonSerializer.Deserialize<AccessTokenCredential>(
                 await result.Content.ReadAsStringAsync());
 
             return tokenResponse;
