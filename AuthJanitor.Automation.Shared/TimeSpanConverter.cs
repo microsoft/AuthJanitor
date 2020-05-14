@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace AuthJanitor.Automation.Shared
 {
-    public sealed class TimeSpanConverter : JsonConverter<TimeSpan>
+    internal sealed class TimeSpanConverter : JsonConverter<TimeSpan>
     {
         public override TimeSpan Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

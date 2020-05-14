@@ -20,7 +20,8 @@ namespace AuthJanitor.Automation.Shared.MetaServices
     {
         private static readonly JsonSerializerOptions ExceptionSerializerOptions = new JsonSerializerOptions()
         {
-            WriteIndented = true
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
         private readonly IDataStore<ManagedSecret> _managedSecrets;

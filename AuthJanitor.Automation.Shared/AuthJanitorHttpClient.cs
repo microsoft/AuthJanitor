@@ -18,7 +18,8 @@ namespace AuthJanitor.Automation.Shared
         {
             WriteIndented = false,
             IgnoreNullValues = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new TimeSpanConverter() }
         };
 
         private static readonly Dictionary<Type, string> ApiFormatStrings = new Dictionary<Type, string>()
@@ -33,7 +34,6 @@ namespace AuthJanitor.Automation.Shared
 
         public AuthJanitorHttpClient() : base()
         {
-            SerializerOptions.Converters.Add(new TimeSpanConverter());
             if (!DefaultRequestHeaders.Contains(HEADER_NAME))
                 DefaultRequestHeaders.Add(HEADER_NAME, HEADER_VALUE);
         }
