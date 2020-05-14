@@ -8,16 +8,22 @@ using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Providers;
 using AuthJanitor.Shared;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared.MetaServices
 {
     public class TaskExecutionMetaService
     {
+        private static readonly JsonSerializerOptions ExceptionSerializerOptions = new JsonSerializerOptions()
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
         private readonly IDataStore<Resource> _resources;
@@ -185,7 +191,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
         {
             var myAttempt = task.Attempts.OrderByDescending(a => a.AttemptStarted).First();
             if (text != default) myAttempt.LogCritical(ex, text);
-            myAttempt.OuterException = JsonConvert.SerializeObject(ex, Formatting.Indented);
+            myAttempt.OuterException = JsonSerializer.Serialize(ex, ExceptionSerializerOptions);
             task.RekeyingInProgress = false;
             task.RekeyingFailed = true;
             await _rekeyingTasks.Update(task);

@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
@@ -67,7 +67,7 @@ namespace AuthJanitor.Providers
         }
 
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name) => ActivatorUtilities.CreateInstance(_serviceProvider, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
-        public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonConvert.DeserializeObject(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
+        public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonSerializer.Deserialize(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
         public IReadOnlyList<LoadedProviderMetadata> LoadedProviders { get; }
 
         public async Task ExecuteRekeyingWorkflow(

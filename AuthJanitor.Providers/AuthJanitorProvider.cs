@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 using AuthJanitor.Shared;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
@@ -68,13 +68,14 @@ namespace AuthJanitor.Providers
     /// </summary>
     public abstract class AuthJanitorProvider<TConfiguration> : IAuthJanitorProvider where TConfiguration : AuthJanitorProviderConfiguration
     {
+        private TConfiguration _cachedConfigurationInstance;
+
         /// <summary>
         /// Provider Configuration
         /// </summary>
         public TConfiguration Configuration
         {
-            get => JsonConvert.DeserializeObject<TConfiguration>(SerializedConfiguration);
-            set => SerializedConfiguration = JsonConvert.SerializeObject(value);
+            get => _cachedConfigurationInstance ??= JsonSerializer.Deserialize<TConfiguration>(SerializedConfiguration);
         }
 
         /// <summary>

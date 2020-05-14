@@ -5,13 +5,12 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
@@ -118,7 +117,7 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
                     var etag = (await Blob.GetPropertiesAsync())?.Value?.ETag;
                     using (var ms = new MemoryStream())
                     {
-                        var serialized = JsonConvert.SerializeObject(CachedCollection, Formatting.None);
+                        var serialized = JsonSerializer.Serialize(CachedCollection);
                         ms.Write(Encoding.UTF8.GetBytes(serialized));
                         ms.Seek(0, SeekOrigin.Begin);
                         Blob.Upload(ms, conditions: new BlobRequestConditions() { IfMatch = etag });
@@ -147,7 +146,7 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
                 blobText.Value.Content.CopyTo(ms);
                 ms.Seek(0, SeekOrigin.Begin);
                 var str = Encoding.UTF8.GetString(ms.ToArray());
-                CachedCollection = JsonConvert.DeserializeObject<List<TStoredModel>>(str);
+                CachedCollection = JsonSerializer.Deserialize<List<TStoredModel>>(str);
             }
         }
 
