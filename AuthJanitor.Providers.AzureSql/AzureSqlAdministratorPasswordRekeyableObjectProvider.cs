@@ -1,4 +1,6 @@
-﻿using AuthJanitor.Extensions.Azure;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Sql.Fluent;
 using Microsoft.Extensions.Logging;
