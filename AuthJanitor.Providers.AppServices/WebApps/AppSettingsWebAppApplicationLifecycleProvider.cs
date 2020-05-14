@@ -16,14 +16,11 @@ namespace AuthJanitor.Providers.AppServices.WebApps
     [ProviderImage(ProviderImages.WEBAPPS_SVG)]
     public class AppSettingsWebAppApplicationLifecycleProvider : WebAppApplicationLifecycleProvider<AppSettingConfiguration>
     {
-        /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; }
+        private readonly ILogger _logger;
 
         public AppSettingsWebAppApplicationLifecycleProvider(ILogger<AppSettingsWebAppApplicationLifecycleProvider> logger)
         {
-            Logger = logger;
+            _logger = logger;
         }
 
         /// <summary>
@@ -33,7 +30,7 @@ namespace AuthJanitor.Providers.AppServices.WebApps
         public override async Task BeforeRekeying(List<RegeneratedSecret> temporaryUseSecrets)
         {
             await ApplySecrets(TemporarySlotName, temporaryUseSecrets);
-            Logger.LogInformation("BeforeRekeying completed!");
+            _logger.LogInformation("BeforeRekeying completed!");
         }
 
         /// <summary>
@@ -42,7 +39,7 @@ namespace AuthJanitor.Providers.AppServices.WebApps
         public override async Task CommitNewSecrets(List<RegeneratedSecret> newSecrets)
         {
             await ApplySecrets(TemporarySlotName, newSecrets);
-            Logger.LogInformation("CommitNewSecrets completed!");
+            _logger.LogInformation("CommitNewSecrets completed!");
         }
 
         /// <summary>
@@ -50,9 +47,9 @@ namespace AuthJanitor.Providers.AppServices.WebApps
         /// </summary>
         public override async Task AfterRekeying()
         {
-            Logger.LogInformation("Swapping to '{0}'", TemporarySlotName);
+            _logger.LogInformation("Swapping to '{0}'", TemporarySlotName);
             await (await GetWebApp()).SwapAsync(TemporarySlotName);
-            Logger.LogInformation("Swap complete!");
+            _logger.LogInformation("Swap complete!");
         }
 
         public override string GetDescription() =>
@@ -73,17 +70,17 @@ namespace AuthJanitor.Providers.AppServices.WebApps
             foreach (RegeneratedSecret secret in secrets)
             {
                 var appSettingName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.SettingName : $"{Configuration.SettingName}-{secret.UserHint}";
-                Logger.LogInformation("Updating AppSetting '{0}' in slot '{1}' (as {2})", appSettingName, slotName,
+                _logger.LogInformation("Updating AppSetting '{0}' in slot '{1}' (as {2})", appSettingName, slotName,
                     Configuration.CommitAsConnectionString ? "connection string" : "secret");
 
                 updateBase = updateBase.WithAppSetting(appSettingName,
                     Configuration.CommitAsConnectionString ? secret.NewConnectionStringOrKey : secret.NewSecretValue);
             }
 
-            Logger.LogInformation("Applying changes.");
+            _logger.LogInformation("Applying changes.");
             await updateBase.ApplyAsync();
 
-            Logger.LogInformation("Swapping to '{0}'", slotName);
+            _logger.LogInformation("Swapping to '{0}'", slotName);
             await (await GetWebApp()).SwapAsync(slotName);
         }
     }

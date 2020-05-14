@@ -18,26 +18,22 @@ namespace AuthJanitor.Providers.KeyVault
     public class KeyVaultSecretRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultSecretConfiguration>
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
-
-        /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; }
+        private readonly ILogger _logger;
 
         public KeyVaultSecretRekeyableObjectProvider(
             ILogger<KeyVaultSecretRekeyableObjectProvider> logger,
             ICryptographicImplementation cryptographicImplementation)
         {
-            Logger = logger;
+            _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            Logger.LogInformation("Getting temporary secret based on current version...");
+            _logger.LogInformation("Getting temporary secret based on current version...");
             var client = GetSecretClient();
             Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
-            Logger.LogInformation("Successfully retrieved temporary secret!");
+            _logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
                 Expiry = currentSecret.Value.Properties.ExpiresOn.Value,
@@ -48,7 +44,7 @@ namespace AuthJanitor.Providers.KeyVault
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            Logger.LogInformation("Getting current Secret details from Secret name '{0}'", Configuration.SecretName);
+            _logger.LogInformation("Getting current Secret details from Secret name '{0}'", Configuration.SecretName);
             var client = GetSecretClient();
             Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
@@ -70,9 +66,9 @@ namespace AuthJanitor.Providers.KeyVault
             newSecret.Properties.NotBefore = DateTimeOffset.UtcNow;
             newSecret.Properties.ExpiresOn = DateTimeOffset.UtcNow + requestedValidPeriod;
 
-            Logger.LogInformation("Committing new Secret with name '{0}'", newSecret.Name);
+            _logger.LogInformation("Committing new Secret with name '{0}'", newSecret.Name);
             Azure.Response<KeyVaultSecret> secretResponse = await client.SetSecretAsync(newSecret);
-            Logger.LogInformation("Successfully committed '{0}'", newSecret.Name);
+            _logger.LogInformation("Successfully committed '{0}'", newSecret.Name);
 
             return new RegeneratedSecret()
             {

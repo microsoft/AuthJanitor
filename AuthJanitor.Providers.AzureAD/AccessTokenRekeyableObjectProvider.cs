@@ -14,14 +14,11 @@ namespace AuthJanitor.Providers.AzureAD
     [ProviderImage(ProviderImages.AZURE_AD_SVG)]
     public class AccessTokenRekeyableObjectProvider : RekeyableObjectProvider<AccessTokenConfiguration>
     {
-        /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; }
+        private readonly ILogger _logger;
 
         public AccessTokenRekeyableObjectProvider(ILogger<AccessTokenRekeyableObjectProvider> logger)
         {
-            Logger = logger;
+            _logger = logger;
         }
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
@@ -31,11 +28,11 @@ namespace AuthJanitor.Providers.AzureAD
             // TODO: How to refresh this?
 
             // NOTE: requestedValidPeriod is ignored here, AAD sets token expiry!
-            Logger.LogInformation("Requesting Access Token with scopes '{0}'", Configuration.Scopes);
+            _logger.LogInformation("Requesting Access Token with scopes '{0}'", Configuration.Scopes);
             var token = await Credential.CreateTokenCredential()
                 .GetTokenAsync(new Azure.Core.TokenRequestContext(Configuration.Scopes), System.Threading.CancellationToken.None);
 
-            Logger.LogInformation("Access Token successfully granted! Expires on {0}", token.ExpiresOn);
+            _logger.LogInformation("Access Token successfully granted! Expires on {0}", token.ExpiresOn);
             return new RegeneratedSecret()
             {
                 UserHint = Configuration.UserHint,

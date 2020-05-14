@@ -22,21 +22,18 @@ namespace AuthJanitor.Providers.Storage
         private const string KERB1 = "kerb1";
         private const string KERB2 = "kerb2";
 
-        /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; }
+        private readonly ILogger _logger;
 
         public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger)
         {
-            Logger = logger;
+            _logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            Logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) key...", OtherKeyName);
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) key...", OtherKeyName);
             StorageAccountKey newKey = await Get(OtherKeyName);
-            Logger.LogInformation("Successfully retrieved temporary secret!");
+            _logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
@@ -48,9 +45,9 @@ namespace AuthJanitor.Providers.Storage
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            Logger.LogInformation("Regenerating Storage key type {0}", Configuration.KeyType);
+            _logger.LogInformation("Regenerating Storage key type {0}", Configuration.KeyType);
             StorageAccountKey newKey = await Regenerate(KeyName);
-            Logger.LogInformation("Successfully rekeyed Storage key type {0}", Configuration.KeyType);
+            _logger.LogInformation("Successfully rekeyed Storage key type {0}", Configuration.KeyType);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -64,11 +61,11 @@ namespace AuthJanitor.Providers.Storage
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                Logger.LogInformation("Scrambling Storage key kind {0}", OtherKeyName);
+                _logger.LogInformation("Scrambling Storage key kind {0}", OtherKeyName);
                 await Regenerate(OtherKeyName);
             }
             else
-                Logger.LogInformation("Skipping scrambling Storage key kind {0}", OtherKeyName);
+                _logger.LogInformation("Skipping scrambling Storage key kind {0}", OtherKeyName);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

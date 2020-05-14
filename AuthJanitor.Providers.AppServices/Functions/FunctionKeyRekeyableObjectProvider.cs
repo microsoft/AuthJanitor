@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -16,17 +15,13 @@ namespace AuthJanitor.Providers.AppServices.Functions
     public class FunctionKeyRekeyableObjectProvider : RekeyableObjectProvider<FunctionKeyConfiguration>
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
-
-        /// <summary>
-        /// Logger implementation
-        /// </summary>
-        protected ILogger Logger { get; }
+        private readonly ILogger _logger;
 
         public FunctionKeyRekeyableObjectProvider(
             ILogger<FunctionKeyRekeyableObjectProvider> logger,
             ICryptographicImplementation cryptographicImplementation)
         {
-            Logger = logger;
+            _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
         }
 
@@ -42,7 +37,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            Logger.LogInformation("Generating a new secret of length {0}", Configuration.KeyLength);
+            _logger.LogInformation("Generating a new secret of length {0}", Configuration.KeyLength);
             RegeneratedSecret newKey = new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -54,10 +49,10 @@ namespace AuthJanitor.Providers.AppServices.Functions
             if (functionsApp == null)
                 throw new Exception($"Cannot locate Functions application called '{ResourceName}' in group '{ResourceGroup}'");
 
-            Logger.LogInformation("Removing previous Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            _logger.LogInformation("Removing previous Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.RemoveFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName);
 
-            Logger.LogInformation("Adding new Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            _logger.LogInformation("Adding new Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue);
 
             return newKey;
