@@ -69,13 +69,14 @@ namespace AuthJanitor.Providers
     /// </summary>
     public abstract class AuthJanitorProvider<TConfiguration> : IAuthJanitorProvider where TConfiguration : AuthJanitorProviderConfiguration
     {
+        private TConfiguration _cachedConfigurationInstance;
+
         /// <summary>
         /// Provider Configuration
         /// </summary>
         public TConfiguration Configuration
         {
-            get => JsonConvert.DeserializeObject<TConfiguration>(SerializedConfiguration);
-            set => SerializedConfiguration = JsonConvert.SerializeObject(value);
+            get => _cachedConfigurationInstance ??= JsonConvert.DeserializeObject<TConfiguration>(SerializedConfiguration);
         }
 
         /// <summary>
