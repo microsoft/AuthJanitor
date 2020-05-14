@@ -16,15 +16,18 @@ namespace AuthJanitor.Providers.ServiceBus
     [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
     public class ServiceBusRekeyableObjectProvider : RekeyableObjectProvider<ServiceBusKeyConfiguration>
     {
-        public ServiceBusRekeyableObjectProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly ILogger _logger;
+
+        public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger)
         {
+            _logger = logger;
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            Logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) policy key...", OtherPolicyKey);
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) policy key...", OtherPolicyKey);
             IAuthorizationKeys otherKeys = await Get();
-            Logger.LogInformation("Successfully retrieved temporary secret!");
+            _logger.LogInformation("Successfully retrieved temporary secret!");
 
             return new RegeneratedSecret()
             {
@@ -37,9 +40,9 @@ namespace AuthJanitor.Providers.ServiceBus
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            Logger.LogInformation("Regenerating Service Bus key {0}", PolicyKey);
+            _logger.LogInformation("Regenerating Service Bus key {0}", PolicyKey);
             IAuthorizationKeys newKeys = await Regenerate(PolicyKey);
-            Logger.LogInformation("Successfully rekeyed Service Bus key {0}", PolicyKey);
+            _logger.LogInformation("Successfully rekeyed Service Bus key {0}", PolicyKey);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -53,11 +56,11 @@ namespace AuthJanitor.Providers.ServiceBus
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                Logger.LogInformation("Scrambling Service Bus key kind {0}", OtherPolicyKey);
+                _logger.LogInformation("Scrambling Service Bus key kind {0}", OtherPolicyKey);
                 await Regenerate(OtherPolicyKey);
             }
             else
-                Logger.LogInformation("Skipping scrambling Service Bus key kind {0}", OtherPolicyKey);
+                _logger.LogInformation("Skipping scrambling Service Bus key kind {0}", OtherPolicyKey);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

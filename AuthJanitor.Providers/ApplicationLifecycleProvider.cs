@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -35,10 +33,6 @@ namespace AuthJanitor.Providers
     public abstract class ApplicationLifecycleProvider<TProviderConfiguration> : AuthJanitorProvider<TProviderConfiguration>, IApplicationLifecycleProvider
         where TProviderConfiguration : AuthJanitorProviderConfiguration
     {
-        protected ApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
-
         /// <summary>
         /// Call to prepare the application for a new secret, passing in a secret
         /// which will be valid while the Rekeying is taking place (for zero-downtime)

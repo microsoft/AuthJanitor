@@ -10,10 +10,6 @@ namespace AuthJanitor.Providers.AppServices.WebApps
     public abstract class WebAppApplicationLifecycleProvider<TConsumerConfiguration> : SlottableApplicationLifecycleProvider<TConsumerConfiguration>
         where TConsumerConfiguration : SlottableProviderConfiguration
     {
-        protected WebAppApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
-
         public override async Task Test()
         {
             var sourceDeploymentSlot = await GetDeploymentSlot(SourceSlotName);

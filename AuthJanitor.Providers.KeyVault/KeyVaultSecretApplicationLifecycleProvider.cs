@@ -15,8 +15,11 @@ namespace AuthJanitor.Providers.KeyVault
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretApplicationLifecycleProvider : ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>
     {
-        public KeyVaultSecretApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
+        private readonly ILogger _logger;
+
+        public KeyVaultSecretApplicationLifecycleProvider(ILogger<KeyVaultSecretApplicationLifecycleProvider> logger)
         {
+            _logger = logger;
         }
 
         /// <summary>
@@ -24,11 +27,11 @@ namespace AuthJanitor.Providers.KeyVault
         /// </summary>
         public override async Task CommitNewSecrets(List<RegeneratedSecret> newSecrets)
         {
-            Logger.LogInformation("Committing new secrets to Key Vault secret {0}", Configuration.SecretName);
+            _logger.LogInformation("Committing new secrets to Key Vault secret {0}", Configuration.SecretName);
             var client = GetSecretClient();
             foreach (RegeneratedSecret secret in newSecrets)
             {
-                Logger.LogInformation("Getting current secret version from secret name {0}", Configuration.SecretName);
+                _logger.LogInformation("Getting current secret version from secret name {0}", Configuration.SecretName);
                 Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
                 // Create a new version of the Secret
@@ -49,9 +52,9 @@ namespace AuthJanitor.Providers.KeyVault
                 newKvSecret.Properties.NotBefore = DateTimeOffset.UtcNow;
                 newKvSecret.Properties.ExpiresOn = secret.Expiry;
 
-                Logger.LogInformation("Committing new secret '{0}'", secretName);
+                _logger.LogInformation("Committing new secret '{0}'", secretName);
                 await client.SetSecretAsync(newKvSecret);
-                Logger.LogInformation("Successfully committed new secret '{0}'", secretName);
+                _logger.LogInformation("Successfully committed new secret '{0}'", secretName);
             }
         }
 

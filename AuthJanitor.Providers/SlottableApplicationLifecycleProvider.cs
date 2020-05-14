@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Microsoft.Extensions.Logging;
-using System;
 
 namespace AuthJanitor.Providers
 {
@@ -12,10 +10,6 @@ namespace AuthJanitor.Providers
         ApplicationLifecycleProvider<TSlottableProviderConfiguration>
         where TSlottableProviderConfiguration : SlottableProviderConfiguration
     {
-        protected SlottableApplicationLifecycleProvider(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
-
         /// <summary>
         /// Source Slot (original application)
         /// </summary>
