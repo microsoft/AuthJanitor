@@ -100,7 +100,7 @@ namespace AuthJanitor.Automation.Shared
             return this;
         }
 
-        private string Serialize<T>(T obj) => JsonSerializer.Serialize(obj);
-        private T Deserialize<T>(string str) => JsonSerializer.Deserialize<T>(str);
+        private string Serialize<T>(T obj) => JsonSerializer.Serialize(obj, SerializerOptions);
+        private T Deserialize<T>(string str) => JsonSerializer.Deserialize<T>(str, SerializerOptions);
     }
 }
