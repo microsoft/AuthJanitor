@@ -20,8 +20,12 @@
     <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.AzureAD\AuthJanitor.Providers.AzureAD.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.AzureMaps\AuthJanitor.Providers.AzureMaps.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureSearch\AuthJanitor.Providers.AzureSearch.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureSql\AuthJanitor.Providers.AzureSql.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.CosmosDb\AuthJanitor.Providers.CosmosDb.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.EventHub\AuthJanitor.Providers.EventHub.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.KeyVault\AuthJanitor.Providers.KeyVault.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.RedisCache\AuthJanitor.Providers.RedisCache.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.ServiceBus\AuthJanitor.Providers.ServiceBus.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.Storage\AuthJanitor.Providers.Storage.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
