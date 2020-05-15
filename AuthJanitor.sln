@@ -63,6 +63,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Integrations.Da
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Providers.RedisCache", "AuthJanitor.Providers.RedisCache\AuthJanitor.Providers.RedisCache.csproj", "{A22F4B5A-10D8-4692-9C34-D7089108E4B5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers.AzureSearch", "AuthJanitor.Providers.AzureSearch\AuthJanitor.Providers.AzureSearch.csproj", "{AF99E01C-3AB2-4AF6-8771-871B3F0E380E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Providers.AzureSql", "AuthJanitor.Providers.AzureSql\AuthJanitor.Providers.AzureSql.csproj", "{9A5610CB-A46E-4542-A4F4-1CACBA12E171}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -157,6 +161,14 @@ Global
 		{A22F4B5A-10D8-4692-9C34-D7089108E4B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A22F4B5A-10D8-4692-9C34-D7089108E4B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A22F4B5A-10D8-4692-9C34-D7089108E4B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF99E01C-3AB2-4AF6-8771-871B3F0E380E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF99E01C-3AB2-4AF6-8771-871B3F0E380E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF99E01C-3AB2-4AF6-8771-871B3F0E380E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF99E01C-3AB2-4AF6-8771-871B3F0E380E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A5610CB-A46E-4542-A4F4-1CACBA12E171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A5610CB-A46E-4542-A4F4-1CACBA12E171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A5610CB-A46E-4542-A4F4-1CACBA12E171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A5610CB-A46E-4542-A4F4-1CACBA12E171}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -185,6 +197,8 @@ Global
 		{3337A1CF-2739-47AD-BA89-710C4649C00D} = {9914BF2C-029F-449A-B0F2-89BC260980DA}
 		{2ED2CBEF-1B5F-4D0D-ACF0-C41D59C69B7A} = {07EE807A-D975-4B1D-B486-6633ED87B757}
 		{A22F4B5A-10D8-4692-9C34-D7089108E4B5} = {9C0E454F-146E-40FB-AFE5-F63DAACAB326}
+		{AF99E01C-3AB2-4AF6-8771-871B3F0E380E} = {9C0E454F-146E-40FB-AFE5-F63DAACAB326}
+		{9A5610CB-A46E-4542-A4F4-1CACBA12E171} = {9C0E454F-146E-40FB-AFE5-F63DAACAB326}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0461C5FC-1885-4C0F-B202-817D99C927D2}
