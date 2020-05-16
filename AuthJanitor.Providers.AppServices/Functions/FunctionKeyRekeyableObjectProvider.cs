@@ -37,7 +37,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Generating a new secret of length {0}", Configuration.KeyLength);
+            _logger.LogInformation("Generating a new secret of length {SecretKeyLength}", Configuration.KeyLength);
             RegeneratedSecret newKey = new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -49,10 +49,10 @@ namespace AuthJanitor.Providers.AppServices.Functions
             if (functionsApp == null)
                 throw new Exception($"Cannot locate Functions application called '{ResourceName}' in group '{ResourceGroup}'");
 
-            _logger.LogInformation("Removing previous Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            _logger.LogInformation("Removing previous Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.RemoveFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName);
 
-            _logger.LogInformation("Adding new Function Key '{0}' from Function '{1}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            _logger.LogInformation("Adding new Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue);
 
             return newKey;

@@ -60,7 +60,7 @@ namespace AuthJanitor.Automation.AdminApi
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminSignsOffJustInTime,
                 _configuration.ApprovalRequiredLeadTimeHours);
-            log.LogInformation("Creating {0} tasks for just-in-time administrator approval", jitCandidates.Count);
+            log.LogInformation("Creating {TaskCount} tasks for just-in-time administrator approval", jitCandidates.Count);
             await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
 
             // TODO: Implement schedule of availability windows and adjust timing here to match...
@@ -70,7 +70,7 @@ namespace AuthJanitor.Automation.AdminApi
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminCachesSignOff,
                 _configuration.ApprovalRequiredLeadTimeHours);
-            log.LogInformation("Creating {0} tasks for cached administrator approval", cachedCandidates.Count);
+            log.LogInformation("Creating {TaskCount} tasks for cached administrator approval", cachedCandidates.Count);
             await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
         }
 
@@ -79,7 +79,7 @@ namespace AuthJanitor.Automation.AdminApi
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingAsNeeded,
                 _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
-            log.LogInformation("Creating {0} tasks for just-in-time auto-rekeying", jitCandidates.Count);
+            log.LogInformation("Creating {TaskCount} tasks for just-in-time auto-rekeying", jitCandidates.Count);
             await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
 
             // TODO: Implement schedule of availability windows and adjust timing here to match...
@@ -89,7 +89,7 @@ namespace AuthJanitor.Automation.AdminApi
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingScheduled,
                 _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
-            log.LogInformation("Creating {0} tasks for scheduled auto-rekeying", cachedCandidates.Count);
+            log.LogInformation("Creating {TaskCount} tasks for scheduled auto-rekeying", cachedCandidates.Count);
             await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
         }
 
