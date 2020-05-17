@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -85,13 +86,14 @@ namespace AuthJanitor.Automation.Agent
                             RekeyingInProgress = true
                         };
 
-                        await RekeyingTasks.Create(rekeyingTask);
+                        await RekeyingTasks.Create(rekeyingTask).ConfigureAwait(false);
 
-                        await _taskExecutionMetaService.ExecuteTask(rekeyingTask.ObjectId);
+                        await _taskExecutionMetaService.ExecuteTask(rekeyingTask.ObjectId).ConfigureAwait(false);
                     });
                 
                 var timeout = TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY);
-                var timeoutTask = Task.Delay(timeout);
+                var timeoutCancellationTokenSource = new CancellationTokenSource();
+                var timeoutTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);
 
                 var completedTask = await Task.WhenAny(executeRekeyingTask, timeoutTask);
 
@@ -103,6 +105,9 @@ namespace AuthJanitor.Automation.Agent
                 }
                 else
                 {
+                    // Signal that the timeout task can be canceled
+                    timeoutCancellationTokenSource.Cancel();
+
                     // The rekeying task completed in time, let the caller know
                     log.LogInformation("Completed rekeying workflow within maximum time! ({0})", timeout);
                     return new OkObjectResult(RETURN_CHANGE_OCCURRED);
