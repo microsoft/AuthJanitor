@@ -22,7 +22,7 @@ using System.Web.Http;
 
 namespace AuthJanitor.Automation.Agent
 {
-    public class ExternalSignal : StorageIntegratedFunction
+    public class ExternalSignal
     {
         private const int RETURN_NO_CHANGE = 0;
         private const int RETURN_CHANGE_OCCURRED = 1;
@@ -33,22 +33,20 @@ namespace AuthJanitor.Automation.Agent
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
+        private readonly IDataStore<ManagedSecret> _managedSecrets;
+        private readonly IDataStore<RekeyingTask> _rekeyingTasks;
+
         public ExternalSignal(
             IOptions<AuthJanitorCoreConfiguration> configuration,
             TaskExecutionMetaService taskExecutionMetaService,
             IDataStore<ManagedSecret> managedSecretStore,
-            IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            IDataStore<RekeyingTask> rekeyingTaskStore)
         {
             _configuration = configuration.Value;
             _taskExecutionMetaService = taskExecutionMetaService;
+
+            _managedSecrets = managedSecretStore;
+            _rekeyingTasks = rekeyingTaskStore;
         }
 
         [FunctionName("ExternalSignal")]
@@ -62,13 +60,13 @@ namespace AuthJanitor.Automation.Agent
 
             log.LogInformation("External signal called to check ManagedSecret ID {ManagedSecretId} against nonce {Nonce}", managedSecretId, nonce);
 
-            var secret = await ManagedSecrets.GetOne(managedSecretId);
+            var secret = await _managedSecrets.GetOne(managedSecretId);
             if (secret == null)
                 return new BadRequestErrorMessageResult("Invalid ManagedSecret ID");
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.ExternalSignal))
                 return new BadRequestErrorMessageResult("This ManagedSecret cannot be used with External Signals");
 
-            if ((await RekeyingTasks.Get(t => t.ManagedSecretId == secret.ObjectId))
+            if ((await _rekeyingTasks.Get(t => t.ManagedSecretId == secret.ObjectId))
                                     .Any(t => t.RekeyingInProgress))
             {
                 return new OkObjectResult(RETURN_RETRY_SHORTLY);
@@ -85,8 +83,8 @@ namespace AuthJanitor.Automation.Agent
                             Queued = DateTimeOffset.UtcNow,
                             RekeyingInProgress = true
                         };
-
-                        await RekeyingTasks.Create(rekeyingTask).ConfigureAwait(false);
+                        
+                        await _rekeyingTasks.Create(rekeyingTask).ConfigureAwait(false);
 
                         await _taskExecutionMetaService.ExecuteTask(rekeyingTask.ObjectId).ConfigureAwait(false);
                     });

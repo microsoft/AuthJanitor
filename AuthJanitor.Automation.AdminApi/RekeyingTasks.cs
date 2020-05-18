@@ -25,13 +25,17 @@ namespace AuthJanitor.Automation.AdminApi
     /// API functions to control the creation management, and approval of Rekeying Tasks.
     /// A Rekeying Task is a time-bounded description of one or more Managed Secrets to be rekeyed.
     /// </summary>
-    public class RekeyingTasks : StorageIntegratedFunction
+    public class RekeyingTasks
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
+
+        private readonly IDataStore<ManagedSecret> _managedSecrets;
+        private readonly IDataStore<RekeyingTask> _rekeyingTasks;
+        private readonly Func<RekeyingTask, RekeyingTaskViewModel> _rekeyingTaskViewModel;
 
         public RekeyingTasks(
             IOptions<AuthJanitorCoreConfiguration> configuration,
@@ -40,21 +44,18 @@ namespace AuthJanitor.Automation.AdminApi
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
-            IDataStore<Resource> resourceStore,
             IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate)
         {
             _configuration = configuration.Value;
             _identityService = identityService;
             _taskExecutionMetaService = taskExecutionMetaService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
+
+            _managedSecrets = managedSecretStore;
+            _rekeyingTasks = rekeyingTaskStore;
+            _rekeyingTaskViewModel = rekeyingTaskViewModelDelegate;
         }
 
         [FunctionName("RekeyingTasks-Create")]
@@ -66,17 +67,17 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Create), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var secret = await ManagedSecrets.GetOne(secretId);
+            var secret = await _managedSecrets.GetOne(secretId);
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminCachesSignOff) &&
                 !secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Create), "Managed Secret does not support adminstrator approval");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Create), "Managed Secret does not support adminstrator approval");
                 return new BadRequestErrorMessageResult("Managed Secret does not support administrator approval!");
             }
 
@@ -87,9 +88,9 @@ namespace AuthJanitor.Automation.AdminApi
                 ManagedSecretId = secret.ObjectId
             };
 
-            await RekeyingTasks.Create(newTask);
+            await _rekeyingTasks.Create(newTask);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ManagedSecrets.Create), newTask);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.RekeyingTasks.Create), newTask);
 
             return new OkObjectResult(newTask);
         }
@@ -101,7 +102,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await RekeyingTasks.Get()).Select(t => GetViewModel(t)));
+            return new OkObjectResult((await _rekeyingTasks.Get()).Select(t => _rekeyingTaskViewModel(t)));
         }
 
         [FunctionName("RekeyingTasks-Get")]
@@ -112,13 +113,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await RekeyingTasks.ContainsId(taskId))
+            if (!await _rekeyingTasks.ContainsId(taskId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Get), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(GetViewModel((await RekeyingTasks.GetOne(taskId))));
+            return new OkObjectResult(_rekeyingTaskViewModel((await _rekeyingTasks.GetOne(taskId))));
         }
 
         [FunctionName("RekeyingTasks-Delete")]
@@ -129,13 +130,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await RekeyingTasks.ContainsId(taskId))
+            if (!await _rekeyingTasks.ContainsId(taskId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            await RekeyingTasks.Delete(taskId);
+            await _rekeyingTasks.Delete(taskId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskDeleted, nameof(AdminApi.RekeyingTasks.Delete), taskId);
 
@@ -150,7 +151,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            var toRekey = await RekeyingTasks.GetOne(t => t.ObjectId == taskId);
+            var toRekey = await _rekeyingTasks.GetOne(t => t.ObjectId == taskId);
             if (toRekey == null)
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");
