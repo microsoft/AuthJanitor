@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared;
-using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations.DataStores;
@@ -17,8 +16,14 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.AdminApi
 {
-    public class Dashboard : StorageIntegratedFunction
+    public class Dashboard
     {
+        private readonly IDataStore<ManagedSecret> _managedSecrets;
+        private readonly IDataStore<Resource> _resources;
+        private readonly IDataStore<RekeyingTask> _rekeyingTasks;
+
+        private readonly Func<ManagedSecret, ManagedSecretViewModel> _managedSecretViewModel;
+
         private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
 
@@ -28,16 +33,16 @@ namespace AuthJanitor.Automation.AdminApi
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
             IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate)
         {
             _identityService = identityService;
             _providerManager = providerManager;
+
+            _managedSecrets = managedSecretStore;
+            _resources = resourceStore;
+            _rekeyingTasks = rekeyingTaskStore;
+
+            _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
         [FunctionName("Dashboard")]
@@ -47,9 +52,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            var allSecrets = await ManagedSecrets.Get();
-            var allResources = await Resources.Get();
-            var allTasks = await RekeyingTasks.Get();
+            var allSecrets = await _managedSecrets.Get();
+            var allResources = await _resources.Get();
+            var allTasks = await _rekeyingTasks.Get();
 
             var expiringInNextWeek = allSecrets.Where(s => DateTimeOffset.UtcNow.AddDays(7) < (s.LastChanged + s.ValidPeriod));
             var expired = allSecrets.Where(s => !s.IsValid);
@@ -66,7 +71,7 @@ namespace AuthJanitor.Automation.AdminApi
                     t.ConfirmationType.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime)).Count(),
                 TotalExpiringSoon = expiringInNextWeek.Count(),
                 TotalExpired = expired.Count(),
-                ExpiringSoon = expiringInNextWeek.Select(s => GetViewModel(s)),
+                ExpiringSoon = expiringInNextWeek.Select(s => _managedSecretViewModel(s)),
                 PercentExpired = (int)((double)expired.Count() / allSecrets.Count) * 100,
                 TasksInError = allTasks.Count(t => t.RekeyingFailed)
             };

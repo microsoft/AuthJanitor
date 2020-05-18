@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
@@ -24,30 +23,28 @@ namespace AuthJanitor.Automation.AdminApi
     /// API functions to control the creation and management of AuthJanitor Resources.
     /// A Resource is the description of how to connect to an object or resource, using a given Provider.
     /// </summary>
-    public class Resources : StorageIntegratedFunction
+    public class Resources
     {
         private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
 
+        private readonly IDataStore<Resource> _resources;
+        private readonly Func<Resource, ResourceViewModel> _resourceViewModel;
+
         public Resources(
             IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
-            IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            Func<Resource, ResourceViewModel> resourceViewModelDelegate)
         {
             _identityService = identityService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
+
+            _resources = resourceStore;
+            _resourceViewModel = resourceViewModelDelegate;
         }
 
         [FunctionName("Resources-Create")]
@@ -87,11 +84,11 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await Resources.Create(newResource);
+            await _resources.Create(newResource);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(AdminApi.Resources.Create), newResource);
 
-            return new OkObjectResult(GetViewModel(newResource));
+            return new OkObjectResult(_resourceViewModel(newResource));
         }
 
         [FunctionName("Resources-List")]
@@ -101,7 +98,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await Resources.Get()).Select(r => GetViewModel(r)));
+            return new OkObjectResult((await _resources.Get()).Select(r => _resourceViewModel(r)));
         }
 
         [FunctionName("Resources-Get")]
@@ -113,13 +110,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await Resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Get), "Resource not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(GetViewModel(await Resources.GetOne(resourceId)));
+            return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId)));
         }
 
         [FunctionName("Resources-Delete")]
@@ -131,13 +128,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
-            if (!await Resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Delete), "Resource not found");
                 return new NotFoundResult();
             }
 
-            await Resources.Delete(resourceId);
+            await _resources.Delete(resourceId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(AdminApi.Resources.Delete), resourceId);
 
@@ -176,11 +173,11 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await Resources.Update(newResource);
+            await _resources.Update(newResource);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(AdminApi.Resources.Update), newResource);
 
-            return new OkObjectResult(GetViewModel(newResource));
+            return new OkObjectResult(_resourceViewModel(newResource));
         }
     }
 }

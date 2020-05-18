@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
-using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
-using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
@@ -22,30 +19,28 @@ namespace AuthJanitor.Automation.AdminApi
     /// API functions to describe the loaded Providers and their configurations.
     /// A Provider is a library containing logic to either rekey an object/service or manage the lifecycle of an application.
     /// </summary>
-    public class Providers : StorageIntegratedFunction
+    public class Providers
     {
         private readonly IIdentityService _identityService;
         private readonly EventDispatcherMetaService _eventDispatcher;
         private readonly ProviderManagerService _providerManager;
 
+        private readonly Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> _configViewModel;
+        private readonly Func<LoadedProviderMetadata, LoadedProviderViewModel> _providerViewModel;
+
         public Providers(
             IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
-            IDataStore<ManagedSecret> managedSecretStore,
-            IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
             Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate)
         {
             _identityService = identityService;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
+
+            _configViewModel = configViewModelDelegate;
+            _providerViewModel = providerViewModelDelegate;
         }
 
         [FunctionName("Providers-List")]
@@ -55,7 +50,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult(_providerManager.LoadedProviders.Select(p => GetViewModel(p)));
+            return new OkObjectResult(_providerManager.LoadedProviders.Select(p => _providerViewModel(p)));
         }
 
         [FunctionName("Providers-GetBlankConfiguration")]
@@ -73,7 +68,7 @@ namespace AuthJanitor.Automation.AdminApi
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Providers.GetBlankConfiguration), "Invalid Provider specified");
                 return new NotFoundResult();
             }
-            return new OkObjectResult(GetViewModel(_providerManager.GetProviderConfiguration(provider.ProviderTypeName)));
+            return new OkObjectResult(_configViewModel(_providerManager.GetProviderConfiguration(provider.ProviderTypeName)));
         }
     }
 }

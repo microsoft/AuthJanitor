@@ -3,7 +3,6 @@
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Integrations.EventSinks;
@@ -18,11 +17,15 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.AdminApi
 {
-    public class ScheduleRekeyingTasks : StorageIntegratedFunction
+    public class ScheduleRekeyingTasks
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcherMetaService;
+
+        private readonly IDataStore<ManagedSecret> _managedSecrets;
+        private readonly IDataStore<Resource> _resources;
+        private readonly IDataStore<RekeyingTask> _rekeyingTasks;
 
         public ScheduleRekeyingTasks(
             IOptions<AuthJanitorCoreConfiguration> configuration,
@@ -30,18 +33,15 @@ namespace AuthJanitor.Automation.AdminApi
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            IDataStore<RekeyingTask> rekeyingTaskStore)
         {
             _configuration = configuration.Value;
             _eventDispatcherMetaService = eventDispatcherMetaService;
             _providerManager = providerManager;
+
+            _managedSecrets = managedSecretStore;
+            _resources = resourceStore;
+            _rekeyingTasks = rekeyingTaskStore;
         }
 
         [FunctionName("ScheduleRekeyingTasks")]
@@ -106,11 +106,11 @@ namespace AuthJanitor.Automation.AdminApi
         private async Task CreateAndNotify(IEnumerable<RekeyingTask> tasks)
         {
             if (!tasks.Any()) return;
-            await Task.WhenAll(tasks.Select(t => RekeyingTasks.Create(t)));
+            await Task.WhenAll(tasks.Select(t => _rekeyingTasks.Create(t)));
 
             foreach (var task in tasks)
             {
-                var secret = await ManagedSecrets.GetOne(task.ManagedSecretId);
+                var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
                 if (task.ConfirmationType.UsesOBOTokens())
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.ScheduleRekeyingTasks.CreateAndNotify), task);
                 else
@@ -133,11 +133,11 @@ namespace AuthJanitor.Automation.AdminApi
             TaskConfirmationStrategies taskConfirmationStrategies,
             int leadTimeHours)
         {
-            var secretsToRotate = await ManagedSecrets.Get(s =>
+            var secretsToRotate = await _managedSecrets.Get(s =>
                 s.TaskConfirmationStrategies.HasFlag(taskConfirmationStrategies) &&
                 s.Expiry < DateTimeOffset.UtcNow + TimeSpan.FromHours(leadTimeHours));
 
-            var rekeyingTasks = await RekeyingTasks.Get();
+            var rekeyingTasks = await _rekeyingTasks.Get();
             return secretsToRotate
                         .Where(s => !rekeyingTasks.Any(t =>
                             t.ManagedSecretId == s.ObjectId &&

@@ -3,10 +3,8 @@
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations;
 using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,27 +13,21 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Agent
 {
-    public class PerformAutoRekeyingTasks : StorageIntegratedFunction
+    public class PerformAutoRekeyingTasks
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly TaskExecutionMetaService _taskExecutionMetaService;
 
+        private readonly IDataStore<RekeyingTask> _rekeyingTasks;
+
         public PerformAutoRekeyingTasks(
             IOptions<AuthJanitorCoreConfiguration> configuration,
             TaskExecutionMetaService taskExecutionMetaService,
-            IDataStore<ManagedSecret> managedSecretStore,
-            IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            IDataStore<RekeyingTask> rekeyingTaskStore)
         {
             _configuration = configuration.Value;
             _taskExecutionMetaService = taskExecutionMetaService;
+            _rekeyingTasks = rekeyingTaskStore;
         }
 
         [FunctionName("PerformAutoRekeyingTasks")]
@@ -45,7 +37,7 @@ namespace AuthJanitor.Automation.Agent
 
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            var toRekey = await RekeyingTasks.Get(t =>
+            var toRekey = await _rekeyingTasks.Get(t =>
                 (t.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingAsNeeded ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingScheduled) &&

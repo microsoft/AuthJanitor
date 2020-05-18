@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
 using AuthJanitor.Automation.Shared.ViewModels;
@@ -25,13 +24,17 @@ namespace AuthJanitor.Automation.AdminApi
     /// API functions to control the creation and management of AuthJanitor Managed Secrets.
     /// A Managed Secret is a grouping of Resources and Policies which describe the strategy around rekeying an object and the applications which consume it.
     /// </summary>
-    public class ManagedSecrets : StorageIntegratedFunction
+    public class ManagedSecrets
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ProviderManagerService _providerManager;
         private readonly EventDispatcherMetaService _eventDispatcher;
+
+        private readonly IDataStore<ManagedSecret> _managedSecrets;
+        private readonly IDataStore<Resource> _resources;
+        private readonly Func<ManagedSecret, ManagedSecretViewModel> _managedSecretViewModel;
 
         public ManagedSecrets(
             IOptions<AuthJanitorCoreConfiguration> configuration,
@@ -41,20 +44,17 @@ namespace AuthJanitor.Automation.AdminApi
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
-            IDataStore<RekeyingTask> rekeyingTaskStore,
-            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate,
-            Func<Resource, ResourceViewModel> resourceViewModelDelegate,
-            Func<RekeyingTask, RekeyingTaskViewModel> rekeyingTaskViewModelDelegate,
-            Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
-            Func<ScheduleWindow, ScheduleWindowViewModel> scheduleViewModelDelegate,
-            Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate) :
-                base(managedSecretStore, resourceStore, rekeyingTaskStore, managedSecretViewModelDelegate, resourceViewModelDelegate, rekeyingTaskViewModelDelegate, configViewModelDelegate, scheduleViewModelDelegate, providerViewModelDelegate)
+            Func<ManagedSecret, ManagedSecretViewModel> managedSecretViewModelDelegate)
         {
             _configuration = configuration.Value;
             _identityService = identityService;
             _cryptographicImplementation = cryptographicImplementation;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
+
+            _managedSecrets = managedSecretStore;
+            _resources = resourceStore;
+            _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
         [FunctionName("ManagedSecrets-Create")]
@@ -62,7 +62,7 @@ namespace AuthJanitor.Automation.AdminApi
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            var resources = await Resources.Get();
+            var resources = await _resources.Get();
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -81,11 +81,11 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await ManagedSecrets.Create(newManagedSecret);
+            await _managedSecrets.Create(newManagedSecret);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(AdminApi.ManagedSecrets.Create), newManagedSecret);
 
-            return new OkObjectResult(GetViewModel(newManagedSecret));
+            return new OkObjectResult(_managedSecretViewModel(newManagedSecret));
         }
 
         [FunctionName("ManagedSecrets-List")]
@@ -95,7 +95,7 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await ManagedSecrets.Get()).Select(s => GetViewModel(s)));
+            return new OkObjectResult((await _managedSecrets.Get()).Select(s => _managedSecretViewModel(s)));
         }
 
         [FunctionName("ManagedSecrets-Get")]
@@ -106,13 +106,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Get), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            return new OkObjectResult(GetViewModel(await ManagedSecrets.GetOne(secretId)));
+            return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId)));
         }
 
         [FunctionName("ManagedSecrets-Delete")]
@@ -123,13 +123,13 @@ namespace AuthJanitor.Automation.AdminApi
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Delete), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            await ManagedSecrets.Delete(secretId);
+            await _managedSecrets.Delete(secretId);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(AdminApi.ManagedSecrets.Delete), secretId);
 
@@ -143,13 +143,13 @@ namespace AuthJanitor.Automation.AdminApi
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await ManagedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Update), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var resources = await Resources.Get();
+            var resources = await _resources.Get();
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -168,11 +168,11 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await ManagedSecrets.Update(newManagedSecret);
+            await _managedSecrets.Update(newManagedSecret);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(AdminApi.ManagedSecrets.Update), newManagedSecret);
 
-            return new OkObjectResult(GetViewModel(newManagedSecret));
+            return new OkObjectResult(_managedSecretViewModel(newManagedSecret));
         }
     }
 }
