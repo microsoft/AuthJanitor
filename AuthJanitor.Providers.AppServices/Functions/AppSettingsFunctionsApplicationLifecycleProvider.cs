@@ -50,7 +50,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
         /// </summary>
         public override async Task AfterRekeying()
         {
-            _logger.LogInformation("Swapping to '{0}'", TemporarySlotName);
+            _logger.LogInformation("Swapping to '{SlotName}'", TemporarySlotName);
             await (await GetFunctionsApp()).SwapAsync(TemporarySlotName);
             _logger.LogInformation("Swap complete!");
         }
@@ -73,7 +73,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             foreach (RegeneratedSecret secret in secrets)
             {
                 var appSettingName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.SettingName : $"{Configuration.SettingName}-{secret.UserHint}";
-                _logger.LogInformation("Updating AppSetting '{0}' in slot '{1}' (as {2})", appSettingName, slotName,
+                _logger.LogInformation("Updating AppSetting '{AppSettingName}' in slot '{SlotName}' (as {AppSettingType})", appSettingName, slotName,
                     Configuration.CommitAsConnectionString ? "connection string" : "secret");
 
                 updateBase = updateBase.WithAppSetting(appSettingName,
@@ -83,7 +83,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             _logger.LogInformation("Applying changes.");
             await updateBase.ApplyAsync();
 
-            _logger.LogInformation("Swapping to '{0}'", slotName);
+            _logger.LogInformation("Swapping to '{SlotName}'", slotName);
             await (await GetFunctionsApp()).SwapAsync(slotName);
         }
     }

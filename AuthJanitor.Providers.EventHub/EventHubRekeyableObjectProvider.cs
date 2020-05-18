@@ -26,7 +26,7 @@ namespace AuthJanitor.Providers.EventHub
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) policy key...", OtherKeyType);
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) policy key...", OtherKeyType);
             var keys = await (await GetAuthorizationRule()).GetKeysAsync();
             _logger.LogInformation("Successfully retrieved temporary secret!");
 
@@ -41,9 +41,9 @@ namespace AuthJanitor.Providers.EventHub
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Event Hub key {0}", KeyType);
+            _logger.LogInformation("Regenerating Event Hub key {KeyType}", KeyType);
             var keys = await (await GetAuthorizationRule()).RegenerateKeyAsync(this.KeyType);
-            _logger.LogInformation("Successfully rekeyed Event Hub key {0}", KeyType);
+            _logger.LogInformation("Successfully rekeyed Event Hub key {KeyType}", KeyType);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -57,11 +57,11 @@ namespace AuthJanitor.Providers.EventHub
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Event Hub key kind {0}", OtherKeyType);
+                _logger.LogInformation("Scrambling Event Hub key kind {OtherKeyType}", OtherKeyType);
                 await (await GetAuthorizationRule()).RegenerateKeyAsync(this.OtherKeyType);
             }
             else
-                _logger.LogInformation("Skipping scrambling Event Hub key kind {0}", OtherKeyType);
+                _logger.LogInformation("Skipping scrambling Event Hub key kind {OtherKeyType}", OtherKeyType);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

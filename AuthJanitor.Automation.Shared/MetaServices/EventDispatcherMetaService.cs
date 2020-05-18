@@ -23,7 +23,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
         public Task DispatchEvent(AuthJanitorSystemEvents systemEvent, string source, string eventDetails)
         {
-            _logger.LogInformation("Event: {0} from {1} (Detail: {2})", systemEvent, source, eventDetails);
+            _logger.LogInformation("Event: {SystemEvent} from {EventSource} (Detail: {EventDetails})", systemEvent, source, eventDetails);
             return Task.WhenAll(_eventSinks.Select(s =>
                 s.LogEvent(systemEvent, source, eventDetails)
             ));
@@ -31,7 +31,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
         public Task DispatchEvent<TEventObject>(AuthJanitorSystemEvents systemEvent, string source, TEventObject eventObject)
         {
-            _logger.LogInformation("Event: {0} from {1} (Object type: {2})", systemEvent, source, typeof(TEventObject));
+            _logger.LogInformation("Event: {SystemEvent} from {EventSource} (Object type: {EventObjectType})", systemEvent, source, typeof(TEventObject));
             return Task.WhenAll(_eventSinks.Select(s =>
                 s.LogEvent<TEventObject>(systemEvent, source, eventObject)
             ));

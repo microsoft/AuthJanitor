@@ -89,7 +89,7 @@ namespace AuthJanitor.Automation.Agent
 
             // -----
 
-            logger.LogDebug("Scanning for Provider modules at {0}\\{1} recursively", PROVIDER_SEARCH_PATH, PROVIDER_SEARCH_MASK);
+            logger.LogDebug("Scanning for Provider modules at {ProviderSearchPath}\\{ProviderSearchMask} recursively", PROVIDER_SEARCH_PATH, PROVIDER_SEARCH_MASK);
 
             var providerTypes = Directory.GetFiles(PROVIDER_SEARCH_PATH, PROVIDER_SEARCH_MASK, new EnumerationOptions() { RecurseSubdirectories = true })
                                          .SelectMany(libraryFile => PluginLoader.CreateFromAssemblyFile(libraryFile, PROVIDER_SHARED_TYPES)
@@ -98,7 +98,7 @@ namespace AuthJanitor.Automation.Agent
                                                                             .Where(type => !type.IsAbstract && typeof(IAuthJanitorProvider).IsAssignableFrom(type)))
                                          .ToArray();
 
-            logger.LogInformation("Found {0} providers: {1}", providerTypes.Count(), string.Join("  ", providerTypes.Select(t => t.Name)));
+            logger.LogInformation("Found {ProviderCount} providers: {ProviderTypeNames}", providerTypes.Length, string.Join("  ", providerTypes.Select(t => t.Name)));
             logger.LogInformation("Registering Provider Manager Service");
             ProviderManagerService.ConfigureServices(builder.Services, providerTypes);
         }

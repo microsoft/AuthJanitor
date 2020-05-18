@@ -25,7 +25,7 @@ namespace AuthJanitor.Providers.ServiceBus
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) policy key...", OtherPolicyKey);
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherPolicyKey}) policy key...", OtherPolicyKey);
             IAuthorizationKeys otherKeys = await Get();
             _logger.LogInformation("Successfully retrieved temporary secret!");
 
@@ -40,9 +40,9 @@ namespace AuthJanitor.Providers.ServiceBus
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Service Bus key {0}", PolicyKey);
+            _logger.LogInformation("Regenerating Service Bus key {PolicyKey}", PolicyKey);
             IAuthorizationKeys newKeys = await Regenerate(PolicyKey);
-            _logger.LogInformation("Successfully rekeyed Service Bus key {0}", PolicyKey);
+            _logger.LogInformation("Successfully rekeyed Service Bus key {PolicyKey}", PolicyKey);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -56,11 +56,11 @@ namespace AuthJanitor.Providers.ServiceBus
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Service Bus key kind {0}", OtherPolicyKey);
+                _logger.LogInformation("Scrambling Service Bus key kind {OtherPolicyKey}", OtherPolicyKey);
                 await Regenerate(OtherPolicyKey);
             }
             else
-                _logger.LogInformation("Skipping scrambling Service Bus key kind {0}", OtherPolicyKey);
+                _logger.LogInformation("Skipping scrambling Service Bus key kind {OtherPolicyKey}", OtherPolicyKey);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

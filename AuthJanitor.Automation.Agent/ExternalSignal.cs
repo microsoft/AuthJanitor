@@ -60,7 +60,7 @@ namespace AuthJanitor.Automation.Agent
         {
             _ = req; // unused but required for attribute
 
-            log.LogInformation("External signal called to check ManagedSecret ID {0} against nonce {1}", managedSecretId, nonce);
+            log.LogInformation("External signal called to check ManagedSecret ID {ManagedSecretId} against nonce {Nonce}", managedSecretId, nonce);
 
             var secret = await ManagedSecrets.GetOne(managedSecretId);
             if (secret == null)
@@ -100,7 +100,7 @@ namespace AuthJanitor.Automation.Agent
                 // If the task that completed first was the timeout task we need to let the caller know it's still running
                 if (completedTask == timeoutTask)
                 {
-                    log.LogInformation("Rekeying workflow was started but exceeded the maximum request time! ({0})", timeout);
+                    log.LogInformation("Rekeying workflow was started but exceeded the maximum request time! ({MaxExecutionRequestTime})", timeout);
                     return new OkObjectResult(RETURN_RETRY_SHORTLY);
                 }
                 else
@@ -109,7 +109,7 @@ namespace AuthJanitor.Automation.Agent
                     timeoutCancellationTokenSource.Cancel();
 
                     // The rekeying task completed in time, let the caller know
-                    log.LogInformation("Completed rekeying workflow within maximum time! ({0})", timeout);
+                    log.LogInformation("Completed rekeying workflow within maximum time! ({MaxExecutionRequestTime})", timeout);
                     return new OkObjectResult(RETURN_CHANGE_OCCURRED);
                 }
             }
