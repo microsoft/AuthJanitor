@@ -82,8 +82,8 @@ namespace AuthJanitor.Providers
             // NOTE: avoid costs of generating list of providers if information logging not turned on
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("RKO: {0}", string.Join(", ", rkoProviders.Select(p => p.GetType().Name)));
-                logger.LogInformation("ALC: {0}", string.Join(", ", alcProviders.Select(p => p.GetType().Name)));
+                logger.LogInformation("RKO: {ProviderTypeNames}", string.Join(", ", rkoProviders.Select(p => p.GetType().Name)));
+                logger.LogInformation("ALC: {ProviderTypeNames}", string.Join(", ", alcProviders.Select(p => p.GetType().Name)));
             }
 
             // -----
@@ -94,7 +94,7 @@ namespace AuthJanitor.Providers
                 logger, 
                 providers,
                 p => p.Test(),
-                "Error running sanity test on provider '{0}'",
+                "Error running sanity test on provider '{ProviderName}'",
                 "Error running one or more sanity tests!");
 
             logger.LogInformation("### Retrieving/generating temporary secrets.");
@@ -111,24 +111,24 @@ namespace AuthJanitor.Providers
                                 temporarySecrets.Add(t.Result);
                             }
                         }),
-                "Error getting temporary secret from provider '{0}'",
+                "Error getting temporary secret from provider '{ProviderName}'",
                 "Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
 
-            logger.LogInformation("{0} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
+            logger.LogInformation("{SecretCount} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
 
             // ---
 
-            logger.LogInformation("### Preparing {0} Application Lifecycle Providers for rekeying...", alcProviders.Count);
+            logger.LogInformation("### Preparing {ProviderCount} Application Lifecycle Providers for rekeying...", alcProviders.Count);
             await PerformProviderActions(
                 logger,
                 alcProviders,
                 p => p.BeforeRekeying(temporarySecrets),
-                "Error preparing ALC provider '{0}'",
+                "Error preparing ALC provider '{ProviderName}'",
                 "Error preparing one or more Application Lifecycle Providers for rekeying!");
 
             // -----
 
-            logger.LogInformation("### Rekeying {0} Rekeyable Object Providers...", rkoProviders.Count);
+            logger.LogInformation("### Rekeying {ProviderCount} Rekeyable Object Providers...", rkoProviders.Count);
             var newSecrets = new List<RegeneratedSecret>();
             await PerformProviderActions(
                 logger,
@@ -141,14 +141,14 @@ namespace AuthJanitor.Providers
                                 newSecrets.Add(t.Result);
                             } 
                         }),
-                "Error rekeying provider '{0}'",
+                "Error rekeying provider '{ProviderName}'",
                 "Error rekeying one or more Rekeyable Object Providers!");
 
-            logger.LogInformation("{0} secrets were regenerated.", newSecrets.Count);
+            logger.LogInformation("{SecretCount} secrets were regenerated.", newSecrets.Count);
 
             // -----
 
-            logger.LogInformation("### Committing {0} regenerated secrets to {1} Application Lifecycle Providers...",
+            logger.LogInformation("### Committing {SecretCount} regenerated secrets to {ProviderCount} Application Lifecycle Providers...",
                 newSecrets.Count,
                 alcProviders.Count);
 
@@ -156,7 +156,7 @@ namespace AuthJanitor.Providers
                 logger,
                 alcProviders,
                 p => p.CommitNewSecrets(newSecrets),
-                "Error committing to provider '{0}'",
+                "Error committing to provider '{ProviderName}'",
                 "Error committing regenerated secrets!");
 
             // -----
@@ -167,7 +167,7 @@ namespace AuthJanitor.Providers
                 logger,
                 alcProviders,
                 p => p.AfterRekeying(),
-                "Error running post-rekey operations on provider '{0}'",
+                "Error running post-rekey operations on provider '{ProviderName}'",
                 "Error running post-rekey operations on one or more Application Lifecycle Providers!");
             
             // -----
@@ -178,7 +178,7 @@ namespace AuthJanitor.Providers
                 logger,
                 rkoProviders,
                 p => p.OnConsumingApplicationSwapped(),
-                "Error running after-swap operations on provider '{0}'",
+                "Error running after-swap operations on provider '{ProviderName}'",
                 "Error running after-swap operations on one or more Rekeyable Object Providers!");
 
             logger.LogInformation("########## END REKEYING WORKFLOW ##########");

@@ -25,7 +25,7 @@ namespace AuthJanitor.Providers.AzureSearch
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) key...", GetOtherKeyKind(Configuration.KeyKind));
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyKind}) key...", GetOtherKeyKind(Configuration.KeyKind));
             var searchService = await SearchService;
             IAdminKeys keys = await searchService.GetAdminKeysAsync();
             _logger.LogInformation("Successfully retrieved temporary secret!");
@@ -39,12 +39,12 @@ namespace AuthJanitor.Providers.AzureSearch
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Azure Search {0} admin key", Configuration.KeyKind);
+            _logger.LogInformation("Regenerating Azure Search {KeyKind} admin key", Configuration.KeyKind);
             var searchService = await SearchService;
             await searchService.RegenerateAdminKeysAsync(GetKeyKind(Configuration.KeyKind));
 
             IAdminKeys keys = await searchService.GetAdminKeysAsync();
-            _logger.LogInformation("Successfully rekeyed CosmosDB key kind {0}", Configuration.KeyKind);
+            _logger.LogInformation("Successfully rekeyed CosmosDB key kind {KeyKind}", Configuration.KeyKind);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -57,11 +57,11 @@ namespace AuthJanitor.Providers.AzureSearch
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Azure Search key kind {0}", GetOtherKeyKind(Configuration.KeyKind));
+                _logger.LogInformation("Scrambling Azure Search key kind {OtherKeyKind}", GetOtherKeyKind(Configuration.KeyKind));
                 await (await SearchService).RegenerateAdminKeysAsync(GetOtherKeyKind(Configuration.KeyKind));
             }
             else
-                _logger.LogInformation("Skipping scrambling Azure Search key kind {0}", GetOtherKeyKind(Configuration.KeyKind));
+                _logger.LogInformation("Skipping scrambling Azure Search key kind {OtherKeyKind}", GetOtherKeyKind(Configuration.KeyKind));
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

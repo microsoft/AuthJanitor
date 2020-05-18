@@ -122,7 +122,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
             // Retrieve targets
             var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
-            rekeyingAttemptLog.LogInformation("Beginning rekeying of secret ID {0}", task.ManagedSecretId);
+            rekeyingAttemptLog.LogInformation("Beginning rekeying of secret ID {SecretId}", task.ManagedSecretId);
             var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId));
 
             // Execute rekeying workflow
@@ -167,7 +167,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                         task.PersistedCredentialUser = default;
                     }
 
-                    rekeyingAttemptLog.LogInformation("Completed rekeying workflow for ManagedSecret '{0}' (ID {1})", secret.Name, secret.ObjectId);
+                    rekeyingAttemptLog.LogInformation("Completed rekeying workflow for ManagedSecret '{ManagedSecretName}' (ID {ManagedSecretId})", secret.Name, secret.ObjectId);
                     rekeyingAttemptLog.LogInformation("Rekeying task completed");
 
                     await _rekeyingTasks.Update(task);

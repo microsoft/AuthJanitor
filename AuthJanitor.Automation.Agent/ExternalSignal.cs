@@ -58,7 +58,7 @@ namespace AuthJanitor.Automation.Agent
         {
             _ = req; // unused but required for attribute
 
-            log.LogInformation("External signal called to check ManagedSecret ID {0} against nonce {1}", managedSecretId, nonce);
+            log.LogInformation("External signal called to check ManagedSecret ID {ManagedSecretId} against nonce {Nonce}", managedSecretId, nonce);
 
             var secret = await ManagedSecrets.GetOne(managedSecretId);
             if (secret == null)
@@ -92,12 +92,12 @@ namespace AuthJanitor.Automation.Agent
 
                 if (!rekeyingTask.Wait(TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY)))
                 {
-                    log.LogInformation("Rekeying workflow was started but exceeded the maximum request time! ({0})", TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY));
+                    log.LogInformation("Rekeying workflow was started but exceeded the maximum request time! ({MaxExecutionRequestTime})", TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY));
                     return new OkObjectResult(RETURN_RETRY_SHORTLY);
                 }
                 else
                 {
-                    log.LogInformation("Completed rekeying workflow within maximum time! ({0})", TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY));
+                    log.LogInformation("Completed rekeying workflow within maximum time! ({MaxExecutionRequestTime})", TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY));
                     return new OkObjectResult(RETURN_CHANGE_OCCURRED);
                 }
             }

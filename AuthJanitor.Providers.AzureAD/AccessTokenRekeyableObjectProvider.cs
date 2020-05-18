@@ -28,11 +28,11 @@ namespace AuthJanitor.Providers.AzureAD
             // TODO: How to refresh this?
 
             // NOTE: requestedValidPeriod is ignored here, AAD sets token expiry!
-            _logger.LogInformation("Requesting Access Token with scopes '{0}'", Configuration.Scopes);
+            _logger.LogInformation("Requesting Access Token with scopes '{RequestedScopes}'", Configuration.Scopes);
             var token = await Credential.CreateTokenCredential()
                 .GetTokenAsync(new Azure.Core.TokenRequestContext(Configuration.Scopes), System.Threading.CancellationToken.None);
 
-            _logger.LogInformation("Access Token successfully granted! Expires on {0}", token.ExpiresOn);
+            _logger.LogInformation("Access Token successfully granted! Expires on {TokenExpiresOn}", token.ExpiresOn);
             return new RegeneratedSecret()
             {
                 UserHint = Configuration.UserHint,

@@ -28,7 +28,7 @@ namespace AuthJanitor.Providers.AzureMaps
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) key...", GetOtherKeyType);
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType);
             var keys = await ManagementClient.Accounts.ListKeysAsync(
                 ResourceGroup,
                 ResourceName);
@@ -43,12 +43,12 @@ namespace AuthJanitor.Providers.AzureMaps
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Azure Maps key type '{0}'", GetKeyType);
+            _logger.LogInformation("Regenerating Azure Maps key type '{KeyType}'", GetKeyType);
             var keys = await ManagementClient.Accounts.RegenerateKeysAsync(
                 ResourceGroup,
                 ResourceName,
                 new MapsKeySpecification(GetKeyType));
-            _logger.LogInformation("Successfully regenerated Azure Maps key type '{0}'", GetKeyType);
+            _logger.LogInformation("Successfully regenerated Azure Maps key type '{KeyType}'", GetKeyType);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -61,14 +61,14 @@ namespace AuthJanitor.Providers.AzureMaps
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Azure Maps key type '{0}'", GetOtherKeyType);
+                _logger.LogInformation("Scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
                 await ManagementClient.Accounts.RegenerateKeysAsync(
                     ResourceGroup,
                     ResourceName,
                     new MapsKeySpecification(GetOtherKeyType));
             }
             else
-                _logger.LogInformation("Skipping scrambling Azure Maps key type '{0}'", GetOtherKeyType);
+                _logger.LogInformation("Skipping scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

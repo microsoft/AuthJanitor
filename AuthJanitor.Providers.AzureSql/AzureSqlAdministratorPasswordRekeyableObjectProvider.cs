@@ -37,7 +37,7 @@ namespace AuthJanitor.Providers.AzureSql
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Generating new password of length {0}", Configuration.PasswordLength);
+            _logger.LogInformation("Generating new password of length {PasswordLength}", Configuration.PasswordLength);
             var newPassword = await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.PasswordLength);
             var sqlServer = await SqlServer;
             _logger.LogInformation("Updating administrator password...");

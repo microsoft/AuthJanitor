@@ -39,7 +39,7 @@ namespace AuthJanitor.Providers.KeyVault
 
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Key Vault key {0}", Configuration.KeyName);
+            _logger.LogInformation("Regenerating Key Vault key {KeyName}", Configuration.KeyName);
             var client = GetKeyClient();
             Azure.Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
 
@@ -60,7 +60,7 @@ namespace AuthJanitor.Providers.KeyVault
             }
 
             Azure.Response<KeyVaultKey> key = await client.CreateKeyAsync(Configuration.KeyName, currentKey.Value.KeyType, creationOptions);
-            _logger.LogInformation("Successfully rekeyed Key Vault key {0}", Configuration.KeyName);
+            _logger.LogInformation("Successfully rekeyed Key Vault key {KeyName}", Configuration.KeyName);
 
             return new RegeneratedSecret()
             {

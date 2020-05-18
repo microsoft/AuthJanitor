@@ -26,7 +26,7 @@ namespace AuthJanitor.Providers.Redis
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
             // NOTE: Redis Fluent lacks async methods
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({0}) key...", GetOtherKeyType(Configuration.KeyType));
+            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType(Configuration.KeyType));
             var redisCache = await RedisCache;
             IRedisAccessKeys keys = redisCache.GetKeys();
             _logger.LogInformation("Successfully retrieved temporary secret!");
@@ -41,11 +41,11 @@ namespace AuthJanitor.Providers.Redis
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             // NOTE: Redis Fluent lacks async methods
-            _logger.LogInformation("Regenerating Redis Cache key type {0}", Configuration.KeyType);
+            _logger.LogInformation("Regenerating Redis Cache key type {KeyType}", Configuration.KeyType);
             var redisCache = await RedisCache;
             var keys = redisCache.RegenerateKey(GetKeyType(Configuration.KeyType));
 
-            _logger.LogInformation("Successfully rekeyed Redis Cache key type {0}", Configuration.KeyType);
+            _logger.LogInformation("Successfully rekeyed Redis Cache key type {KeyType}", Configuration.KeyType);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -59,11 +59,11 @@ namespace AuthJanitor.Providers.Redis
             // NOTE: Redis Fluent lacks async methods
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Redis Cache key kind {0}", GetOtherKeyType(Configuration.KeyType));
+                _logger.LogInformation("Scrambling Redis Cache key kind {OtherKeyType}", GetOtherKeyType(Configuration.KeyType));
                 (await RedisCache).RegenerateKey(GetOtherKeyType(Configuration.KeyType));
             }
             else
-                _logger.LogInformation("Skipping scrambling CosmosDB key kind {0}", GetOtherKeyType(Configuration.KeyType));
+                _logger.LogInformation("Skipping scrambling CosmosDB key kind {OtherKeyType}", GetOtherKeyType(Configuration.KeyType));
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()
