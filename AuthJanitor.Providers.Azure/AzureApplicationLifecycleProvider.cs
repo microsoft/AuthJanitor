@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.Azure
