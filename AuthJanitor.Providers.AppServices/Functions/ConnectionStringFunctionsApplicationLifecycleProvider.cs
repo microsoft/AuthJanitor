@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.AppService.Fluent;
-using Microsoft.Azure.Management.AppService.Fluent.WebAppBase.Update;
+using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AppServices.Functions
@@ -16,42 +16,38 @@ namespace AuthJanitor.Providers.AppServices.Functions
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
-    public class ConnectionStringFunctionsApplicationLifecycleProvider : FunctionsApplicationLifecycleProvider<ConnectionStringConfiguration>
+    public class ConnectionStringFunctionsApplicationLifecycleProvider : SlottableAzureApplicationLifecycleProvider<ConnectionStringConfiguration, IFunctionApp>
     {
         private readonly ILogger _logger;
 
-        public ConnectionStringFunctionsApplicationLifecycleProvider(ILogger<ConnectionStringFunctionsApplicationLifecycleProvider> logger)
+        public ConnectionStringFunctionsApplicationLifecycleProvider(ILogger<AppSettingsFunctionsApplicationLifecycleProvider> logger) : base(logger)
         {
             _logger = logger;
         }
 
-        /// <summary>
-        /// Call to prepare the application for a new secret, passing in a secret
-        /// which will be valid while the Rekeying is taking place (for zero-downtime)
-        /// </summary>
-        public override async Task BeforeRekeying(List<RegeneratedSecret> temporaryUseSecrets)
+        protected override async Task ApplyUpdate(IFunctionApp resource, string slotName, List<RegeneratedSecret> secrets)
         {
-            await ApplySecrets(TemporarySlotName, temporaryUseSecrets);
-            _logger.LogInformation("BeforeRekeying completed!");
+            var updateBase = (await resource.DeploymentSlots.GetByNameAsync(slotName)).Update();
+            foreach (RegeneratedSecret secret in secrets)
+            {
+                var connectionStringName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.ConnectionStringName : $"{Configuration.ConnectionStringName}-{secret.UserHint}";
+                _logger.LogInformation("Updating Connection String '{ConnectionStringName}' in slot '{SlotName}'", connectionStringName, Configuration.TemporarySlot);
+                updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)
+                              updateBase.WithoutConnectionString(connectionStringName);
+                updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)
+                              updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey, Configuration.ConnectionStringType);
+            }
+            await updateBase.ApplyAsync();
         }
 
-        /// <summary>
-        /// Call to commit the newly generated secret
-        /// </summary>
-        public override async Task CommitNewSecrets(List<RegeneratedSecret> newSecrets)
-        {
-            await ApplySecrets(TemporarySlotName, newSecrets);
-            _logger.LogInformation("CommitNewSecrets completed!");
-        }
+        protected override Task SwapSlotAsync(IFunctionApp resource, string slotName) => resource.SwapAsync(slotName);
 
-        /// <summary>
-        /// Call after all new keys have been committed
-        /// </summary>
-        public override async Task AfterRekeying()
+        protected override ISupportsGettingByResourceGroup<IFunctionApp> GetResourceCollection(IAzure azure) => azure.AppServices.FunctionApps;
+
+        protected override async Task TestSlotAsync(IFunctionApp resource, string slotName)
         {
-            _logger.LogInformation("Swapping to '{SlotName}'", TemporarySlotName);
-            await (await GetFunctionsApp()).SwapAsync(TemporarySlotName);
-            _logger.LogInformation("Swap complete!");
+            var slot = await resource.DeploymentSlots.GetByNameAsync(slotName);
+            if (slot == null) throw new System.Exception($"Slot {slotName} not found");
         }
 
         public override string GetDescription() =>
@@ -61,28 +57,5 @@ namespace AuthJanitor.Providers.AppServices.Functions
             $"'{Configuration.ResourceGroup}'). During the rekeying, the Functions App will " +
             $"be moved from slot '{Configuration.SourceSlot}' to slot '{Configuration.TemporarySlot}' " +
             $"temporarily, and then to slot '{Configuration.DestinationSlot}'.";
-
-        private async Task ApplySecrets(string slotName, List<RegeneratedSecret> secrets)
-        {
-            if (secrets.Count > 1 && secrets.Select(s => s.UserHint).Distinct().Count() != secrets.Count)
-            {
-                throw new Exception("Multiple secrets sent to Provider but without distinct UserHints!");
-            }
-
-            IUpdate<IFunctionDeploymentSlot> updateBase = (await GetDeploymentSlot(slotName)).Update();
-            foreach (RegeneratedSecret secret in secrets)
-            {
-                var connectionStringName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.ConnectionStringName : $"{Configuration.ConnectionStringName}-{secret.UserHint}";
-                _logger.LogInformation("Updating Connection String '{ConnectionStringName}' in slot '{SlotName}'", connectionStringName, TemporarySlotName);
-                updateBase = updateBase.WithoutConnectionString(connectionStringName);
-                updateBase = updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey, Configuration.ConnectionStringType);
-            }
-
-            _logger.LogInformation("Applying changes.");
-            await updateBase.ApplyAsync();
-
-            _logger.LogInformation("Swapping to '{SlotName}'", slotName);
-            await (await GetFunctionsApp()).SwapAsync(slotName);
-        }
     }
 }

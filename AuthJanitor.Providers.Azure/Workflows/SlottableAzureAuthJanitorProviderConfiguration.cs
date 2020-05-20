@@ -1,13 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
-namespace AuthJanitor.Providers
+namespace AuthJanitor.Providers.Azure.Workflows
 {
-    /// <summary>
-    /// Describes the configuration of an Extension which supports slotting
-    /// </summary>
-    public abstract class SlottableProviderConfiguration : AuthJanitorProviderConfiguration
+    public class SlottableAzureAuthJanitorProviderConfiguration : AzureAuthJanitorProviderConfiguration
     {
         public const string DEFAULT_ORIGINAL_SLOT = "production";
         public const string DEFAULT_TEMPORARY_SLOT = "aj-temporary";

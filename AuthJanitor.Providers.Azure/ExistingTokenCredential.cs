@@ -1,11 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-using Azure.Core;
+﻿using Azure.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Extensions.Azure
+namespace AuthJanitor.Providers.Azure
 {
     public class ExistingTokenCredential : TokenCredential
     {

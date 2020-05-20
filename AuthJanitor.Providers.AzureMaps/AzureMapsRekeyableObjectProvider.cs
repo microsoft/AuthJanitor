@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure;
 using Microsoft.Azure.Management.Maps;
 using Microsoft.Azure.Management.Maps.Models;
 using Microsoft.Extensions.Logging;
@@ -32,17 +32,17 @@ namespace AuthJanitor.Providers.AzureMaps
         public override async Task Test()
         {
             var keys = await ManagementClient.Accounts.ListKeysAsync(
-                ResourceGroup,
-                ResourceName);
-            if (keys == null) throw new Exception("Could not access keys for Azure Maps");
+                Configuration.ResourceGroup,
+                Configuration.ResourceName);
+            if (keys == null) throw new Exception("Could not access Azure Maps keys");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
         {
             _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType);
             var keys = await ManagementClient.Accounts.ListKeysAsync(
-                ResourceGroup,
-                ResourceName);
+                Configuration.ResourceGroup,
+                Configuration.ResourceName);
             _logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
@@ -56,8 +56,8 @@ namespace AuthJanitor.Providers.AzureMaps
         {
             _logger.LogInformation("Regenerating Azure Maps key type '{KeyType}'", GetKeyType);
             var keys = await ManagementClient.Accounts.RegenerateKeysAsync(
-                ResourceGroup,
-                ResourceName,
+                Configuration.ResourceGroup,
+                Configuration.ResourceName,
                 new MapsKeySpecification(GetKeyType));
             _logger.LogInformation("Successfully regenerated Azure Maps key type '{KeyType}'", GetKeyType);
             return new RegeneratedSecret()
@@ -74,8 +74,8 @@ namespace AuthJanitor.Providers.AzureMaps
             {
                 _logger.LogInformation("Scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
                 await ManagementClient.Accounts.RegenerateKeysAsync(
-                    ResourceGroup,
-                    ResourceName,
+                    Configuration.ResourceGroup,
+                    Configuration.ResourceName,
                     new MapsKeySpecification(GetOtherKeyType));
             }
             else
@@ -100,7 +100,7 @@ namespace AuthJanitor.Providers.AzureMaps
 
         public override string GetDescription() =>
             $"Regenerates the {GetKeyType} key for an Azure Maps instance " +
-            $"called '{ResourceName}' (Resource Group '{ResourceGroup}'). " +
+            $"called '{Configuration.ResourceName}' (Resource Group '{Configuration.ResourceGroup}'). " +
             $"The {GetOtherKeyType} key is used as a temporary " +
             $"key while rekeying is taking place. The {GetOtherKeyType} " +
             $"key will {(Configuration.SkipScramblingOtherKey ? "not" : "also")} be rotated.";

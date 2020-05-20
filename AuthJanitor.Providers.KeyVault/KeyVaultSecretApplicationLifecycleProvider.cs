@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure;
+using Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 using System;
@@ -39,7 +40,7 @@ namespace AuthJanitor.Providers.KeyVault
             foreach (RegeneratedSecret secret in newSecrets)
             {
                 _logger.LogInformation("Getting current secret version from secret name {SecretName}", Configuration.SecretName);
-                Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
+                Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
                 // Create a new version of the Secret
                 string secretName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.SecretName : $"{Configuration.SecretName}-{secret.UserHint}";

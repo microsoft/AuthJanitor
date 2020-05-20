@@ -5,13 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.33.0" />
+    <PackageReference Include="Azure.Identity" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Shared\AuthJanitor.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Rest;
 using System;
 
-namespace AuthJanitor.Extensions.Azure
+namespace AuthJanitor.Providers.Azure
 {
     public static class AzureAccessTokenCredentialExtensions
     {

@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.EventHub
 {
-    public class EventHubKeyConfiguration : AuthJanitorProviderConfiguration
+    public class EventHubKeyConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<EventHubKeyConfiguration.EventHubKeyTypes>
     {
         /// <summary>
         /// Duplication of Service Bus "Policykey" enumeration to avoid passing through a dependency
@@ -19,7 +20,7 @@ namespace AuthJanitor.Providers.EventHub
         /// Kind (type) of Event Hub Key
         /// </summary>
         [DisplayName("Event Hub Key Type")]
-        public EventHubKeyTypes KeyType { get; set; }
+        public override EventHubKeyTypes KeyType { get; set; }
 
         /// <summary>
         /// Event Hub Authorization Rule name
@@ -32,12 +33,5 @@ namespace AuthJanitor.Providers.EventHub
         /// </summary>
         [DisplayName("Authorization Rule")]
         public string AuthorizationRuleName { get; set; }
-
-        /// <summary>
-        /// Skip the process of scrambling the other (non-active) key
-        /// </summary>
-        [DisplayName("Skip Scrambling Other Key?")]
-        [Description("If checked, the opposite key (e.g. primary/secondary) will NOT be scrambled at the end of the rekeying")]
-        public bool SkipScramblingOtherKey { get; set; }
     }
 }

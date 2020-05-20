@@ -8,16 +8,6 @@ namespace AuthJanitor.Providers
     public abstract class AuthJanitorProviderConfiguration
     {
         /// <summary>
-        /// Resource Group name
-        /// </summary>
-        public string ResourceGroup { get; set; }
-
-        /// <summary>
-        /// Resource name (inside Resource Group)
-        /// </summary>
-        public string ResourceName { get; set; }
-
-        /// <summary>
         /// Arbitrary user-specified hint string (from Provider Configuration) used to distinguish among multiple 
         /// RegeneratedSecrets entering an ApplicationLifecycleProvider
         /// </summary>

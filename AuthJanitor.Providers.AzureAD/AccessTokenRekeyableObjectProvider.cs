@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure;
+using Azure.Core;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace AuthJanitor.Providers.AzureAD
             // NOTE: requestedValidPeriod is ignored here, AAD sets token expiry!
             _logger.LogInformation("Requesting Access Token with scopes '{RequestedScopes}'", Configuration.Scopes);
             var token = await Credential.CreateTokenCredential()
-                .GetTokenAsync(new Azure.Core.TokenRequestContext(Configuration.Scopes), System.Threading.CancellationToken.None);
+                .GetTokenAsync(new TokenRequestContext(Configuration.Scopes), System.Threading.CancellationToken.None);
 
             _logger.LogInformation("Access Token successfully granted! Expires on {TokenExpiresOn}", token.ExpiresOn);
             return new RegeneratedSecret()
