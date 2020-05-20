@@ -1,4 +1,6 @@
-﻿using Azure.Core;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using Azure.Core;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
