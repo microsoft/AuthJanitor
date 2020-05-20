@@ -1,17 +1,20 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.ServiceBus
 {
-    public class ServiceBusKeyConfiguration : AuthJanitorProviderConfiguration
+    public class ServiceBusKeyConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<ServiceBusKeyConfiguration.ServiceBusKeyTypes>
     {
         /// <summary>
         /// Duplication of Service Bus "Policykey" enumeration to avoid passing through a dependency
         /// </summary>
         public enum ServiceBusKeyTypes
         {
+            [PairedKey("key")]
             Primary,
+            [PairedKey("key")]
             Secondary
         }
 
@@ -20,7 +23,7 @@ namespace AuthJanitor.Providers.ServiceBus
         /// </summary>
         [DisplayName("Service Bus Key Type")]
         [Description("Type of Service Bus Key to manage")]
-        public ServiceBusKeyTypes KeyType { get; set; }
+        public override ServiceBusKeyTypes KeyType { get; set; }
 
         /// <summary>
         /// Service Bus Authorization Rule name
@@ -28,12 +31,5 @@ namespace AuthJanitor.Providers.ServiceBus
         [DisplayName("Authorization Rule")]
         [Description("Authorization Rule to manage")]
         public string AuthorizationRuleName { get; set; }
-
-        /// <summary>
-        /// Skip the process of scrambling the other (non-active) key
-        /// </summary>
-        [DisplayName("Skip Scrambling Other Key?")]
-        [Description("If checked, the opposite key (e.g. primary/secondary) will NOT be scrambled at the end of the rekeying")]
-        public bool SkipScramblingOtherKey { get; set; }
     }
 }

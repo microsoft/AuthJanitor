@@ -1,15 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.AzureSearch
 {
-    public class AzureSearchAdminKeyConfiguration : AuthJanitorProviderConfiguration
+    public class AzureSearchAdminKeyConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds>
     {
         public enum AzureSearchKeyKinds
         {
+            [PairedKey("key")]
             [Description("Primary")]
             Primary,
+            [PairedKey("key")]
             [Description("Secondary")]
             Secondary
         }
@@ -19,13 +22,6 @@ namespace AuthJanitor.Providers.AzureSearch
         /// </summary>
         [DisplayName("Key Kind")]
         [Description("Primary or secondary administrative key")]
-        public AzureSearchKeyKinds KeyKind { get; set; }
-
-        /// <summary>
-        /// Skip the process of scrambling the other (non-active) key
-        /// </summary>
-        [DisplayName("Skip Scrambling Other Key?")]
-        [Description("If checked, the opposite key (e.g. primary/secondary) will NOT be scrambled at the end of the rekeying")]
-        public bool SkipScramblingOtherKey { get; set; }
+        public override AzureSearchKeyKinds KeyType { get; set; }
     }
 }

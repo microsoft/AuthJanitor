@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure;
+using Azure;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Extensions.Logging;
 using System;
@@ -27,7 +28,7 @@ namespace AuthJanitor.Providers.KeyVault
         {
             _logger.LogInformation("Getting temporary secret to use during rekeying based on current KID");
             var client = GetKeyClient();
-            Azure.Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
+            Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
             _logger.LogInformation("Successfully retrieved temporary secret!");
 
             return new RegeneratedSecret()
@@ -41,7 +42,7 @@ namespace AuthJanitor.Providers.KeyVault
         {
             _logger.LogInformation("Regenerating Key Vault key {KeyName}", Configuration.KeyName);
             var client = GetKeyClient();
-            Azure.Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
+            Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
 
             CreateKeyOptions creationOptions = new CreateKeyOptions()
             {
@@ -59,7 +60,7 @@ namespace AuthJanitor.Providers.KeyVault
                 creationOptions.Tags.Add(tag.Key, tag.Value);
             }
 
-            Azure.Response<KeyVaultKey> key = await client.CreateKeyAsync(Configuration.KeyName, currentKey.Value.KeyType, creationOptions);
+            Response<KeyVaultKey> key = await client.CreateKeyAsync(Configuration.KeyName, currentKey.Value.KeyType, creationOptions);
             _logger.LogInformation("Successfully rekeyed Key Vault key {KeyName}", Configuration.KeyName);
 
             return new RegeneratedSecret()

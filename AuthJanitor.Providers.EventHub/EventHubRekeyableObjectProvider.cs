@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Eventhub.Fluent;
 using Microsoft.Azure.Management.EventHub.Fluent.Models;
+using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,110 +16,42 @@ namespace AuthJanitor.Providers.EventHub
               IconClass = "fa fa-key",
               Description = "Regenerates an Azure Event Hub Key")]
     [ProviderImage(ProviderImages.EVENT_HUB_SVG)]
-    public class EventHubRekeyableObjectProvider : RekeyableObjectProvider<EventHubKeyConfiguration>
+    public class EventHubRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<EventHubKeyConfiguration, IEventHubNamespace, IEventHubAuthorizationKey, EventHubKeyConfiguration.EventHubKeyTypes, KeyType>
     {
-        private readonly ILogger _logger;
+        public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger) : base(logger) { }
 
-        public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger)
-        {
-            _logger = logger;
-        }
+        protected override string Service => "Event Hub";
 
-        public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
-        {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) policy key...", OtherKeyType);
-            var keys = await (await GetAuthorizationRule()).GetKeysAsync();
-            _logger.LogInformation("Successfully retrieved temporary secret!");
-
-            return new RegeneratedSecret()
+        protected override RegeneratedSecret CreateSecretFromKeyring(IEventHubAuthorizationKey keyring, EventHubKeyConfiguration.EventHubKeyTypes keyType) =>
+            new RegeneratedSecret()
             {
-                Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
-                UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(keys, OtherKeyType),
-                NewConnectionString = GetConnectionStringValue(keys, OtherKeyType)
-            };
-        }
-
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
-        {
-            _logger.LogInformation("Regenerating Event Hub key {KeyType}", KeyType);
-            var keys = await (await GetAuthorizationRule()).RegenerateKeyAsync(this.KeyType);
-            _logger.LogInformation("Successfully rekeyed Event Hub key {KeyType}", KeyType);
-            return new RegeneratedSecret()
-            {
-                Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
-                UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(keys, KeyType),
-                NewConnectionString = GetConnectionStringValue(keys, KeyType)
-            };
-        }
-
-        public override async Task OnConsumingApplicationSwapped()
-        {
-            if (!Configuration.SkipScramblingOtherKey)
-            {
-                _logger.LogInformation("Scrambling Event Hub key kind {OtherKeyType}", OtherKeyType);
-                await (await GetAuthorizationRule()).RegenerateKeyAsync(this.OtherKeyType);
-            }
-            else
-                _logger.LogInformation("Skipping scrambling Event Hub key kind {OtherKeyType}", OtherKeyType);
-        }
-
-        public override IList<RiskyConfigurationItem> GetRisks()
-        {
-            List<RiskyConfigurationItem> issues = new List<RiskyConfigurationItem>();
-            if (Configuration.SkipScramblingOtherKey)
-            {
-                issues.Add(new RiskyConfigurationItem()
+                NewSecretValue = keyType switch
                 {
-                    Score = 80,
-                    Risk = $"The other (unused) Event Hub Key is not being scrambled during key rotation",
-                    Recommendation = "Unless other services use the alternate key, consider allowing the scrambling of the unused key to 'fully' rekey the Event Hub and maintain a high degree of security."
-                });
-            }
-
-            return issues;
-        }
-
-        public override string GetDescription() =>
-            $"Regenerates the {KeyType} key for an Event Hub called " +
-            $"'{ResourceName}' in namespace '{Configuration.NamespaceName}' (Resource Group '{ResourceGroup}') for the " +
-            $"authorization rule {Configuration.AuthorizationRuleName}. " +
-            $"The {OtherKeyType} key is used as a temporary key while " +
-            $"rekeying is taking place. The {OtherKeyType} key will " +
-            $"{(Configuration.SkipScramblingOtherKey ? "not" : "also")} be rotated.";
-
-        private KeyType KeyType =>
-            Configuration.KeyType switch
-            {
-                EventHubKeyConfiguration.EventHubKeyTypes.Secondary => KeyType.SecondaryKey,
-                _ => KeyType.PrimaryKey,
-            };
-        private KeyType OtherKeyType =>
-            Configuration.KeyType switch
-            {
-                EventHubKeyConfiguration.EventHubKeyTypes.Secondary => KeyType.PrimaryKey,
-                _ => KeyType.SecondaryKey,
+                    EventHubKeyConfiguration.EventHubKeyTypes.Primary => keyring.PrimaryKey,
+                    EventHubKeyConfiguration.EventHubKeyTypes.Secondary => keyring.SecondaryKey,
+                    _ => throw new NotImplementedException(),
+                },
+                NewConnectionString = keyType switch
+                {
+                    EventHubKeyConfiguration.EventHubKeyTypes.Primary => keyring.PrimaryConnectionString,
+                    EventHubKeyConfiguration.EventHubKeyTypes.Secondary => keyring.SecondaryConnectionString,
+                    _ => throw new NotImplementedException(),
+                }
             };
 
-        private Task<IEventHub> EventHub => this.GetAzure().ContinueWith(az => az.Result.EventHubs.GetByNameAsync(ResourceGroup, Configuration.NamespaceName, ResourceName)).Unwrap();
-        private async Task<IEventHubAuthorizationRule> GetAuthorizationRule()
-        {
-            var eventHub = await EventHub;
-            var authorizationRules = await eventHub.ListAuthorizationRulesAsync();
-            return authorizationRules.FirstOrDefault(r => r.Name == Configuration.AuthorizationRuleName);
-        }
+        protected override ISupportsGettingByResourceGroup<IEventHubNamespace> GetResourceCollection(IAzure azure) => azure.EventHubNamespaces;
 
-        private string GetKeyValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
-        {
-            KeyType.SecondaryKey => keys.SecondaryKey,
-            _ => keys.PrimaryKey,
-        };
+        protected override async Task<IEventHubAuthorizationKey> RetrieveCurrentKeyring(IEventHubNamespace resource, KeyType keyType) =>
+            await (await resource.ListAuthorizationRulesAsync()).First(r => r.Name == Configuration.AuthorizationRuleName).GetKeysAsync();
 
-        private string GetConnectionStringValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
+        protected override async Task<IEventHubAuthorizationKey> RotateKeyringValue(IEventHubNamespace resource, KeyType keyType) =>
+            await (await resource.ListAuthorizationRulesAsync()).First(r => r.Name == Configuration.AuthorizationRuleName).RegenerateKeyAsync(keyType);
+
+        protected override KeyType Translate(EventHubKeyConfiguration.EventHubKeyTypes keyType) => keyType switch
         {
-            KeyType.SecondaryKey => keys.SecondaryConnectionString,
-            _ => keys.PrimaryConnectionString,
+            EventHubKeyConfiguration.EventHubKeyTypes.Primary => KeyType.PrimaryKey,
+            EventHubKeyConfiguration.EventHubKeyTypes.Secondary => KeyType.SecondaryKey,
+            _ => throw new NotImplementedException(),
         };
     }
 }

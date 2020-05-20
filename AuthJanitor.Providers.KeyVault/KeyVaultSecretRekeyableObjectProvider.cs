@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Providers.Azure;
+using Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 using System;
@@ -32,7 +33,7 @@ namespace AuthJanitor.Providers.KeyVault
         {
             _logger.LogInformation("Getting temporary secret based on current version...");
             var client = GetSecretClient();
-            Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
+            Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
             _logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
@@ -46,7 +47,7 @@ namespace AuthJanitor.Providers.KeyVault
         {
             _logger.LogInformation("Getting current Secret details from Secret name '{SecretName}'", Configuration.SecretName);
             var client = GetSecretClient();
-            Azure.Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
+            Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
             // Create a new version of the Secret
             KeyVaultSecret newSecret = new KeyVaultSecret(
@@ -67,7 +68,7 @@ namespace AuthJanitor.Providers.KeyVault
             newSecret.Properties.ExpiresOn = DateTimeOffset.UtcNow + requestedValidPeriod;
 
             _logger.LogInformation("Committing new Secret with name '{SecretName}'", newSecret.Name);
-            Azure.Response<KeyVaultSecret> secretResponse = await client.SetSecretAsync(newSecret);
+            Response<KeyVaultSecret> secretResponse = await client.SetSecretAsync(newSecret);
             _logger.LogInformation("Successfully committed '{SecretName}'", newSecret.Name);
 
             return new RegeneratedSecret()

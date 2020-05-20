@@ -13,16 +13,6 @@ namespace AuthJanitor.Providers
     public interface IAuthJanitorProvider
     {
         /// <summary>
-        /// Resource Group name
-        /// </summary>
-        string ResourceGroup { get; }
-
-        /// <summary>
-        /// Resource name (inside Resource Group)
-        /// </summary>
-        string ResourceName { get; }
-
-        /// <summary>
         /// Serialized ProviderConfiguration
         /// </summary>
         string SerializedConfiguration { get; set; }
@@ -77,16 +67,6 @@ namespace AuthJanitor.Providers
         {
             get => _cachedConfigurationInstance ??= JsonSerializer.Deserialize<TConfiguration>(SerializedConfiguration);
         }
-
-        /// <summary>
-        /// Resource Group name
-        /// </summary>
-        public string ResourceGroup => Configuration?.ResourceGroup;
-
-        /// <summary>
-        /// Resource name (inside Resource Group)
-        /// </summary>
-        public string ResourceName => Configuration?.ResourceName;
 
         /// <summary>
         /// Serialized ProviderConfiguration

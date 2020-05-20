@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.2.1" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.33.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Extensions.Azure\AuthJanitor.Extensions.Azure.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.Azure\AuthJanitor.Providers.Azure.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
   </ItemGroup>
 

@@ -1,19 +1,24 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.Storage
 {
-    public class StorageAccountKeyConfiguration : AuthJanitorProviderConfiguration
+    public class StorageAccountKeyConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<StorageAccountKeyConfiguration.StorageKeyTypes>
     {
         public enum StorageKeyTypes
         {
+            [PairedKey("key")]
             [Description("Key1")]
             Key1,
+            [PairedKey("key")]
             [Description("Key2")]
             Key2,
+            [PairedKey("kerb")]
             [Description("Kerb1")]
             Kerb1,
+            [PairedKey("kerb")]
             [Description("Kerb2")]
             Kerb2
         }
@@ -23,13 +28,6 @@ namespace AuthJanitor.Providers.Storage
         /// </summary>
         [DisplayName("Storage Key")]
         [Description("Type of Storage Key to manage")]
-        public StorageKeyTypes KeyType { get; set; }
-
-        /// <summary>
-        /// Skip the process of scrambling the other (non-active) key
-        /// </summary>
-        [DisplayName("Skip Scrambling Other Key?")]
-        [Description("If checked, the opposite key (e.g. primary/secondary) will NOT be scrambled at the end of the rekeying")]
-        public bool SkipScramblingOtherKey { get; set; }
+        public override StorageKeyTypes KeyType { get; set; }
     }
 }
