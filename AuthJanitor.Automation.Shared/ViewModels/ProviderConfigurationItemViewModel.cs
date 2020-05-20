@@ -26,14 +26,22 @@ namespace AuthJanitor.Automation.Shared.ViewModels
         [JsonIgnore]
         public bool BoolValue
         {
-            get => Value == null ? false : bool.Parse(Value);
+            get
+            {
+                bool.TryParse(Value, out bool boolResult);
+                return boolResult;
+            }
             set => Value = value.ToString();
         }
 
         [JsonIgnore]
         public int IntValue
         {
-            get => Value == null ? 0 : int.Parse(Value);
+            get
+            {
+                int.TryParse(Value, out int intResult);
+                return intResult;
+            }
             set => Value = value.ToString();
         }
 
