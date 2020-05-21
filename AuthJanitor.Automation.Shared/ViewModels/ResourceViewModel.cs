@@ -23,7 +23,6 @@ namespace AuthJanitor.Automation.Shared.ViewModels
             MoreInformationUrl = string.Empty
         };
         public string SerializedProviderConfiguration { get; set; }
-        public ProviderConfigurationViewModel ProviderConfiguration { get; set; } = new ProviderConfigurationViewModel();
         public IEnumerable<RiskyConfigurationItem> Risks { get; set; } = new List<RiskyConfigurationItem>();
         public string RuntimeDescription { get; set; }
         public int RiskScore => Risks.Sum(r => r.Score);

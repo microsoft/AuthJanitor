@@ -11,9 +11,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -60,20 +62,8 @@ namespace AuthJanitor.Automation.AdminApi
             if (provider == null)
                 return new NotFoundObjectResult("Provider type not found");
 
-            if (string.IsNullOrEmpty(resource.SerializedProviderConfiguration))
-            {
-                resource.SerializedProviderConfiguration = JsonConvert.SerializeObject(
-                    resource.ProviderConfiguration.ConfigurationItems.ToDictionary(
-                        k => k.Name,
-                        v => v.Value));
-            }
-            try
-            {
-                // Test deserialization of configuration to make sure it's valid
-                var obj = JsonConvert.DeserializeObject(resource.SerializedProviderConfiguration, provider.ProviderConfigurationType);
-                if (obj == null) return new BadRequestErrorMessageResult("Invalid Provider configuration");
-            }
-            catch { return new BadRequestErrorMessageResult("Invalid Provider configuration"); }
+            if (!_providerManager.TestProviderConfiguration(provider.ProviderTypeName, resource.SerializedProviderConfiguration))
+                return new BadRequestErrorMessageResult("Invalid Provider configuration!");
 
             Resource newResource = new Resource()
             {
@@ -155,13 +145,8 @@ namespace AuthJanitor.Automation.AdminApi
             if (provider == null)
                 return new NotFoundObjectResult("Provider type not found");
 
-            try
-            {
-                // Test deserialization of configuration to make sure it's valid
-                var obj = JsonConvert.DeserializeObject(resource.SerializedProviderConfiguration, provider.ProviderConfigurationType);
-                if (obj == null) return new BadRequestErrorMessageResult("Invalid Provider configuration");
-            }
-            catch { return new BadRequestErrorMessageResult("Invalid Provider configuration"); }
+            if (!_providerManager.TestProviderConfiguration(provider.ProviderTypeName, resource.SerializedProviderConfiguration))
+                return new BadRequestErrorMessageResult("Invalid Provider configuration!");
 
             Resource newResource = new Resource()
             {
