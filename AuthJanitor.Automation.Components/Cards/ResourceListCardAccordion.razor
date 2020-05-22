@@ -1,6 +1,7 @@
 ﻿<Accordion>
     @foreach (var resource in Resources)
     {
+        var providerConfiguration = new ProviderConfigurationViewModel() { SerializedConfiguration = resource.SerializedProviderConfiguration };
         <Card>
             <CardHeader>
                 <Button Clicked="@(() => PutVisibility(resource.ObjectId, !GetVisibility(resource.ObjectId)))">
@@ -13,7 +14,7 @@
                     <Container IsFluid="true">
                         <Row>
                             <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                                <ProviderSettingsCard ProviderConfiguration="@resource.ProviderConfiguration" ShowEditControls="false" />
+                                <ProviderSettingsCard ProviderConfiguration="@providerConfiguration" ShowEditControls="false" />
                             </Column>
                         </Row>
                         <Row>

@@ -169,8 +169,6 @@ namespace AuthJanitor.Automation.Shared
                 IsRekeyableObjectProvider = resource.IsRekeyableObjectProvider,
                 ProviderType = resource.ProviderType,
                 ProviderDetail = providerManagerService.GetProviderMetadata(resource.ProviderType).Details,
-                ProviderConfiguration = serviceProvider.GetRequiredService<Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel>>()(
-                    providerManagerService.GetProviderConfiguration(resource.ProviderType, resource.ProviderConfiguration)),
                 SerializedProviderConfiguration = resource.ProviderConfiguration,
                 RuntimeDescription = provider.GetDescription(),
                 Risks = provider.GetRisks()

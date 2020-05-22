@@ -58,7 +58,8 @@
            YesButton="Create"
            NoButton="Cancel"
            ResultClicked="@CreateCallback">
-    <ResourceEditor @bind-Value="@SelectedValue" />
+    <ResourceEditor @bind-Value="@SelectedValue"
+                    @ref="_resourceEditorRef"/>
 </DataModal>
 <DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
                          ObjectId="@SelectedValue.ObjectId"
@@ -68,6 +69,7 @@
 @using AuthJanitor.Automation.Components.Editors
 @using AuthJanitor.Automation.Components.Modals
 @code {
+    private ResourceEditor _resourceEditorRef;
     protected IEnumerable<ResourceViewModel> ManagedResources { get; set; } = new List<ResourceViewModel>();
 
     protected bool CreateModalShowing { get; set; }
@@ -93,6 +95,7 @@
     {
         if (result)
         {
+            SelectedValue.SerializedProviderConfiguration = _resourceEditorRef.ProviderConfiguration?.SerializedConfiguration;
             await Http.AJCreate<ResourceViewModel>(SelectedValue);
             await LoadData();
         }
