@@ -1,6 +1,4 @@
 ﻿<Accordion>
-    @if (ConfigurationReady)
-    {
     @foreach (var resource in Resources)
     {
         <Card>
@@ -15,7 +13,9 @@
                     <Container IsFluid="true">
                         <Row>
                             <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                                <ProviderSettingsCard ProviderConfiguration="@ProviderConfigurations[resource.ObjectId]" ShowEditControls="false" />
+                                <ProviderSettingsCard ProviderConfiguration="@resource.ProviderConfiguration" 
+                                                      ProviderType="@resource.ProviderType"
+                                                      ShowEditControls="false" />
                             </Column>
                         </Row>
                         <Row>
@@ -31,37 +31,21 @@
             </Collapse>
         </Card>
     }
-    }
 </Accordion>
 
 @using AuthJanitor.Automation.Components.Common.Resources
 @using AuthJanitor.Automation.Components.Common.Risks
 @code {
     protected Dictionary<Guid, bool> Visibilities { get; set; } = new Dictionary<Guid, bool>();
-    protected Dictionary<Guid, ProviderConfigurationViewModel> ProviderConfigurations { get; set; } = new Dictionary<Guid, ProviderConfigurationViewModel>();
 
     [Parameter]
     public IEnumerable<ResourceViewModel> Resources { get; set; } = new List<ResourceViewModel>();
-
-    protected bool ConfigurationReady { get; set; } = false;
 
     protected override void OnParametersSet()
     {
         foreach (var r in Resources)
         {
             Visibilities[r.ObjectId] = false;
-            ProviderConfigurations[r.ObjectId] = new ProviderConfigurationViewModel();
         }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await Task.WhenAll(Resources.Select(async r =>
-        {
-            Visibilities[r.ObjectId] = false;
-            var providerConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(r.ProviderType);
-            ProviderConfigurations[r.ObjectId].ConfigurationItems = providerConfiguration.ConfigurationItems;
-            ProviderConfigurations[r.ObjectId].SerializedConfiguration = r.SerializedProviderConfiguration;
-        })).ContinueWith(t => ConfigurationReady = true);
     }
 }

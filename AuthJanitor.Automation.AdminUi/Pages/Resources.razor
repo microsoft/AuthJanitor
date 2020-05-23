@@ -58,8 +58,7 @@
            YesButton="Create"
            NoButton="Cancel"
            ResultClicked="@CreateCallback">
-    <ResourceEditor @bind-Value="@SelectedValue"
-                    @ref="_resourceEditorRef"/>
+    <ResourceEditor @bind-Value="@SelectedValue"/>
 </DataModal>
 <DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
                          ObjectId="@SelectedValue.ObjectId"
@@ -83,7 +82,15 @@
 
     protected override Task OnInitializedAsync() => LoadData();
 
-    protected async Task LoadData() => ManagedResources = await Http.AJList<ResourceViewModel>();
+    protected async Task LoadData()
+    {
+        ManagedResources = await Http.AJList<ResourceViewModel>();
+        await Task.WhenAll(ManagedResources.Select(async resource =>
+        {
+            resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(resource.ProviderType);
+            resource.ProviderConfiguration.SerializedConfiguration = resource.SerializedProviderConfiguration;
+        }));
+    }
 
     protected void CreateNew()
     {
@@ -95,7 +102,7 @@
     {
         if (result)
         {
-            SelectedValue.SerializedProviderConfiguration = _resourceEditorRef.ProviderConfiguration?.SerializedConfiguration;
+            SelectedValue.SerializedProviderConfiguration = SelectedValue.ProviderConfiguration?.SerializedConfiguration;
             await Http.AJCreate<ResourceViewModel>(SelectedValue);
             await LoadData();
         }

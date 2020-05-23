@@ -4,6 +4,7 @@ using AuthJanitor.Providers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace AuthJanitor.Automation.Shared.ViewModels
 {
@@ -26,5 +27,9 @@ namespace AuthJanitor.Automation.Shared.ViewModels
         public IEnumerable<RiskyConfigurationItem> Risks { get; set; } = new List<RiskyConfigurationItem>();
         public string RuntimeDescription { get; set; }
         public int RiskScore => Risks.Sum(r => r.Score);
+
+        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public ProviderConfigurationViewModel ProviderConfiguration { get; set; } = new ProviderConfigurationViewModel();
     }
 }
