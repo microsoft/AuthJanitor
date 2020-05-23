@@ -1,20 +1,21 @@
 ﻿<Accordion>
+    @if (ConfigurationReady)
+    {
     @foreach (var resource in Resources)
     {
-        var providerConfiguration = new ProviderConfigurationViewModel() { SerializedConfiguration = resource.SerializedProviderConfiguration };
         <Card>
             <CardHeader>
-                <Button Clicked="@(() => PutVisibility(resource.ObjectId, !GetVisibility(resource.ObjectId)))">
+                <Button Clicked="@(() => Visibilities[resource.ObjectId] = !Visibilities[resource.ObjectId])">
                     <ResourceNameStyled Value="@resource" />
                 </Button>
                 <RiskScoreBadge Value="@resource.RiskScore" Float="Float.Right" Class="mt-2" />
             </CardHeader>
-            <Collapse IsOpen="@GetVisibility(resource.ObjectId)">
+            <Collapse IsOpen="@Visibilities[resource.ObjectId]">
                 <CardBody Padding="Padding.Is2.OnAll">
                     <Container IsFluid="true">
                         <Row>
                             <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                                <ProviderSettingsCard ProviderConfiguration="@providerConfiguration" ShowEditControls="false" />
+                                <ProviderSettingsCard ProviderConfiguration="@ProviderConfigurations[resource.ObjectId]" ShowEditControls="false" />
                             </Column>
                         </Row>
                         <Row>
@@ -30,20 +31,37 @@
             </Collapse>
         </Card>
     }
+    }
 </Accordion>
 
 @using AuthJanitor.Automation.Components.Common.Resources
 @using AuthJanitor.Automation.Components.Common.Risks
 @code {
-    protected bool PutVisibility(Guid id, bool visible) => Visibilities[id] = visible;
-    protected bool GetVisibility(Guid id) => Visibilities.ContainsKey(id) ? Visibilities[id] : false;
     protected Dictionary<Guid, bool> Visibilities { get; set; } = new Dictionary<Guid, bool>();
+    protected Dictionary<Guid, ProviderConfigurationViewModel> ProviderConfigurations { get; set; } = new Dictionary<Guid, ProviderConfigurationViewModel>();
 
     [Parameter]
     public IEnumerable<ResourceViewModel> Resources { get; set; } = new List<ResourceViewModel>();
 
-    protected override void OnInitialized()
+    protected bool ConfigurationReady { get; set; } = false;
+
+    protected override void OnParametersSet()
     {
-        foreach (var item in Resources) Visibilities[item.ObjectId] = false;
+        foreach (var r in Resources)
+        {
+            Visibilities[r.ObjectId] = false;
+            ProviderConfigurations[r.ObjectId] = new ProviderConfigurationViewModel();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(Resources.Select(async r =>
+        {
+            Visibilities[r.ObjectId] = false;
+            var providerConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(r.ProviderType);
+            ProviderConfigurations[r.ObjectId].ConfigurationItems = providerConfiguration.ConfigurationItems;
+            ProviderConfigurations[r.ObjectId].SerializedConfiguration = r.SerializedProviderConfiguration;
+        })).ContinueWith(t => ConfigurationReady = true);
     }
 }

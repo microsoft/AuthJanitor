@@ -31,6 +31,11 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
 
         private AzureADIdentityServiceConfiguration Configuration { get; }
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions()
+        {
+            // Upstream bug: https://github.com/dotnet/runtime/issues/30255
+            Converters = { new StringToIntJsonConverter(false), new StringToLongJsonConverter(false) }
+        };
 
         /// <summary>
         /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory
@@ -145,7 +150,7 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
                 "/oauth2/token",
                 new FormUrlEncodedContent(dict));
             var tokenResponse = JsonSerializer.Deserialize<AccessTokenCredential>(
-                await result.Content.ReadAsStringAsync());
+                await result.Content.ReadAsStringAsync(), _serializerOptions);
 
             return tokenResponse;
         }

@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.EventSinks.SendGrid
@@ -60,12 +60,12 @@ namespace AuthJanitor.Integrations.EventSinks.SendGrid
                 "<h3>AuthJanitor Event! (" + systemEvent.ToString() + ")</h3><br />" +
                 "<h6>Source: " + source + "</h6><br />" +
                 "<em>" + DateTime.UtcNow + "</em>" +
-                "<pre>" + JsonConvert.SerializeObject(detailObject, Formatting.Indented) + "</pre>";
+                "<pre>" + JsonSerializer.Serialize(detailObject, new JsonSerializerOptions() { WriteIndented = true }) + "</pre>";
             var nonHtmlTemplate =
                 "AuthJanitor Event! (" + systemEvent.ToString() + ")" + Environment.NewLine +
                 "Source: " + source + Environment.NewLine +
                 "Object: " + Environment.NewLine +
-                JsonConvert.SerializeObject(detailObject, Formatting.Indented);
+                JsonSerializer.Serialize(detailObject, new JsonSerializerOptions() { WriteIndented = true });
 
             if (Configuration.MinimumLogLevel > LogLevel.Information && systemEvent == AuthJanitorSystemEvents.AnomalousEventOccurred)
                 return;

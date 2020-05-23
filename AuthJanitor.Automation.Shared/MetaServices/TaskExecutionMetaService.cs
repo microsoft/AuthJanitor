@@ -11,19 +11,12 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared.MetaServices
 {
     public class TaskExecutionMetaService
     {
-        private static readonly JsonSerializerOptions ExceptionSerializerOptions = new JsonSerializerOptions()
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
         private readonly IDataStore<Resource> _resources;
@@ -82,6 +75,15 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             var rekeyingAttemptLog = new RekeyingAttemptLogger();
             task.Attempts.Add(rekeyingAttemptLog);
             await _rekeyingTasks.Update(task);
+
+            Task.Run(async () =>
+            {
+                while (task.RekeyingInProgress)
+                {
+                    await Task.Delay(15*1000);
+                    await _rekeyingTasks.Update(task);
+                }
+            });
 
             // Retrieve credentials for Task
             AccessTokenCredential credential = null;
@@ -191,7 +193,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
         {
             var myAttempt = task.Attempts.OrderByDescending(a => a.AttemptStarted).First();
             if (text != default) myAttempt.LogCritical(ex, text);
-            myAttempt.OuterException = JsonSerializer.Serialize(ex, ExceptionSerializerOptions);
+            myAttempt.OuterException = $"{ex.Message}{Environment.NewLine}{ex.StackTrace}";
             task.RekeyingInProgress = false;
             task.RekeyingFailed = true;
             await _rekeyingTasks.Update(task);

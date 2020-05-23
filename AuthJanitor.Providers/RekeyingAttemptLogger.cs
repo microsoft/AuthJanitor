@@ -21,9 +21,9 @@ namespace AuthJanitor.Providers
         public ILogger ChainedLogger { get; set; }
         public string LogString { get; set; }
 
-        public RekeyingAttemptLogger(ILogger chainedLogger = null)
+        public RekeyingAttemptLogger() => AttemptStarted = DateTimeOffset.UtcNow;
+        public RekeyingAttemptLogger(ILogger chainedLogger) : this()
         {
-            AttemptStarted = DateTimeOffset.UtcNow;
             ChainedLogger = chainedLogger;
         }
 
