@@ -16,7 +16,9 @@
         </Row>
         <Row>
             <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                <ProviderSettingsCard ProviderConfiguration="@ProviderConfiguration" ShowEditControls="false" />
+                <ProviderSettingsCard ProviderConfiguration="@Resource.ProviderConfiguration" 
+                                      ProviderType="@Resource.ProviderType"
+                                      ShowEditControls="false" />
             </Column>
         </Row>
         <Row>
@@ -37,12 +39,10 @@
 
     public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
 
-    protected ProviderConfigurationViewModel ProviderConfiguration { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
         Resource = await Http.AJGet<ResourceViewModel>(Guid.Parse(ResourceId));
-        ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(Resource.ProviderType);
-        ProviderConfiguration.SerializedConfiguration = Resource.SerializedProviderConfiguration;
+        Resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(Resource.ProviderType);
+        Resource.ProviderConfiguration.SerializedConfiguration = Resource.SerializedProviderConfiguration;
     }
 }

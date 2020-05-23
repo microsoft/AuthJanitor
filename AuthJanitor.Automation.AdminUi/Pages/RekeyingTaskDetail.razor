@@ -131,6 +131,12 @@
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));
         if (Task.Attempts.Any())
             SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
+        
+        await System.Threading.Tasks.Task.WhenAll(Task.ManagedSecret.Resources.Select(async resource =>
+        {
+            resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(resource.ProviderType);
+            resource.ProviderConfiguration.SerializedConfiguration = resource.SerializedProviderConfiguration;
+        }));
     }
 
     string SelectedAttemptTab;

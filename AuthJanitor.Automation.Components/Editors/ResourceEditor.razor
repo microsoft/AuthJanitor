@@ -24,14 +24,14 @@
         </Field>
     </Row>
 </Container>
-@if (ProviderConfiguration != null &&
-    ProviderConfiguration.ConfigurationItems != null &&
-    ProviderConfiguration.ConfigurationItems.Any())
+@if (Value.ProviderConfiguration != null &&
+    Value.ProviderConfiguration.ConfigurationItems != null &&
+    Value.ProviderConfiguration.ConfigurationItems.Any())
 {
     <Container Class="hasSectionHeader">
         <span class="sectionHeader">Provider Settings</span>
         <Row>
-            <ConfigurationVisualizer @bind-Value="@ProviderConfiguration"
+            <ConfigurationVisualizer @bind-Value="@Value.ProviderConfiguration"
                                       ShowEditControls="true" />
         </Row>
     </Container>
@@ -44,13 +44,13 @@
         </Paragraph>
         <Column ColumnSize="ColumnSize.Is6" Class="text-center">
             <ConfigurationTestButton ProviderType="@Value.ProviderType"
-                                     ProviderConfiguration="@ProviderConfiguration"
+                                     ProviderConfiguration="@Value.ProviderConfiguration"
                                      DefaultColor="Color.Secondary"
                                      Context="TestAsContexts.AsUser" />
         </Column>
         <Column ColumnSize="ColumnSize.Is6" Class="text-center">
             <ConfigurationTestButton ProviderType="@Value.ProviderType"
-                                     ProviderConfiguration="@ProviderConfiguration"
+                                     ProviderConfiguration="@Value.ProviderConfiguration"
                                      DefaultColor="Color.Secondary"
                                      Context="TestAsContexts.AsApp" />
         </Column>
@@ -65,11 +65,9 @@
     [Parameter]
     public EventCallback<ResourceViewModel> ValueChanged { get; set; }
 
-    public ProviderConfigurationViewModel ProviderConfiguration { get; set; }
-
     protected async Task ProviderTypeChanged(string providerType)
     {
         Value.ProviderType = providerType;
-        ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(providerType);
+        Value.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(providerType);
     }
 }
