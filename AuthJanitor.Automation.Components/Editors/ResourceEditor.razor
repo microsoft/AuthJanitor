@@ -35,6 +35,26 @@
                                       ShowEditControls="true" />
         </Row>
     </Container>
+
+    <Row Margin="Margin.Is2.FromTop" Padding="Padding.Is2.FromTop" Class="border-top">
+        <Paragraph Class="small"
+                   Alignment="TextAlignment.Center" 
+                   Margin="Margin.Is5.OnX" 
+                   Padding="Padding.Is2.OnY">Use the buttons below to test the configuration in the context of either the current user or the AuthJanitor application.
+        </Paragraph>
+        <Column ColumnSize="ColumnSize.Is6" Class="text-center">
+            <ConfigurationTestButton ProviderType="@Value.ProviderType"
+                                     ProviderConfiguration="@ProviderConfiguration"
+                                     DefaultColor="Color.Secondary"
+                                     Context="TestAsContexts.AsUser" />
+        </Column>
+        <Column ColumnSize="ColumnSize.Is6" Class="text-center">
+            <ConfigurationTestButton ProviderType="@Value.ProviderType"
+                                     ProviderConfiguration="@ProviderConfiguration"
+                                     DefaultColor="Color.Secondary"
+                                     Context="TestAsContexts.AsApp" />
+        </Column>
+    </Row>
 }
 
 @using AuthJanitor.Automation.Components.Common.Providers

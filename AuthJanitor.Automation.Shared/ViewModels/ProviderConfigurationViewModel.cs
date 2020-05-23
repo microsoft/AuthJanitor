@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AuthJanitor.Automation.Shared.ViewModels
 {
@@ -10,6 +11,7 @@ namespace AuthJanitor.Automation.Shared.ViewModels
         public IEnumerable<ProviderConfigurationItemViewModel> ConfigurationItems { get; set; } = new List<ProviderConfigurationItemViewModel>();
 
         [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string SerializedConfiguration
         {
             get
@@ -36,11 +38,11 @@ namespace AuthJanitor.Automation.Shared.ViewModels
                             break;
                     }
                 }
-                return System.Text.Json.JsonSerializer.Serialize(dict);
+                return JsonSerializer.Serialize(dict);
             }
             set
             {
-                var deserialized = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, System.Text.Json.JsonElement>>(value);
+                var deserialized = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(value);
                 foreach (var item in ConfigurationItems)
                 {
                     System.Console.WriteLine($"{item.Name} => {deserialized[item.Name]} ({item.InputType})");

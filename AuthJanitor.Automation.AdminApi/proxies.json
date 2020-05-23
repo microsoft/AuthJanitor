@@ -15,6 +15,13 @@
       },
       "backendUri": "%STORAGE_WEB_URL%/{restOfPath}"
     },
+    "uiContent": {
+      "matchCondition": {
+        "methods": [ "GET" ],
+        "route": "/_content/{*restOfPath}"
+      },
+      "backendUri": "%STORAGE_WEB_URL%/_content/{restOfPath}"
+    },
     "favicon": {
       "matchCondition": {
         "methods": [ "GET" ],
