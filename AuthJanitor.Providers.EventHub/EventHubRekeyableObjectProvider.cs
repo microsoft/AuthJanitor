@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Eventhub.Fluent;
 using Microsoft.Azure.Management.EventHub.Fluent.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.EventHub
@@ -109,16 +111,16 @@ namespace AuthJanitor.Providers.EventHub
             return authorizationRules.FirstOrDefault(r => r.Name == Configuration.AuthorizationRuleName);
         }
 
-        private string GetKeyValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
+        private SecureString GetKeyValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
         {
-            KeyType.SecondaryKey => keys.SecondaryKey,
-            _ => keys.PrimaryKey,
+            KeyType.SecondaryKey => keys.SecondaryKey.GetSecureString(),
+            _ => keys.PrimaryKey.GetSecureString(),
         };
 
-        private string GetConnectionStringValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
+        private SecureString GetConnectionStringValue(IEventHubAuthorizationKey keys, KeyType type) => type switch
         {
-            KeyType.SecondaryKey => keys.SecondaryConnectionString,
-            _ => keys.PrimaryConnectionString,
+            KeyType.SecondaryKey => keys.SecondaryConnectionString.GetSecureString(),
+            _ => keys.PrimaryConnectionString.GetSecureString(),
         };
     }
 }

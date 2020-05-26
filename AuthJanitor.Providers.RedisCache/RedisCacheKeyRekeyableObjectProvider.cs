@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Redis.Fluent;
 using Microsoft.Azure.Management.Redis.Fluent.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.Redis
@@ -105,10 +107,10 @@ namespace AuthJanitor.Providers.Redis
             _ => throw new System.Exception($"Key type '{keyType}' not implemented")
         };
 
-        private string GetKeyValue(IRedisAccessKeys keys, RedisKeyType keyType) => keyType switch
+        private SecureString GetKeyValue(IRedisAccessKeys keys, RedisKeyType keyType) => keyType switch
         {
-            RedisKeyType.Primary => keys.PrimaryKey,
-            RedisKeyType.Secondary => keys.SecondaryKey,
+            RedisKeyType.Primary => keys.PrimaryKey.GetSecureString(),
+            RedisKeyType.Secondary => keys.SecondaryKey.GetSecureString(),
             _ => throw new System.Exception($"Key type '{keyType}' not implemented")
         };
     }

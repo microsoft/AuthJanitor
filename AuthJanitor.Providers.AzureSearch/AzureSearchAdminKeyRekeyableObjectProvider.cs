@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Search.Fluent;
 using Microsoft.Azure.Management.Search.Fluent.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AzureSearch
@@ -103,10 +105,10 @@ namespace AuthJanitor.Providers.AzureSearch
             _ => throw new System.Exception($"Key kind '{keyKind}' not implemented")
         };
 
-        private string GetKeyValue(IAdminKeys keys, AdminKeyKind keyKind) => keyKind switch
+        private SecureString GetKeyValue(IAdminKeys keys, AdminKeyKind keyKind) => keyKind switch
         {
-            AdminKeyKind.Primary => keys.PrimaryKey,
-            AdminKeyKind.Secondary => keys.SecondaryKey,
+            AdminKeyKind.Primary => keys.PrimaryKey.GetSecureString(),
+            AdminKeyKind.Secondary => keys.SecondaryKey.GetSecureString(),
             _ => throw new System.Exception($"Key kind '{keyKind}' not implemented")
         };
     }

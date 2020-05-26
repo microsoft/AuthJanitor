@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Storage.Fluent;
 using Microsoft.Azure.Management.Storage.Fluent.Models;
 using Microsoft.Extensions.Logging;
@@ -38,8 +39,8 @@ namespace AuthJanitor.Providers.Storage
             {
                 Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
                 UserHint = Configuration.UserHint,
-                NewSecretValue = newKey?.Value,
-                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={ResourceName};AccountKey={newKey?.Value};EndpointSuffix=core.windows.net"
+                NewSecretValue = newKey?.Value.GetSecureString(),
+                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={ResourceName};AccountKey={newKey?.Value};EndpointSuffix=core.windows.net".GetSecureString()
             };
         }
 
@@ -52,8 +53,8 @@ namespace AuthJanitor.Providers.Storage
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = newKey?.Value,
-                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={ResourceName};AccountKey={newKey?.Value};EndpointSuffix=core.windows.net"
+                NewSecretValue = newKey?.Value.GetSecureString(),
+                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={ResourceName};AccountKey={newKey?.Value};EndpointSuffix=core.windows.net".GetSecureString()
             };
         }
 

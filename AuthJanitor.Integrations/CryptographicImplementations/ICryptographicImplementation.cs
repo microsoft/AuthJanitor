@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.CryptographicImplementations
@@ -7,11 +8,18 @@ namespace AuthJanitor.Integrations.CryptographicImplementations
     public interface ICryptographicImplementation
     {
         /// <summary>
-        /// Generate a new secure string with a given length
+        /// Generate a new cryptographically random SecureString with a given length
+        /// </summary>
+        /// <param name="length">Length to generate</param>
+        /// <returns>Generated SecureString</returns>
+        Task<SecureString> GenerateCryptographicallyRandomSecureString(int length);
+
+        /// <summary>
+        /// Generate a new cryptographically random string with a given length
         /// </summary>
         /// <param name="length">Length to generate</param>
         /// <returns>Generated string</returns>
-        Task<string> GenerateCryptographicallySecureString(int length);
+        Task<string> GenerateCryptographicallyRandomString(int length);
 
         /// <summary>
         /// Hash a given string

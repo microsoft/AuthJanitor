@@ -38,7 +38,7 @@ namespace AuthJanitor.Providers.KeyVault
             {
                 Expiry = currentSecret.Value.Properties.ExpiresOn.Value,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = currentSecret.Value.Value
+                NewSecretValue = currentSecret.Value.Value.GetSecureString()
             };
         }
 
@@ -51,7 +51,8 @@ namespace AuthJanitor.Providers.KeyVault
             // Create a new version of the Secret
             KeyVaultSecret newSecret = new KeyVaultSecret(
                 Configuration.SecretName,
-                await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.SecretLength));
+                (await _cryptographicImplementation.GenerateCryptographicallyRandomSecureString(Configuration.SecretLength))
+                    .GetNormalString());
 
             // Copy in metadata from the old Secret if it existed
             if (currentSecret != null && currentSecret.Value != null)
@@ -74,7 +75,7 @@ namespace AuthJanitor.Providers.KeyVault
             {
                 Expiry = newSecret.Properties.ExpiresOn.Value,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = secretResponse.Value.Value
+                NewSecretValue = secretResponse.Value.Value.GetSecureString()
             };
         }
         public override IList<RiskyConfigurationItem> GetRisks()

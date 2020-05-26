@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.WebAppBase.Update;
 using Microsoft.Extensions.Logging;
@@ -73,7 +74,7 @@ namespace AuthJanitor.Providers.AppServices.WebApps
                 var connectionStringName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.ConnectionStringName : $"{Configuration.ConnectionStringName}-{secret.UserHint}";
                 _logger.LogInformation("Updating Connection String '{ConnectionStringName}' in slot '{SlotName}'", connectionStringName, slotName);
                 updateBase = updateBase.WithoutConnectionString(connectionStringName);
-                updateBase = updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey, Configuration.ConnectionStringType);
+                updateBase = updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey.GetNormalString(), Configuration.ConnectionStringType);
             }
 
             _logger.LogInformation("Applying changes.");

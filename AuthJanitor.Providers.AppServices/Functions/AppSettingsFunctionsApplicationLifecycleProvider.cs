@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.AppService.Fluent.WebAppBase.Update;
 using Microsoft.Extensions.Logging;
@@ -77,7 +78,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
                     Configuration.CommitAsConnectionString ? "connection string" : "secret");
 
                 updateBase = updateBase.WithAppSetting(appSettingName,
-                    Configuration.CommitAsConnectionString ? secret.NewConnectionStringOrKey : secret.NewSecretValue);
+                    Configuration.CommitAsConnectionString ? secret.NewConnectionStringOrKey.GetNormalString() : secret.NewSecretValue.GetNormalString());
             }
 
             _logger.LogInformation("Applying changes.");

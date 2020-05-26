@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 using System;
@@ -36,7 +37,7 @@ namespace AuthJanitor.Providers.KeyVault
 
                 // Create a new version of the Secret
                 string secretName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.SecretName : $"{Configuration.SecretName}-{secret.UserHint}";
-                KeyVaultSecret newKvSecret = new KeyVaultSecret(secretName, secret.NewSecretValue);
+                KeyVaultSecret newKvSecret = new KeyVaultSecret(secretName, secret.NewSecretValue.GetNormalString());
 
                 // Copy in metadata from the old Secret if it existed
                 if (currentSecret != null && currentSecret.Value != null)

@@ -78,7 +78,7 @@ namespace AuthJanitor.Automation.AdminApi
                 LastChanged = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallyRandomString(_configuration.DefaultNonceLength)
             };
 
             await _managedSecrets.Create(newManagedSecret);
@@ -165,7 +165,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ValidPeriod = TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallyRandomString(_configuration.DefaultNonceLength)
             };
 
             await _managedSecrets.Update(newManagedSecret);

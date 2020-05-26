@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.Maps;
 using Microsoft.Azure.Management.Maps.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AzureMaps
@@ -96,10 +98,10 @@ namespace AuthJanitor.Providers.AzureMaps
 
         private MapsManagementClient ManagementClient => new MapsManagementClient(Credential.CreateAzureCredentials());
 
-        private string GetKeyValue(MapsAccountKeys accountKeys, string keyType) => keyType switch
+        private SecureString GetKeyValue(MapsAccountKeys accountKeys, string keyType) => keyType switch
         {
-            PRIMARY_KEY => accountKeys.PrimaryKey,
-            SECONDARY_KEY => accountKeys.SecondaryKey,
+            PRIMARY_KEY => accountKeys.PrimaryKey.GetSecureString(),
+            SECONDARY_KEY => accountKeys.SecondaryKey.GetSecureString(),
             _ => throw new NotImplementedException()
         };
 

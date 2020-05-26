@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.ServiceBus.Fluent;
 using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.ServiceBus
@@ -108,16 +110,16 @@ namespace AuthJanitor.Providers.ServiceBus
         private Task<IServiceBusNamespace> ServiceBusNamespace => this.GetAzure().ContinueWith(az => az.Result.ServiceBusNamespaces.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
         private Task<INamespaceAuthorizationRule> AuthorizationRule => ServiceBusNamespace.ContinueWith(ns => ns.Result.AuthorizationRules.GetByNameAsync(Configuration.AuthorizationRuleName)).Unwrap();
 
-        private string GetKeyValue(Policykey key, IAuthorizationKeys keys) => key switch
+        private SecureString GetKeyValue(Policykey key, IAuthorizationKeys keys) => key switch
         {
-            Policykey.SecondaryKey => keys.SecondaryKey,
-            _ => keys.PrimaryKey,
+            Policykey.SecondaryKey => keys.SecondaryKey.GetSecureString(),
+            _ => keys.PrimaryKey.GetSecureString(),
         };
 
-        private string GetConnectionStringValue(Policykey key, IAuthorizationKeys keys) => key switch
+        private SecureString GetConnectionStringValue(Policykey key, IAuthorizationKeys keys) => key switch
         {
-            Policykey.SecondaryKey => keys.SecondaryConnectionString,
-            _ => keys.PrimaryConnectionString,
+            Policykey.SecondaryKey => keys.SecondaryConnectionString.GetSecureString(),
+            _ => keys.PrimaryConnectionString.GetSecureString(),
         };
     }
 }

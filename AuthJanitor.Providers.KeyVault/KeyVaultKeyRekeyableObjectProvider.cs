@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Extensions.Logging;
 using System;
@@ -33,7 +34,7 @@ namespace AuthJanitor.Providers.KeyVault
             return new RegeneratedSecret()
             {
                 UserHint = Configuration.UserHint,
-                NewSecretValue = currentKey.Value.Key.Id.ToString()
+                NewSecretValue = currentKey.Value.Key.Id.ToString().GetSecureString()
             };
         }
 
@@ -65,7 +66,7 @@ namespace AuthJanitor.Providers.KeyVault
             return new RegeneratedSecret()
             {
                 UserHint = Configuration.UserHint,
-                NewSecretValue = key.Value.Key.Id.ToString()
+                NewSecretValue = key.Value.Key.Id.ToString().GetSecureString()
             };
         }
 

@@ -3,6 +3,7 @@
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
+using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,30 +32,50 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         }
 
         /// <summary>
+        /// Generates a cryptographically random SecureString of a given length.
+        /// 
+        /// This implementation uses RNGCryptoServiceProvider.
+        /// </summary>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public Task<SecureString> GenerateCryptographicallyRandomSecureString(int length)
+        {
+            var secureString = new SecureString();
+            GenerateCryptographicallyRandomCharacters((c) => secureString.AppendChar(c), length);
+            return Task.FromResult(secureString);
+        }
+
+        /// <summary>
         /// Generates a cryptographically random string of a given length.
         /// 
         /// This implementation uses RNGCryptoServiceProvider.
         /// </summary>
         /// <param name="length"></param>
         /// <returns></returns>
-        public Task<string> GenerateCryptographicallySecureString(int length)
+        public Task<string> GenerateCryptographicallyRandomString(int length)
+        {
+            var sb = new StringBuilder();
+            GenerateCryptographicallyRandomCharacters((c) => sb.Append(c), length);
+            return Task.FromResult(sb.ToString());
+        }
+
+        private void GenerateCryptographicallyRandomCharacters(Action<char> characterOutputAction, int numChars)
         {
             // https://cmvandrevala.wordpress.com/2016/09/24/modulo-bias-when-generating-random-numbers/
             var chars = CHARS_ALPHANUMERIC_ONLY;
-            byte[] data = new byte[4 * length];
+            byte[] data = new byte[4 * numChars];
             using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
             {
                 crypto.GetBytes(data);
             }
 
-            StringBuilder sb = new StringBuilder(length);
-            for (int i = 0; i < length; i++)
+            var secureString = new SecureString();
+            for (int i = 0; i < numChars; i++)
             {
                 int randomNumber = BitConverter.ToInt32(data, i * 4);
                 if (randomNumber < 0) randomNumber *= -1;
-                sb.Append(chars[randomNumber % chars.Length]);
+                characterOutputAction(chars[randomNumber % chars.Length]);
             }
-            return Task.FromResult(sb.ToString());
         }
 
         /// <summary>

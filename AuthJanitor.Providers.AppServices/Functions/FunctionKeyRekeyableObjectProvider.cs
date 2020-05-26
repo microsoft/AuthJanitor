@@ -42,7 +42,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.KeyLength)
+                NewSecretValue = await _cryptographicImplementation.GenerateCryptographicallyRandomSecureString(Configuration.KeyLength)
             };
 
             var functionsApp = await (await this.GetAzure()).AppServices.FunctionApps.GetByResourceGroupAsync(ResourceGroup, ResourceName);
@@ -53,7 +53,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             await functionsApp.RemoveFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName);
 
             _logger.LogInformation("Adding new Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
-            await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue);
+            await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue.GetNormalString());
 
             return newKey;
         }

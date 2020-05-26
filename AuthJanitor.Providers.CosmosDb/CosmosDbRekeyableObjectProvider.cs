@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using Microsoft.Azure.Management.CosmosDB.Fluent;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.CosmosDb
@@ -112,12 +114,12 @@ namespace AuthJanitor.Providers.CosmosDb
             _ => throw new System.Exception($"KeyKind '{keyKind}' not implemented")
         };
 
-        private string GetKeyValue(IDatabaseAccountListKeysResult keys, CosmosDbKeyConfiguration.CosmosDbKeyKinds keyKind) => keyKind switch
+        private SecureString GetKeyValue(IDatabaseAccountListKeysResult keys, CosmosDbKeyConfiguration.CosmosDbKeyKinds keyKind) => keyKind switch
         {
-            CosmosDbKeyConfiguration.CosmosDbKeyKinds.Primary => keys.PrimaryMasterKey,
-            CosmosDbKeyConfiguration.CosmosDbKeyKinds.Secondary => keys.SecondaryMasterKey,
-            CosmosDbKeyConfiguration.CosmosDbKeyKinds.PrimaryReadOnly => keys.PrimaryReadonlyMasterKey,
-            CosmosDbKeyConfiguration.CosmosDbKeyKinds.SecondaryReadOnly => keys.SecondaryReadonlyMasterKey,
+            CosmosDbKeyConfiguration.CosmosDbKeyKinds.Primary => keys.PrimaryMasterKey.GetSecureString(),
+            CosmosDbKeyConfiguration.CosmosDbKeyKinds.Secondary => keys.SecondaryMasterKey.GetSecureString(),
+            CosmosDbKeyConfiguration.CosmosDbKeyKinds.PrimaryReadOnly => keys.PrimaryReadonlyMasterKey.GetSecureString(),
+            CosmosDbKeyConfiguration.CosmosDbKeyKinds.SecondaryReadOnly => keys.SecondaryReadonlyMasterKey.GetSecureString(),
             _ => throw new System.Exception($"KeyKind '{keyKind}' not implemented")
         };
     }
