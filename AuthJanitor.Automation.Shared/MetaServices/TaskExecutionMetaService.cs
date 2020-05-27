@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Shared.MetaServices
@@ -76,14 +77,15 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             task.Attempts.Add(rekeyingAttemptLog);
             await _rekeyingTasks.Update(task);
 
-            Task.Run(async () =>
+            var logUpdateCancellationTokenSource = new CancellationTokenSource();
+            var logUpdateTask = Task.Run(async () =>
             {
                 while (task.RekeyingInProgress)
                 {
                     await Task.Delay(15*1000);
                     await _rekeyingTasks.Update(task);
                 }
-            });
+            }, logUpdateCancellationTokenSource.Token);
 
             // Retrieve credentials for Task
             AccessTokenCredential credential = null;
@@ -149,6 +151,8 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             task.RekeyingInProgress = false;
             task.RekeyingCompleted = rekeyingAttemptLog.IsSuccessfulAttempt;
             task.RekeyingFailed = !rekeyingAttemptLog.IsSuccessfulAttempt;
+
+            logUpdateCancellationTokenSource.Cancel();
 
             await _rekeyingTasks.Update(task);
 
