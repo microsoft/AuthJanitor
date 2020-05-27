@@ -1,74 +1,85 @@
 ﻿@page "/resources"
 
-<DisplayHeading Size="DisplayHeadingSize.Is4">Resources</DisplayHeading>
+<Container Fluid="true">
+    <Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
+        <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
+            <DisplayHeading Size="DisplayHeadingSize.Is4">Resources</DisplayHeading>
+        </Column>
+    </Row>
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <BlazorTable.Table TableItem="ResourceViewModel"
+                               TableClass="table table-striped table-bordered"
+                               @bind-Items="@ManagedResources">
 
-<BlazorTable.Table TableItem="ResourceViewModel"
-                   TableClass="table table-striped table-bordered"
-                   @bind-Items="@ManagedResources">
+                <!-- Controls/ID -->
+                <BlazorTable.Column TableItem="ResourceViewModel"
+                                    Title="" Field="@(x => x.ObjectId)"
+                                    Width="1%"
+                                    Sortable="false" Filterable="false">
+                    <Template>
+                        <Blazorise.Buttons Role="ButtonsRole.Toolbar">
+                            <Blazorise.Button Color="Color.Info"
+                                              Clicked="@(() => NavigationManager.NavigateTo($"/aj/resources/{context.ObjectId}"))">
+                                <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
+                            </Blazorise.Button>
+                            <Blazorise.Button Color="Color.Danger" Clicked="@(() => { SelectedValue = context; DeleteModalShowing = true; })">
+                                <Icon Name="FontAwesomeIcons.Trash" Class="text-light" />
+                            </Blazorise.Button>
+                        </Blazorise.Buttons>
+                    </Template>
+                </BlazorTable.Column>
 
-    <!-- Controls/ID -->
-    <BlazorTable.Column TableItem="ResourceViewModel"
-                        Title="" Field="@(x => x.ObjectId)"
-                        Width="1%"
-                        Sortable="false" Filterable="false">
-        <Template>
-            <Blazorise.Buttons Role="ButtonsRole.Toolbar">
-                <Blazorise.Button Color="Color.Info"
-                                  Clicked="@(() => NavigationManager.NavigateTo($"/aj/resources/{context.ObjectId}"))">
-                    <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
-                </Blazorise.Button>
-                <Blazorise.Button Color="Color.Danger" Clicked="@(() => { SelectedValue = context; DeleteModalShowing = true; })">
-                    <Icon Name="FontAwesomeIcons.Trash" Class="text-light" />
-                </Blazorise.Button>
-            </Blazorise.Buttons>
-        </Template>
-    </BlazorTable.Column>
+                <!-- Resource Name -->
+                <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
+                                    Title="Name" Field="@(x => x.Name)"
+                                    Sortable="true" Filterable="true" />
 
-    <!-- Resource Name -->
-    <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
-                        Title="Name" Field="@(x => x.Name)"
-                        Sortable="true" Filterable="true" />
+                <!-- Description -->
+                <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
+                                    Title="Description" Field="@(x => x.Description)"
+                                    Sortable="true" Filterable="true" />
 
-    <!-- Description -->
-    <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
-                        Title="Description" Field="@(x => x.Description)"
-                        Sortable="true" Filterable="true" />
+                <!-- Provider -->
+                <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
+                                    Title="Provider" Field="@(x => x.ProviderDetail.Name)"
+                                    Sortable="true" Filterable="true" />
 
-    <!-- Provider -->
-    <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
-                        Title="Provider" Field="@(x => x.ProviderDetail.Name)"
-                        Sortable="true" Filterable="true" />
+                <!-- Risk Score -->
+                <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
+                                    Title="Risk Score" Field="@(x => x.RiskScore)"
+                                    Sortable="true" Filterable="true" />
 
-    <!-- Risk Score -->
-    <BlazorTable.Column TableItem="Automation.Shared.ViewModels.ResourceViewModel"
-                        Title="Risk Score" Field="@(x => x.RiskScore)"
-                        Sortable="true" Filterable="true" />
-
-    <!-- Pager -->
-    <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
-</BlazorTable.Table>
-
-<Blazorise.Button Size="ButtonSize.Large" Color="Color.Primary" Clicked="@CreateNew">
-    <Icon Name="FontAwesomeIcons.Plus" Margin="Margin.Is2.FromRight" IconStyle="IconStyle.Solid" />
-    Manage New Resource
-</Blazorise.Button>
+                <!-- Pager -->
+                <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+            </BlazorTable.Table>
+        </Column>
+        </Row>
+    <Row>
+        <Column>
+            <Blazorise.Button Size="ButtonSize.Large" Color="Color.Primary" Clicked="@CreateNew">
+                <Icon Name="FontAwesomeIcons.Plus" Margin="Margin.Is2.FromRight" IconStyle="IconStyle.Solid" />
+                Manage New Resource
+            </Blazorise.Button>
+        </Column>
+    </Row>
+</Container>
 
 <DataModal @bind-Visible="@CreateModalShowing"
-           Title="Manage New Resource"
-           YesButton="Create"
-           NoButton="Cancel"
-           ResultClicked="@CreateCallback">
-    <ResourceEditor @bind-Value="@SelectedValue"/>
+            Title="Manage New Resource"
+            YesButton="Create"
+            NoButton="Cancel"
+            ResultClicked="@CreateCallback">
+    <ResourceEditor @bind-Value="@SelectedValue" />
 </DataModal>
 <DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
-                         ObjectId="@SelectedValue.ObjectId"
-                         ObjectName="@SelectedValue.Name"
-                         ResultClicked="@DeleteConfirmCallback" />
+                            ObjectId="@SelectedValue.ObjectId"
+                            ObjectName="@SelectedValue.Name"
+                            ResultClicked="@DeleteConfirmCallback" />
 
 @using AuthJanitor.Automation.Components.Editors
 @using AuthJanitor.Automation.Components.Modals
 @code {
-    private ResourceEditor _resourceEditorRef;
     protected IEnumerable<ResourceViewModel> ManagedResources { get; set; } = new List<ResourceViewModel>();
 
     protected bool CreateModalShowing { get; set; }

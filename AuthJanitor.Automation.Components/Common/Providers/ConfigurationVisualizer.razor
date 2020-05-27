@@ -1,4 +1,15 @@
-﻿<Table IsFullWidth="true" IsBorderless="true" IsStriped="true" Margin="Margin.Is0.OnAll">
+﻿<Table FullWidth="true" Borderless="true" Striped="true" Margin="Margin.Is0.OnAll">
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>
+                <span class="float-left" style="width:2.3em;">&nbsp;</span>
+                Setting
+            </TableHeaderCell>
+            <TableHeaderCell>
+                Value
+            </TableHeaderCell>
+        </TableRow>
+    </TableHeader>
     <TableBody>
         @if (Value != null && Value.ConfigurationItems != null && Value.ConfigurationItems.Any())
         {
@@ -7,15 +18,19 @@
                 var setting = Value.ConfigurationItems.ToArray()[i];
                 <TableRow>
                     <TableRowCell Class="align-middle" Padding="Padding.Is0.OnY.Is3.OnX">
-                        <Heading Size="HeadingSize.Is6" Float="Float.Left" Margin="Margin.Is0.FromBottom">
-                            @setting.DisplayName
-                        </Heading>
                         @if (!string.IsNullOrEmpty(setting.HelpText))
                         {
-                            <span title="@setting.HelpText" class="float-right">
+                            <span title="@setting.HelpText" class="float-left" style="width:2em;">
                                 <Icon Name="FontAwesomeIcons.QuestionCircle" Margin="Margin.Is0.OnAll" />
                             </span>
                         }
+                        else
+                        {
+                            <span class="float-left" style="width:2em;">&nbsp;</span>
+                        }
+                        <Heading Size="HeadingSize.Is6" Float="Float.Left" Margin="Margin.Is0.FromBottom">
+                            @setting.DisplayName
+                        </Heading>
                     </TableRowCell>
                     <TableRowCell Class="align-middle" Padding="Padding.Is1.OnAll">
                         @if (ShowEditControls)

@@ -1,117 +1,144 @@
 ﻿@page "/rekeyingTasks/{RekeyingTaskId}"
 
-<Container IsFluid="true" Padding="Padding.Is0">
-    <Row Margin="Margin.Is4.FromBottom">
-        <Column ColumnSize="ColumnSize.Is8">
-            <Card>
-                <CardHeader>Rekeying Task Secret Detail</CardHeader>
-                <CardBody>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">ID<span class="float-right text-muted">@Secret.ObjectId</span></Heading>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Current Nonce<span class="float-right text-muted">@Secret.Nonce</span></Heading>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Name<span class="float-right text-muted">@Secret.Name</span></Heading>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Providers<span class="float-right text-muted">@Secret.ProviderSummary</span></Heading>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Last Changed<span class="float-right text-muted">@Secret.LastChanged</span></Heading>
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Expires<span class="float-right text-muted">@Secret.Expiry</span></Heading>
-
-                    @{
-                        Background barColor;
-                        if (Secret.ExpiryPercent > 90) barColor = Background.Danger;
-                        else if (Secret.ExpiryPercent > 75) barColor = Background.Warning;
-                        else barColor = Background.Success;
-                    }
-
-                    <Progress Margin="Margin.Is3.FromBottom">
-                        <ProgressBar Background="@barColor" Value="@Secret.ExpiryPercent">
-                            @if (Secret.IsValid)
+    <Container Fluid="true">
+        <Row Class="bg-light border-bottom" Padding="Padding.Is2.FromTop">
+            <Column ColumnSize="ColumnSize.Is12">
+                <Container Fluid="true">
+                    <Row Margin="Margin.Is1.FromTop">
+                        <Column ColumnSize="ColumnSize.Is8.OnDesktop.Is12">
+                            <DisplayHeading Size="DisplayHeadingSize.Is4" Class="hasRekeyingTag">@Secret.Name</DisplayHeading>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is4.OnDesktop.Is1" Class="text-right">
+                            @foreach (var resource in Secret.Resources)
                             {
-                                @((DateTimeOffset.Now - Secret.LastChanged).GetValueOrDefault().ToReadableString(true))
+                                <div style="width:2em; display:inline-block;" class="m-2">
+                                    @((MarkupString)_providers.FirstOrDefault(p => p.ProviderTypeName == resource.ProviderType)?.SvgImage)
+                                </div>
                             }
-                            else
-                            {
-                                @("Expired for " + (DateTimeOffset.Now - Secret.LastChanged).GetValueOrDefault().ToReadableString(true))
-                            }
-                        </ProgressBar>
-                    </Progress>
-
-                    <Heading Size="HeadingSize.Is6" Class="font-weight-bold">
-                        Rotation Confirmations
-                        <span class="float-right">
+                        </Column>
+                    </Row>
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is12">
+                            <Paragraph>@Secret.Description</Paragraph>
+                        </Column>
+                    </Row>
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is12" Margin="Margin.Is4.FromBottom.Is1.FromTop">
                             <ApprovalTypeComponent @bind-Value="@Secret.TaskConfirmationStrategies" />
-                        </span>
-                    </Heading>
-                </CardBody>
-            </Card>
-        </Column>
-        <Column ColumnSize="ColumnSize.Is4">
-            <Buttons Orientation="Orientation.Vertical">
-                <Blazorise.Button IsDisabled="!Secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminCachesSignOff) &&
-                                                   !Secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime)"
-                                  Color="Color.Primary">Create Rekeying Task</Blazorise.Button>
-                <Blazorise.Button Color="Color.Danger">Delete Managed Secret</Blazorise.Button>
-            </Buttons>
-        </Column>
-    </Row>
-    <Row>
-        <Column ColumnSize="ColumnSize.Is12">
-            <ResourceListCardAccordion Resources="@Secret.Resources" />
-        </Column>
-    </Row>
-    <Row>
-        <Column ColumnSize="ColumnSize.Is12">
-            @if (Task.Attempts.Any())
-            {
-                <Card>
-                    <CardHeader>Rekeying Attempts</CardHeader>
-                    <CardBody>
-                        <Tabs SelectedTabChanged="@OnSelectedTabChanged" SelectedTab="@SelectedAttemptTab">
-                            <Items>
-                                @foreach (var attempt in Task.Attempts)
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is1.FromTop">
+                        <Column ColumnSize="ColumnSize.Is6">
+                            <div class="border rounded border-secondary clearfix">
+                                <div class="bg-secondary text-light m-0 p-1 float-left">Last Changed</div>
+                                @if (!Secret.LastChanged.HasValue)
                                 {
-                                <Tab Name="@attempt.AttemptStarted.ToString()">
-                                    @if (attempt.IsSuccessfulAttempt && attempt.AttemptFinished != default)
+                                    <div class="float-left p-1 text-danger font-weight-bold"> Never</div>
+                                }
+                                else
+                                {
+                                    <div class="float-left p-1"> @Secret.LastChanged</div>
+                                }
+                            </div>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is6">
+                            <div class="border rounded border-warning clearfix">
+                                <div class="bg-warning text-dark m-0 p-1 float-left">Expires</div>
+                                <div class="float-left p-1"> @Secret.Expiry</div>
+                            </div>
+                        </Column>
+                    </Row>
+                    <Row Margin="Margin.Is1.FromTop">
+                        <Column ColumnSize="ColumnSize.Is12">
+                            @{
+                                Background barColor;
+                                if (Secret.ExpiryPercent > 90) barColor = Background.Danger;
+                                else if (Secret.ExpiryPercent > 75) barColor = Background.Warning;
+                                else barColor = Background.Success;
+                            }
+
+                            <Progress Margin="Margin.Is3.FromBottom">
+                                <ProgressBar Background="@barColor" Value="@Secret.ExpiryPercent">
+                                    @if (Secret.IsValid)
                                     {
-                                        <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" />
-                                    }
-                                    else if (attempt.AttemptFinished != default)
-                                    {
-                                        <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" />
+                                        @((DateTimeOffset.Now - Secret.LastChanged).GetValueOrDefault().ToReadableString(true))
                                     }
                                     else
                                     {
-                                        <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" />
+                                        @("Expired for " + (DateTimeOffset.Now - Secret.LastChanged).GetValueOrDefault().ToReadableString(true))
                                     }
-                                    @attempt.UserDisplayName<br />
-                                    <small>@attempt.AttemptStarted.ToString()</small>
-                                </Tab>
-                                }
-                            </Items>
-                            <Content>
-                                @foreach (var attempt in Task.Attempts)
-                                {
-                                    <TabPanel Name="@attempt.AttemptStarted.ToString()"
-                                              Padding="Padding.Is1">
-                                        <pre><code>@attempt.LogString</code></pre>
-                                        @if (!attempt.IsSuccessfulAttempt)
-                                        {
-                                            <Alert Color="Color.Info" IsShow="true">
-                                                <Heading Size="HeadingSize.Is4" TextColor="TextColor.Danger">
-                                                    Exception Thrown!
-                                                </Heading>
-                                                <Paragraph>
-                                                    <pre><code>@attempt.OuterException</code></pre>
-                                                </Paragraph>
-                                            </Alert>
-                                        }
-                                    </TabPanel>
-                                }
-                            </Content>
-                        </Tabs>
+                                </ProgressBar>
+                            </Progress>
+                        </Column>
+                    </Row>
+                </Container>
+            </Column>
+        </Row>
+        <Row Margin="Margin.Is3.FromTop">
+            <Column ColumnSize="ColumnSize.Is12">
+                <ResourceListCardAccordion Resources="@Secret.Resources" />
+            </Column>
+        </Row>
+        <Row Margin="Margin.Is3.FromTop">
+            <Column ColumnSize="ColumnSize.Is12">
+                <Card>
+                    <CardHeader>Rekeying Attempts</CardHeader>
+                    <CardBody>
+                        @if (Task.Attempts.Any())
+                        {
+                            <Tabs SelectedTabChanged="@OnSelectedTabChanged" SelectedTab="@SelectedAttemptTab">
+                                <Items>
+                                    @foreach (var attempt in Task.Attempts)
+                                    {
+                                        <Tab Name="@attempt.AttemptStarted.ToString()">
+                                            @if (attempt.IsSuccessfulAttempt && attempt.AttemptFinished != default)
+                                            {
+                                                <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" />
+                                            }
+                                            else if (attempt.AttemptFinished != default)
+                                            {
+                                                <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" />
+                                            }
+                                            else
+                                            {
+                                                <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" />
+                                            }
+                                            @attempt.UserDisplayName<br />
+                                            <small>@attempt.AttemptStarted.ToString()</small>
+                                        </Tab>
+                                    }
+                                </Items>
+                                <Content>
+                                    @foreach (var attempt in Task.Attempts)
+                                    {
+                                        <TabPanel Name="@attempt.AttemptStarted.ToString()"
+                                                  Padding="Padding.Is1">
+                                            <pre><code>@attempt.LogString</code></pre>
+                                            @if (!attempt.IsSuccessfulAttempt)
+                                            {
+                                                <Alert Color="Color.Info" Visible="true">
+                                                    <Heading Size="HeadingSize.Is4" TextColor="TextColor.Danger">
+                                                        Exception Thrown!
+                                                    </Heading>
+                                                    <Paragraph>
+                                                        <pre><code>@attempt.OuterException</code></pre>
+                                                    </Paragraph>
+                                                </Alert>
+                                            }
+                                        </TabPanel>
+                                    }
+                                </Content>
+                            </Tabs>
+                        }
+                        else
+                        {
+                            <Paragraph Color="TextColor.Warning" Alignment="TextAlignment.Center" Padding="Padding.Is1.OnAll">There have been no attempts for this Task.</Paragraph>
+                        }
                     </CardBody>
                 </Card>
-            }
-        </Column>
-    </Row>
-</Container>
+            </Column>
+        </Row>
+    </Container>
 
 @using AuthJanitor.Automation.Components.Cards
 @using AuthJanitor.Automation.Components.Common.Secrets
@@ -125,13 +152,15 @@
     public string RekeyingTaskId { get; set; }
 
     public TimeSpan DurationSoFar => DateTimeOffset.UtcNow - Secret.LastChanged.GetValueOrDefault();
+    protected IEnumerable<LoadedProviderViewModel> _providers;
 
     protected override async Task OnInitializedAsync()
     {
+        _providers = await Http.AJList<LoadedProviderViewModel>();
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));
         if (Task.Attempts.Any())
             SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
-        
+
         await System.Threading.Tasks.Task.WhenAll(Task.ManagedSecret.Resources.Select(async resource =>
         {
             resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(resource.ProviderType);

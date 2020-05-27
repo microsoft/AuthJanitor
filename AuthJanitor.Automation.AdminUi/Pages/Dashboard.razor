@@ -1,24 +1,36 @@
 ﻿@page "/"
 @page "/dashboard"
 
-<Container IsFluid="true" Padding="Padding.Is3">
-    <Row>
-        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-            <InformationSummaryCard Heading="Expiring Soon" HeadingColor="Color.Warning" Data="@($"{Metrics.TotalExpiringSoon}")" Icon="fas fa-calendar" />
+<Container Fluid="true">
+    <Row Margin="Margin.Is3.OnY">
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is3.OnFullHD.Is12">
+            <InformationSummaryCard Heading="Expiring Soon" 
+                                    HeadingColor="Color.Warning" 
+                                    Data="@($"{Metrics.TotalExpiringSoon}")" 
+                                    Icon="fas fa-calendar" />
         </Column>
-        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-            <InformationSummaryCard Heading="Expired" HeadingColor="Color.Danger" Data="@($"{Metrics.TotalExpired}")" Icon="fas fa-calendar-times" />
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is3.OnFullHD.Is12">
+            <InformationSummaryCard Heading="Expired"
+                                    HeadingColor="Color.Danger"
+                                    Data="@($"{Metrics.TotalExpired}")"
+                                    Icon="fas fa-calendar-times" />
         </Column>
-        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-            <InformationSummaryCard Heading="Pending Approval" HeadingColor="Color.Success" Data="@($"{Metrics.TotalPendingApproval}")" Icon="fas fa-user-check" />
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is3.OnFullHD.Is12">
+            <InformationSummaryCard Heading="Pending Approval"
+                                    HeadingColor="Color.Success"
+                                    Data="@($"{Metrics.TotalPendingApproval}")"
+                                    Icon="fas fa-user-check" />
         </Column>
-        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-            <InformationSummaryCard Heading="Managed Secrets" HeadingColor="Color.Info" Data="@($"{Metrics.TotalSecrets}")" Icon="fas fa-unlock-alt" />
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is3.OnFullHD.Is12">
+            <InformationSummaryCard Heading="Managed Secrets"
+                                    HeadingColor="Color.Info"
+                                    Data="@($"{Metrics.TotalSecrets}")"
+                                    Icon="fas fa-unlock-alt" />
         </Column>
     </Row>
-    <Row>
+    <Row Margin="Margin.Is3.OnY">
         <Column ColumnSize="ColumnSize.Is12">
-            <Card>
+            <Card Margin="Margin.Is2">
                 <CardHeader>Expiring Soon</CardHeader>
                 @if (Metrics.ExpiringSoon.Any())
                 {
@@ -51,14 +63,14 @@
                 }
                 else
                 {
-                    <Paragraph Class="text-center text-success" Padding="Padding.Is0" Margin="Margin.Is2">No Managed Secrets Expiring Soon!</Paragraph>
+                    <Paragraph Class="text-center text-success" Padding="Padding.Is0" Margin="Margin.Is2">No Managed Secrets Expiring Soon! 👍</Paragraph>
                 }
             </Card>
         </Column>
     </Row>
-    <Row Padding="Padding.Is3.OnY">
+    <Row Margin="Margin.Is3.OnY">
         <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnTablet">
-            <Card>
+            <Card Margin="Margin.Is2">
                 <CardHeader>Risks</CardHeader>
                 <CardBody>
                     <Blazorise.Charts.DoughnutChart TItem="int" Data="@GetRiskDataSet()" />
@@ -66,7 +78,7 @@
             </Card>
         </Column>
         <Column ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnTablet">
-            <Card>
+            <Card Margin="Margin.Is2">
                 <CardHeader>Expiry</CardHeader>
                 <CardBody>
                     <Blazorise.Charts.DoughnutChart TItem="int" Data="@GetExpiryDataSet()" />

@@ -1,35 +1,38 @@
 ﻿@page "/resources/{ResourceId}"
 
-    <Container IsFluid="true" Padding="Padding.Is0">
-        <Row>
-            <Column ColumnSize="ColumnSize.Is10">
-                <Card Margin="Margin.Is4.FromBottom">
-                    <CardHeader>Resource Detail</CardHeader>
-                    <CardBody>
-                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">ID<span class="float-right text-muted">@Resource.ObjectId</span></Heading>
-                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Name<span class="float-right text-muted">@Resource.Name</span></Heading>
-                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Provider<span class="float-right text-muted">@Resource.ProviderDetail?.Name</span></Heading>
-                        <Heading Size="HeadingSize.Is6" Class="font-weight-bold">Description<span class="float-right text-muted">@Resource.Description</span></Heading>
-                    </CardBody>
-                </Card>
-            </Column>
-        </Row>
-        <Row>
-            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                <ProviderSettingsCard ProviderConfiguration="@Resource.ProviderConfiguration" 
-                                      ProviderType="@Resource.ProviderType"
-                                      ShowEditControls="false" />
-            </Column>
-        </Row>
-        <Row>
-            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-                <RiskListCard Risks="@Resource.Risks" />
-            </Column>
-            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is3.OnDesktop.Is12">
-                <ActionDescriptionCard Description="@Resource.RuntimeDescription" />
-            </Column>
-        </Row>
-    </Container>
+<Container Fluid="true">
+    <Row Class="bg-light border-bottom">
+        <Column ColumnSize="ColumnSize.Is2" Padding="Padding.Is2" Class="text-center">
+            <div style="max-width:5em;margin: 0 auto;">
+                @((MarkupString)_provider?.SvgImage)
+            </div>
+            <Paragraph Alignment="TextAlignment.Center"
+                        Margin="Margin.Is2.OnX.Is1.OnY"
+                        Padding="Padding.Is2"
+                        Class="small border-top border-bottom border-secondary">@Resource.ProviderDetail.Name</Paragraph>
+                        
+        </Column>
+        <Column ColumnSize="ColumnSize.Is10">
+            <DisplayHeading Size="DisplayHeadingSize.Is4">@Resource.Name</DisplayHeading>
+            <Paragraph>@Resource.Description</Paragraph>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is2.OnY">
+        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
+            <ProviderSettingsCard ProviderConfiguration="@Resource.ProviderConfiguration" 
+                                    ProviderType="@Resource.ProviderType"
+                                    ShowEditControls="false" />
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is2.OnY">
+        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+            <RiskListCard Risks="@Resource.Risks" />
+        </Column>
+        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+            <ActionDescriptionCard Description="@Resource.RuntimeDescription" />
+        </Column>
+    </Row>
+</Container>
 
 @using AuthJanitor.Automation.Components.Cards
 @using AuthJanitor.Automation.Shared.ViewModels
@@ -38,10 +41,13 @@
     public string ResourceId { get; set; }
 
     public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
+    protected LoadedProviderViewModel _provider;
 
     protected override async Task OnInitializedAsync()
     {
         Resource = await Http.AJGet<ResourceViewModel>(Guid.Parse(ResourceId));
+        var providers = await Http.AJList<LoadedProviderViewModel>();
+        _provider = providers.First(p => p.ProviderTypeName == Resource.ProviderType);
         Resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(Resource.ProviderType);
         Resource.ProviderConfiguration.SerializedConfiguration = Resource.SerializedProviderConfiguration;
     }

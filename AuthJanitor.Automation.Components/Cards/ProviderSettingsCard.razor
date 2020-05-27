@@ -1,16 +1,14 @@
 ﻿<Card>
     <CardHeader Class="text-info">
         <Row>
-            <Column ColumnSize="ColumnSize.Is6" Padding="Padding.Is2.FromTop">
+            <Column ColumnSize="ColumnSize.Is6" Padding="Padding.Is2.FromTop" Style="margin: auto 0;">
                 Provider Settings
             </Column>
-            <Column ColumnSize="ColumnSize.Is3" Class="text-right">
+            <Column ColumnSize="ColumnSize.Is6" Class="text-right">
                 <ConfigurationTestButton ProviderType="@ProviderType"
                                          ProviderConfiguration="@ProviderConfiguration"
                                          DefaultColor="Color.Secondary"
                                          Context="TestAsContexts.AsUser" />
-            </Column>
-            <Column ColumnSize="ColumnSize.Is3" Class="text-right">
                 <ConfigurationTestButton ProviderType="@ProviderType"
                                          ProviderConfiguration="@ProviderConfiguration"
                                          DefaultColor="Color.Secondary"
