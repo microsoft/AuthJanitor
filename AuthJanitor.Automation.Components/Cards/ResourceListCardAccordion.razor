@@ -1,35 +1,33 @@
 ﻿<Accordion>
     @foreach (var resource in Resources)
     {
-        <Card>
-            <CardHeader>
-                <Button Clicked="@(() => Visibilities[resource.ObjectId] = !Visibilities[resource.ObjectId])">
+        <Collapse Visible="@Visibilities[resource.ObjectId]">
+            <CollapseHeader>
+                <Button Clicked="@(() => Invert(resource))">
                     <ResourceNameStyled Value="@resource" />
                 </Button>
                 <RiskScoreBadge Value="@resource.RiskScore" Float="Float.Right" Class="mt-2" />
-            </CardHeader>
-            <Collapse IsOpen="@Visibilities[resource.ObjectId]">
-                <CardBody Padding="Padding.Is2.OnAll">
-                    <Container IsFluid="true">
-                        <Row>
-                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-                                <ProviderSettingsCard ProviderConfiguration="@resource.ProviderConfiguration" 
-                                                      ProviderType="@resource.ProviderType"
-                                                      ShowEditControls="false" />
-                            </Column>
-                        </Row>
-                        <Row>
-                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
-                                <RiskListCard Risks="@resource.Risks" />
-                            </Column>
-                            <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
-                                <ActionDescriptionCard Description="@resource.RuntimeDescription" />
-                            </Column>
-                        </Row>
-                    </Container>
-                </CardBody>
-            </Collapse>
-        </Card>
+            </CollapseHeader>
+            <CollapseBody>
+                <Container Fluid="true">
+                    <Row>
+                        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
+                            <ProviderSettingsCard ProviderConfiguration="@resource.ProviderConfiguration"
+                                                  ProviderType="@resource.ProviderType"
+                                                  ShowEditControls="false" />
+                        </Column>
+                    </Row>
+                    <Row>
+                        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+                            <RiskListCard Risks="@resource.Risks" />
+                        </Column>
+                        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
+                            <ActionDescriptionCard Description="@resource.RuntimeDescription" />
+                        </Column>
+                    </Row>
+                </Container>
+            </CollapseBody>
+        </Collapse>
     }
 </Accordion>
 
@@ -47,5 +45,11 @@
         {
             Visibilities[r.ObjectId] = false;
         }
+    }
+
+    protected void Invert(ResourceViewModel resource)
+    {
+        Visibilities[resource.ObjectId] = !Visibilities[resource.ObjectId];
+        StateHasChanged();
     }
 }

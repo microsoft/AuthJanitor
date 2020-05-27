@@ -1,6 +1,6 @@
 ﻿@page "/providers" 
 
-<Container IsFluid="true">
+<Container Fluid="true">
     <Row Class="bg-light border border-secondary py-2">
         <Column ColumnSize="ColumnSize.Is6" Class="text-center">
             <span class="h5 text-primary font-weight-bold">❚ Rekeyable Object Provider</span>
@@ -12,7 +12,7 @@
     <Row>
         @foreach (var item in ProviderList)
         {
-        <Column ColumnSize="ColumnSize.Is4.OnDesktop.Is6.OnTablet.Is12.OnMobile">
+        <Column ColumnSize="ColumnSize.Is3.OnDesktop.Is6.OnTablet.Is12.OnMobile">
             <ProviderMetadataCard Provider="@item" />
         </Column>
         }

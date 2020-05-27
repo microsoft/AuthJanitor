@@ -20,6 +20,17 @@ body app {
     padding-left: 1rem !important;*/
 }
 
+.hasRekeyingTag:before {
+    content: 'Rekeying';
+    position: absolute;
+    left: -10px;
+    transform: rotate(270deg);
+    font-size: 8pt;
+    font-weight: bold;
+    top: calc(35%);
+    color: #ffc107;
+}
+
 .border-left-primary {
     border-left: 0.25rem solid #4e73df !important;
 }
