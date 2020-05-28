@@ -15,7 +15,9 @@ namespace AuthJanitor.Providers.AppServices.Functions
     /// </summary>
     [Provider(Name = "Functions App - AppSettings",
               IconClass = "fa fa-bolt",
-              Description = "Manages the lifecycle of an Azure Functions app which reads a Managed Secret from its Application Settings")]
+              Description = "Manages the lifecycle of an Azure Functions app which reads a Managed Secret from its Application Settings",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
     public class AppSettingsFunctionsApplicationLifecycleProvider : FunctionsApplicationLifecycleProvider<AppSettingConfiguration>
     {

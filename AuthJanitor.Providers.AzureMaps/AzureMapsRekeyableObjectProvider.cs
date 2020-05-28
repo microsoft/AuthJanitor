@@ -12,7 +12,10 @@ namespace AuthJanitor.Providers.AzureMaps
 {
     [Provider(Name = "Azure Maps Key",
               IconClass = "fa fa-map",
-              Description = "Regenerates a key for an Azure Maps instance")]
+              Description = "Regenerates a key for an Azure Maps instance",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.AZURE_MAPS_SVG)]
     public class AzureMapsRekeyableObjectProvider : RekeyableObjectProvider<AzureMapsConfiguration>
     {
@@ -24,6 +27,14 @@ namespace AuthJanitor.Providers.AzureMaps
         public AzureMapsRekeyableObjectProvider(ILogger<AzureMapsRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = await ManagementClient.Accounts.ListKeysAsync(
+                ResourceGroup,
+                ResourceName);
+            if (keys == null) throw new Exception("Could not access keys for Azure Maps");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

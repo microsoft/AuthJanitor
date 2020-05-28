@@ -20,8 +20,7 @@ namespace AuthJanitor.Automation.Shared.ViewModels
         {
             Name = "No Provider Loaded",
             Description = "No Provider Loaded",
-            IconClass = "fa fa-times",
-            MoreInformationUrl = string.Empty
+            IconClass = "fa fa-times"
         };
         public string SerializedProviderConfiguration { get; set; }
         public IEnumerable<RiskyConfigurationItem> Risks { get; set; } = new List<RiskyConfigurationItem>();

@@ -12,7 +12,9 @@ namespace AuthJanitor.Providers.AppServices.WebApps
 {
     [Provider(Name = "WebApp - Connection String",
               IconClass = "fa fa-globe",
-              Description = "Manages the lifecycle of an Azure Web App which reads from a Connection String")]
+              Description = "Manages the lifecycle of an Azure Web App which reads from a Connection String",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.WEBAPPS_SVG)]
     public class ConnectionStringWebAppApplicationLifecycleProvider : WebAppApplicationLifecycleProvider<ConnectionStringConfiguration>
     {

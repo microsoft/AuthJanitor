@@ -13,7 +13,10 @@ namespace AuthJanitor.Providers.EventHub
 {
     [Provider(Name = "Event Hub Key",
               IconClass = "fa fa-key",
-              Description = "Regenerates an Azure Event Hub Key")]
+              Description = "Regenerates an Azure Event Hub Key",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.EVENT_HUB_SVG)]
     public class EventHubRekeyableObjectProvider : RekeyableObjectProvider<EventHubKeyConfiguration>
     {
@@ -22,6 +25,12 @@ namespace AuthJanitor.Providers.EventHub
         public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = await(await GetAuthorizationRule()).GetKeysAsync();
+            if (keys == null) throw new Exception("Could not access Event Hub keys");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

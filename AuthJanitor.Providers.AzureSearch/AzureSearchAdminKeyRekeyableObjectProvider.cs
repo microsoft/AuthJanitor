@@ -12,7 +12,10 @@ namespace AuthJanitor.Providers.AzureSearch
 {
     [Provider(Name = "Azure Search Admin Key",
               IconClass = "fas fa-search",
-              Description = "Regenerates an Admin Key for an Azure Search service")]
+              Description = "Regenerates an Admin Key for an Azure Search service",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.AZURE_SEARCH_SVG)]
     public class AzureSearchAdminKeyRekeyableObjectProvider : RekeyableObjectProvider<AzureSearchAdminKeyConfiguration>
     {
@@ -21,6 +24,12 @@ namespace AuthJanitor.Providers.AzureSearch
         public AzureSearchAdminKeyRekeyableObjectProvider(ILogger<AzureSearchAdminKeyRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = await (await SearchService).GetAdminKeysAsync();
+            if (keys == null) throw new Exception("Could not get admin keys for Azure Search");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

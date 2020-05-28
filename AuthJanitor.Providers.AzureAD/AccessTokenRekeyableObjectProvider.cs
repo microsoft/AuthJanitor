@@ -10,7 +10,8 @@ namespace AuthJanitor.Providers.AzureAD
 {
     [Provider(Name = "Access Token",
               IconClass = "fa fa-key",
-              Description = "Acquires an Access Token from Azure AD with a given set of scopes")]
+              Description = "Acquires an Access Token from Azure AD with a given set of scopes",
+              Features = ProviderFeatureFlags.None)]
     [ProviderImage(ProviderImages.AZURE_AD_SVG)]
     public class AccessTokenRekeyableObjectProvider : RekeyableObjectProvider<AccessTokenConfiguration>
     {

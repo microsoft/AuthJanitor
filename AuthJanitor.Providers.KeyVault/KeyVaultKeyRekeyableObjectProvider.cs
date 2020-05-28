@@ -12,7 +12,10 @@ namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Key",
               IconClass = "fa fa-key",
-              Description = "Regenerates an Azure Key Vault Key with the same parameters as the previous version")]
+              Description = "Regenerates an Azure Key Vault Key with the same parameters as the previous version",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultKeyRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultKeyConfiguration>
     {
@@ -21,6 +24,12 @@ namespace AuthJanitor.Providers.KeyVault
         public KeyVaultKeyRekeyableObjectProvider(ILogger<KeyVaultKeyRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var key = await GetKeyClient().GetKeyAsync(Configuration.KeyName);
+            if (key == null) throw new Exception("Key was not found or not accessible");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
