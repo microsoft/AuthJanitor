@@ -1,0 +1,16 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+      "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+      
+      "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+      "AZURE_FUNCTION_PROXY_DISABLE_LOCAL_CALL": "True",  
+      "STORAGE_WEB_URL": "http://localhost:16010",
+  
+      "SENDGRID_API_KEY": "my.sendgrid.api.key",
+
+      "CLIENT_ID": "authjanitor-admin-application-client-id",
+      "CLIENT_SECRET": "authjanitor-admin-application-client-secret",
+      "TENANT_ID": "authjanitor-admin-application-tenant-id"
+    }
+  }
