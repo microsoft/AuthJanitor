@@ -28,16 +28,25 @@
                     }
                 </CardText>
             </CardBody>
-            @if (!string.IsNullOrEmpty(Provider.Details.MoreInformationUrl))
-            {
-                <CardFooter>
-                    <a href="@Provider.Details.MoreInformationUrl" target="_blank">
-                        More Information...
-                        <Icon Name="FontAwesomeIcons.ExternalLinkAlt" Margin="Margin.Is2.FromLeft" />
-                    </a>
-                    <Button Color="Color.Secondary">More Information...</Button>
-                </CardFooter>
-            }
+            
+            <CardFooter Class="text-right border-left">
+                <Icon Name="FontAwesomeIcons.Flask"
+                      Class="@(Provider.Details.Features.HasFlag(ProviderFeatureFlags.IsTestable) ? "text-success" : "text-dark")"
+                      title="@("Provider " + (Provider.Details.Features.HasFlag(ProviderFeatureFlags.IsTestable) ? "Supports" : "Does Not Support") + " Pre-Testing")"
+                      Margin="Margin.Is2" />
+                <Icon Name="FontAwesomeIcons.SyncAlt"
+                      Class="@(Provider.Details.Features.HasFlag(ProviderFeatureFlags.CanRotateWithoutDowntime) ? "text-success" : "text-dark")"
+                      title="@("Provider " + (Provider.Details.Features.HasFlag(ProviderFeatureFlags.CanRotateWithoutDowntime) ? "Can" : "Cannot") + " Rotate Without Downtime")"
+                      Margin="Margin.Is2" />
+                <Icon Name="FontAwesomeIcons.LayerGroup"
+                      Class="@(Provider.Details.Features.HasFlag(ProviderFeatureFlags.HasCandidateSelection) ? "text-success" : "text-dark")"
+                      title="@("Provider " + (Provider.Details.Features.HasFlag(ProviderFeatureFlags.HasCandidateSelection) ? "Supports" : "Does Not Support") + " Candidate Selection")"
+                      Margin="Margin.Is2" />
+                <Icon Name="FontAwesomeIcons.Key"
+                      Class="@(Provider.Details.Features.HasFlag(ProviderFeatureFlags.SupportsSecondaryKey) ? "text-success" : "text-dark")"
+                      title="@("Provider " + (Provider.Details.Features.HasFlag(ProviderFeatureFlags.SupportsSecondaryKey) ? "Supports" : "Does Not Support") + " Use of a Secondary Key")"
+                      Margin="Margin.Is2" />
+            </CardFooter>
         </Column>
     </Row>
 </Card>

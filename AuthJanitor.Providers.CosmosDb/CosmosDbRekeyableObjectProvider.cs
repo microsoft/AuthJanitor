@@ -11,7 +11,10 @@ namespace AuthJanitor.Providers.CosmosDb
 {
     [Provider(Name = "CosmosDB Master Key",
               IconClass = "fa fa-database",
-              Description = "Regenerates a Master Key for an Azure CosmosDB instance")]
+              Description = "Regenerates a Master Key for an Azure CosmosDB instance",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.COSMOS_DB_SVG)]
     public class CosmosDbRekeyableObjectProvider : RekeyableObjectProvider<CosmosDbKeyConfiguration>
     {
@@ -25,6 +28,12 @@ namespace AuthJanitor.Providers.CosmosDb
         public CosmosDbRekeyableObjectProvider(ILogger<CosmosDbRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = (await CosmosDbAccount).ListKeysAsync();
+            if (keys == null) throw new Exception("Could not access CosmosDB keys");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

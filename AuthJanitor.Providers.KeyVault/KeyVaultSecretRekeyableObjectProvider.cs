@@ -13,7 +13,10 @@ namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Secret",
               IconClass = "fa fa-low-vision",
-              Description = "Regenerates a Key Vault Secret with a given length")]
+              Description = "Regenerates a Key Vault Secret with a given length",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultSecretConfiguration>
     {
@@ -26,6 +29,12 @@ namespace AuthJanitor.Providers.KeyVault
         {
             _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
+        }
+
+        public override async Task Test()
+        {
+            var secret = await GetSecretClient().GetSecretAsync(Configuration.SecretName);
+            if (secret == null) throw new Exception("Could not access Key Vault Secret");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

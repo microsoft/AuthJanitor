@@ -11,7 +11,8 @@ namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Secret",
               IconClass = "fa fa-low-vision",
-              Description = "Manages the lifecycle of a Key Vault Secret where a Managed Secret's value is stored")]
+              Description = "Manages the lifecycle of a Key Vault Secret where a Managed Secret's value is stored",
+              Features = ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretApplicationLifecycleProvider : ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>
     {
@@ -20,6 +21,12 @@ namespace AuthJanitor.Providers.KeyVault
         public KeyVaultSecretApplicationLifecycleProvider(ILogger<KeyVaultSecretApplicationLifecycleProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var secret = await GetSecretClient().GetSecretAsync(Configuration.SecretName);
+            if (secret == null) throw new Exception("Could not access Key Vault Secret");
         }
 
         /// <summary>

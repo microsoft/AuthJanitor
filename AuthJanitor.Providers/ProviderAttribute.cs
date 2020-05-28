@@ -4,6 +4,17 @@ using System;
 
 namespace AuthJanitor.Providers
 {
+    [Flags]
+    public enum ProviderFeatureFlags : int
+    {
+        None                        = 0b00000000,
+
+        IsTestable                  = 0b00000010,
+        CanRotateWithoutDowntime    = 0b00000100,
+        SupportsSecondaryKey        = 0b00001000,
+        HasCandidateSelection       = 0b00010000
+    }
+
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class ProviderAttribute : Attribute
     {
@@ -23,9 +34,9 @@ namespace AuthJanitor.Providers
         public string Description { get; set; }
 
         /// <summary>
-        /// URL with more information about the Provider
+        /// Features supported by this Provider
         /// </summary>
-        public string MoreInformationUrl { get; set; }
+        public ProviderFeatureFlags Features { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]

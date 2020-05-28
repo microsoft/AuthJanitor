@@ -13,7 +13,10 @@ namespace AuthJanitor.Providers.Storage
 {
     [Provider(Name = "Storage Account Key",
               IconClass = "fas fa-file-alt",
-              Description = "Regenerates a key of a specified type for an Azure Storage Account")]
+              Description = "Regenerates a key of a specified type for an Azure Storage Account",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime | 
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.STORAGE_ACCOUNT_SVG)]
     public class StorageAccountRekeyableObjectProvider : RekeyableObjectProvider<StorageAccountKeyConfiguration>
     {
@@ -27,6 +30,12 @@ namespace AuthJanitor.Providers.Storage
         public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var key = await Get(KeyName);
+            if (key == null) throw new Exception("Storage Key could not be retrieved");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

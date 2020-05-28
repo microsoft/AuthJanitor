@@ -12,7 +12,10 @@ namespace AuthJanitor.Providers.ServiceBus
 {
     [Provider(Name = "Service Bus Key",
               IconClass = "fa fa-key",
-              Description = "Regenerates an Azure Service Bus Key")]
+              Description = "Regenerates an Azure Service Bus Key",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
     public class ServiceBusRekeyableObjectProvider : RekeyableObjectProvider<ServiceBusKeyConfiguration>
     {
@@ -21,6 +24,12 @@ namespace AuthJanitor.Providers.ServiceBus
         public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = await Get();
+            if (keys == null) throw new Exception("Service Bus key could not be retrieved");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()

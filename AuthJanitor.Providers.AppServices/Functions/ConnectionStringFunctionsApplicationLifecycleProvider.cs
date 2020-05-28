@@ -12,7 +12,9 @@ namespace AuthJanitor.Providers.AppServices.Functions
 {
     [Provider(Name = "Functions App - Connection String",
               IconClass = "fa fa-bolt",
-              Description = "Manages the lifecycle of an Azure Functions app which reads from a Connection String")]
+              Description = "Manages the lifecycle of an Azure Functions app which reads from a Connection String",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
     public class ConnectionStringFunctionsApplicationLifecycleProvider : FunctionsApplicationLifecycleProvider<ConnectionStringConfiguration>
     {

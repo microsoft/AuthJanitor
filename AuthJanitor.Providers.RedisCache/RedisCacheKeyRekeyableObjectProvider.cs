@@ -12,7 +12,10 @@ namespace AuthJanitor.Providers.Redis
 {
     [Provider(Name = "Redis Cache Key",
               IconClass = "fa fa-database",
-              Description = "Regenerates a Master Key for a Redis Cache instance")]
+              Description = "Regenerates a Master Key for a Redis Cache instance",
+              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
+                         ProviderFeatureFlags.IsTestable |
+                         ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.REDIS_SVG)]
     public class RedisCacheKeyRekeyableObjectProvider : RekeyableObjectProvider<RedisCacheKeyConfiguration>
     {
@@ -21,6 +24,12 @@ namespace AuthJanitor.Providers.Redis
         public RedisCacheKeyRekeyableObjectProvider(ILogger<RedisCacheKeyRekeyableObjectProvider> logger)
         {
             _logger = logger;
+        }
+
+        public override async Task Test()
+        {
+            var keys = (await RedisCache).GetKeys();
+            if (keys == null) throw new Exception("Redis Cache key could not be retrieved");
         }
 
         public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
