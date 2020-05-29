@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure;
+
 namespace AuthJanitor.Providers.AppServices.Functions
 {
     /// <summary>
     /// Defines the configuration to rotate a Function Key for an Azure Functions application
     /// </summary>
-    public class FunctionKeyConfiguration : SlottableProviderConfiguration
+    public class FunctionKeyConfiguration : AzureAuthJanitorProviderConfiguration
     {
         public const int DEFAULT_KEY_LENGTH = 64;
 

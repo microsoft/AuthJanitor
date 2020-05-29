@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
+using AuthJanitor.Providers.Azure.Workflows;
+using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Azure.Management.ServiceBus.Fluent;
 using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.ServiceBus
@@ -17,116 +18,42 @@ namespace AuthJanitor.Providers.ServiceBus
                          ProviderFeatureFlags.IsTestable |
                          ProviderFeatureFlags.SupportsSecondaryKey)]
     [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
-    public class ServiceBusRekeyableObjectProvider : RekeyableObjectProvider<ServiceBusKeyConfiguration>
+    public class ServiceBusRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<ServiceBusKeyConfiguration, IServiceBusNamespace, IAuthorizationKeys, ServiceBusKeyConfiguration.ServiceBusKeyTypes, Policykey>
     {
-        private readonly ILogger _logger;
+        public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger) : base(logger) { }
 
-        public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger)
+        protected override string Service => "Service Bus";
+
+        protected override Policykey Translate(ServiceBusKeyConfiguration.ServiceBusKeyTypes keyType) => keyType switch
         {
-            _logger = logger;
-        }
+            ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary => Policykey.PrimaryKey,
+            ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => Policykey.SecondaryKey,
+            _ => throw new NotImplementedException(),
+        };
 
-        public override async Task Test()
-        {
-            var keys = await Get();
-            if (keys == null) throw new Exception("Service Bus key could not be retrieved");
-        }
+        protected override async Task<IAuthorizationKeys> RetrieveCurrentKeyring(IServiceBusNamespace resource, Policykey keyType) =>
+            await (await resource.AuthorizationRules.GetByNameAsync(Configuration.AuthorizationRuleName)).GetKeysAsync();
 
-        public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
-        {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherPolicyKey}) policy key...", OtherPolicyKey);
-            IAuthorizationKeys otherKeys = await Get();
-            _logger.LogInformation("Successfully retrieved temporary secret!");
+        protected override async Task<IAuthorizationKeys> RotateKeyringValue(IServiceBusNamespace resource, Policykey keyType) =>
+            await (await resource.AuthorizationRules.GetByNameAsync(Configuration.AuthorizationRuleName)).RegenerateKeyAsync(keyType);
 
-            return new RegeneratedSecret()
+        protected override RegeneratedSecret CreateSecretFromKeyring(IAuthorizationKeys keyring, ServiceBusKeyConfiguration.ServiceBusKeyTypes keyType) =>
+            new RegeneratedSecret()
             {
-                Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
-                UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(OtherPolicyKey, otherKeys),
-                NewConnectionString = GetConnectionStringValue(OtherPolicyKey, otherKeys)
-            };
-        }
-
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
-        {
-            _logger.LogInformation("Regenerating Service Bus key {PolicyKey}", PolicyKey);
-            IAuthorizationKeys newKeys = await Regenerate(PolicyKey);
-            _logger.LogInformation("Successfully rekeyed Service Bus key {PolicyKey}", PolicyKey);
-            return new RegeneratedSecret()
-            {
-                Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
-                UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(PolicyKey, newKeys),
-                NewConnectionString = GetConnectionStringValue(PolicyKey, newKeys)
-            };
-        }
-
-        public override async Task OnConsumingApplicationSwapped()
-        {
-            if (!Configuration.SkipScramblingOtherKey)
-            {
-                _logger.LogInformation("Scrambling Service Bus key kind {OtherPolicyKey}", OtherPolicyKey);
-                await Regenerate(OtherPolicyKey);
-            }
-            else
-                _logger.LogInformation("Skipping scrambling Service Bus key kind {OtherPolicyKey}", OtherPolicyKey);
-        }
-
-        public override IList<RiskyConfigurationItem> GetRisks()
-        {
-            List<RiskyConfigurationItem> issues = new List<RiskyConfigurationItem>();
-            if (Configuration.SkipScramblingOtherKey)
-            {
-                issues.Add(new RiskyConfigurationItem()
+                NewSecretValue = keyType switch
                 {
-                    Score = 80,
-                    Risk = $"The other (unused) Service Bus Key is not being scrambled during key rotation",
-                    Recommendation = "Unless other services use the alternate key, consider allowing the scrambling of the unused key to 'fully' rekey the Service Bus and maintain a high degree of security."
-                });
-            }
-
-            return issues;
-        }
-
-        public override string GetDescription() =>
-            $"Regenerates the {PolicyKey} key for a Service Bus called " +
-            $"'{ResourceName}' (Resource Group '{ResourceGroup}') for the " +
-            $"authorization rule {Configuration.AuthorizationRuleName}. " +
-            $"The {OtherPolicyKey} key is used as a temporary key while " +
-            $"rekeying is taking place. The {OtherPolicyKey} key will " +
-            $"{(Configuration.SkipScramblingOtherKey ? "not" : "also")} be rotated.";
-
-        private Policykey PolicyKey =>
-            Configuration.KeyType switch
-            {
-                ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => Policykey.SecondaryKey,
-                _ => Policykey.PrimaryKey,
-            };
-        private Policykey OtherPolicyKey =>
-            Configuration.KeyType switch
-            {
-                ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => Policykey.PrimaryKey,
-                _ => Policykey.SecondaryKey,
+                    ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary => keyring.PrimaryKey,
+                    ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => keyring.SecondaryKey,
+                    _ => throw new NotImplementedException(),
+                },
+                NewConnectionString = keyType switch
+                {
+                    ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary => keyring.PrimaryConnectionString,
+                    ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => keyring.SecondaryConnectionString,
+                    _ => throw new NotImplementedException(),
+                },
             };
 
-        private Task<IAuthorizationKeys> Regenerate(Policykey keyType) =>
-            AuthorizationRule.ContinueWith(rule => rule.Result.RegenerateKeyAsync(keyType)).Unwrap();
-        private Task<IAuthorizationKeys> Get() =>
-            AuthorizationRule.ContinueWith(rule => rule.Result.GetKeysAsync()).Unwrap();
-
-        private Task<IServiceBusNamespace> ServiceBusNamespace => this.GetAzure().ContinueWith(az => az.Result.ServiceBusNamespaces.GetByResourceGroupAsync(ResourceGroup, ResourceName)).Unwrap();
-        private Task<INamespaceAuthorizationRule> AuthorizationRule => ServiceBusNamespace.ContinueWith(ns => ns.Result.AuthorizationRules.GetByNameAsync(Configuration.AuthorizationRuleName)).Unwrap();
-
-        private string GetKeyValue(Policykey key, IAuthorizationKeys keys) => key switch
-        {
-            Policykey.SecondaryKey => keys.SecondaryKey,
-            _ => keys.PrimaryKey,
-        };
-
-        private string GetConnectionStringValue(Policykey key, IAuthorizationKeys keys) => key switch
-        {
-            Policykey.SecondaryKey => keys.SecondaryConnectionString,
-            _ => keys.PrimaryConnectionString,
-        };
+        protected override ISupportsGettingByResourceGroup<IServiceBusNamespace> GetResourceCollection(IAzure azure) => azure.ServiceBusNamespaces;
     }
 }

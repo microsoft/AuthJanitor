@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Shared;
 using Azure.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Extensions.Azure
+namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 {
     public class ExistingTokenCredential : TokenCredential
     {
@@ -24,5 +25,8 @@ namespace AuthJanitor.Extensions.Azure
         {
             return new ValueTask<AccessToken>(_accessToken);
         }
+
+        public static ExistingTokenCredential FromAccessToken(AccessTokenCredential token) =>
+            new ExistingTokenCredential(token.AccessToken, token.ExpiresOnDateTime);
     }
 }

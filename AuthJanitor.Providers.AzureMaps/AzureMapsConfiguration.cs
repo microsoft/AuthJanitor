@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.AzureMaps
 {
-    public class AzureMapsConfiguration : AuthJanitorProviderConfiguration
+    public class AzureMapsConfiguration : AzureAuthJanitorProviderConfiguration
     {
         public enum AzureMapsKeyType
         {

@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.AzureSql
 {
-    public class AzureSqlAdministratorPasswordConfiguration : AuthJanitorProviderConfiguration
+    public class AzureSqlAdministratorPasswordConfiguration : AzureAuthJanitorProviderConfiguration
     {
         /// <summary>
         /// Password length

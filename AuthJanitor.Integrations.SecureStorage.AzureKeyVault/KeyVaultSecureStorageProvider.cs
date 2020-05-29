@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Extensions.Azure;
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.IdentityServices;
 using Azure.Security.KeyVault.Secrets;
@@ -60,9 +59,8 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 
         private Task<SecretClient> GetClient() =>
             _identityService.GetAccessTokenForApplicationAsync()
-                .ContinueWith(t => t.Result.CreateTokenCredential())
                 .ContinueWith(t => new SecretClient(
                     new Uri($"https://{Configuration.VaultName}.vault.azure.net/"),
-                    t.Result));
+                    ExistingTokenCredential.FromAccessToken(t.Result)));
     }
 }

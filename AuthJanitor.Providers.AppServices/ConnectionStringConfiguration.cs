@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.AppService.Fluent.Models;
 using System.ComponentModel;
 
@@ -8,7 +9,7 @@ namespace AuthJanitor.Providers.AppServices
     /// <summary>
     /// Defines the configuration to update a consumed Connection String for an Azure Functions or Azure WebApps application
     /// </summary>
-    public class ConnectionStringConfiguration : SlottableProviderConfiguration
+    public class ConnectionStringConfiguration : SlottableAzureAuthJanitorProviderConfiguration
     {
         /// <summary>
         /// Connection String name
