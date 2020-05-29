@@ -68,6 +68,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure", "Azure", "{93A3274C-6CD8-4399-9C45-7D0A4077E4E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Providers.Azure", "AuthJanitor.Providers.Azure\AuthJanitor.Providers.Azure.csproj", "{7EDE5077-75D1-4D60-85AA-94E1F99525EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthJanitor.Tests", "AuthJanitor.Tests\AuthJanitor.Tests.csproj", "{4EF08D3E-5F88-4156-8BBA-9FD8A3065190}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -175,6 +176,10 @@ Global
 		{7EDE5077-75D1-4D60-85AA-94E1F99525EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EDE5077-75D1-4D60-85AA-94E1F99525EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EDE5077-75D1-4D60-85AA-94E1F99525EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EF08D3E-5F88-4156-8BBA-9FD8A3065190}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EF08D3E-5F88-4156-8BBA-9FD8A3065190}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EF08D3E-5F88-4156-8BBA-9FD8A3065190}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EF08D3E-5F88-4156-8BBA-9FD8A3065190}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
