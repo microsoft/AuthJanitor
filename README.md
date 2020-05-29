@@ -1,4 +1,4 @@
-![AuthJanitor Logo](../master/docs/assets/img/AJLogoDark.png?raw=true)
+![AuthJanitor Logo](https://github.com/microsoft/AuthJanitor/blob/master/docs/assets/img/AJLogoDark.png?raw=true)
 
 ![.NET Core](https://github.com/microsoft/AuthJanitor/workflows/.NET%20Core/badge.svg?branch=master)
 
