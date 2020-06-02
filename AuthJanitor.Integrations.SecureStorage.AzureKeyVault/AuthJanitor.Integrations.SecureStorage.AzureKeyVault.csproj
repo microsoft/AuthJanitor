@@ -8,9 +8,7 @@
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.0.3" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.4" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Integrations\AuthJanitor.Integrations.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
   </ItemGroup>
-
 </Project>

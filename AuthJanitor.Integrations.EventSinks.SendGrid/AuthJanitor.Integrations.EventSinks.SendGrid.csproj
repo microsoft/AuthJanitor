@@ -8,9 +8,7 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.4" />
     <PackageReference Include="SendGrid" Version="9.15.0" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Integrations\AuthJanitor.Integrations.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
   </ItemGroup>
-
 </Project>
