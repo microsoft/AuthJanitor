@@ -6,7 +6,6 @@ using AuthJanitor.Automation.Shared.ViewModels;
 using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Providers;
-using AuthJanitor.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;

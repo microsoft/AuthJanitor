@@ -3,7 +3,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace AuthJanitor.Shared
+namespace AuthJanitor
 {
     public class AccessTokenCredential
     {

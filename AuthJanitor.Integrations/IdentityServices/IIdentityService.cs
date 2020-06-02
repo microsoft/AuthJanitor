@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Shared;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.IdentityServices

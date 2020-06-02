@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Shared;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;

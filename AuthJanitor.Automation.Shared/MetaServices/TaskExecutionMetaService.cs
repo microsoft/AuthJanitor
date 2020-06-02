@@ -6,7 +6,6 @@ using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Integrations.IdentityServices;
 using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Providers;
-using AuthJanitor.Shared;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
