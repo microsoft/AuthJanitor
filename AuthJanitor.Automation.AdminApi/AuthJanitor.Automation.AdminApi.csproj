@@ -28,7 +28,6 @@
     <ProjectReference Include="..\AuthJanitor.Providers.RedisCache\AuthJanitor.Providers.RedisCache.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.ServiceBus\AuthJanitor.Providers.ServiceBus.csproj" />
     <ProjectReference Include="..\AuthJanitor.Providers.Storage\AuthJanitor.Providers.Storage.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

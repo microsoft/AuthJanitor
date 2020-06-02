@@ -4,8 +4,6 @@ VisualStudioVersion = 16.0.29411.138
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers.KeyVault", "AuthJanitor.Providers.KeyVault\AuthJanitor.Providers.KeyVault.csproj", "{D3EEB4BA-A801-436B-8308-422DDD8C8C65}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers", "AuthJanitor.Providers\AuthJanitor.Providers.csproj", "{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers.AppServices", "AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj", "{8BD80A4D-A1A1-4B9F-8E4A-C34C5CE03618}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers.CosmosDb", "AuthJanitor.Providers.CosmosDb\AuthJanitor.Providers.CosmosDb.csproj", "{9F31D9D3-3D12-4AAB-A8FE-CB4953504036}"
@@ -79,10 +77,6 @@ Global
 		{D3EEB4BA-A801-436B-8308-422DDD8C8C65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3EEB4BA-A801-436B-8308-422DDD8C8C65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3EEB4BA-A801-436B-8308-422DDD8C8C65}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8BD80A4D-A1A1-4B9F-8E4A-C34C5CE03618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8BD80A4D-A1A1-4B9F-8E4A-C34C5CE03618}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8BD80A4D-A1A1-4B9F-8E4A-C34C5CE03618}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -181,7 +175,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D3EEB4BA-A801-436B-8308-422DDD8C8C65} = {93A3274C-6CD8-4399-9C45-7D0A4077E4E0}
-		{F123A61C-4DA5-40F3-8D85-A1FE1F6C6EB2} = {9C0E454F-146E-40FB-AFE5-F63DAACAB326}
 		{8BD80A4D-A1A1-4B9F-8E4A-C34C5CE03618} = {93A3274C-6CD8-4399-9C45-7D0A4077E4E0}
 		{9F31D9D3-3D12-4AAB-A8FE-CB4953504036} = {93A3274C-6CD8-4399-9C45-7D0A4077E4E0}
 		{12CA268F-9E1F-403F-8428-C36F1F1C17E1} = {93A3274C-6CD8-4399-9C45-7D0A4077E4E0}

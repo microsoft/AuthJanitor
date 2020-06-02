@@ -10,7 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
   </ItemGroup>
-
 </Project>

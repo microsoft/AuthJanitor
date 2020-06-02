@@ -26,6 +26,5 @@
   <ItemGroup>
     <ProjectReference Include="..\AuthJanitor.Automation.Components\AuthJanitor.Automation.Components.csproj" />
     <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Providers\AuthJanitor.Providers.csproj" />
   </ItemGroup>
 </Project>
