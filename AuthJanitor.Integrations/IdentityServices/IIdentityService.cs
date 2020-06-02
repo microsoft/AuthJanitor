@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Integrations.IdentityServices
+namespace AuthJanitor.IdentityServices
 {
     public interface IIdentityService
     {

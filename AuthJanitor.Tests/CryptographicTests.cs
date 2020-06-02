@@ -1,4 +1,4 @@
-using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
 using Microsoft.Extensions.Options;
 using System;

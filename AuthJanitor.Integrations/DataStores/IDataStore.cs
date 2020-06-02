@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.DataStores;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

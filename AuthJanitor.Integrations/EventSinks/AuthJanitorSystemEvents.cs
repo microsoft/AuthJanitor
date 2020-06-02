@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-namespace AuthJanitor.Integrations.EventSinks
+
+namespace AuthJanitor.EventSinks
 {
 
     public enum AuthJanitorSystemEvents

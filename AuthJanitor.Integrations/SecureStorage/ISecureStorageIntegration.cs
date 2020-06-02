@@ -3,7 +3,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Integrations.SecureStorage
+namespace AuthJanitor.SecureStorage
 {
     public interface ISecureStorage
     {

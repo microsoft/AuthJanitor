@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.DataStores;
+using AuthJanitor.DataStores;
 using AuthJanitor.Providers;
 using System;
 using System.Collections.Generic;

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 using System.ComponentModel;
 
-namespace AuthJanitor.Integrations
+namespace AuthJanitor
 {
     public class AuthJanitorCoreConfiguration
     {

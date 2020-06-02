@@ -3,9 +3,8 @@
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.Models;
-using AuthJanitor.Integrations;
+using AuthJanitor.EventSinks;
 using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Integrations.EventSinks;
 using AuthJanitor.Providers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;

@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.EventSinks;
+using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Integrations.EventSinks;
-using AuthJanitor.Integrations.IdentityServices;
-using AuthJanitor.Integrations.SecureStorage;
 using AuthJanitor.Providers;
+using AuthJanitor.SecureStorage;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

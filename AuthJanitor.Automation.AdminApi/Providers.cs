@@ -3,8 +3,8 @@
 using AuthJanitor.Automation.Shared;
 using AuthJanitor.Automation.Shared.MetaServices;
 using AuthJanitor.Automation.Shared.ViewModels;
-using AuthJanitor.Integrations.EventSinks;
-using AuthJanitor.Integrations.IdentityServices;
+using AuthJanitor.EventSinks;
+using AuthJanitor.IdentityServices;
 using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
