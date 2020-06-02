@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Shared\AuthJanitor.Shared.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
