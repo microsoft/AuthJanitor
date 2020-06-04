@@ -58,14 +58,9 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             if (_secureStorageProvider == null)
                 throw new NotSupportedException("Must register an ISecureStorageProvider");
 
-#if false
             var credentialId = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync()
                                        .ContinueWith(t => _secureStorageProvider.Persist(task.Expiry, t.Result))
                                        .Unwrap();
-#else
-            var credentialId = await _secureStorageProvider.Persist(task.Expiry,
-                                        await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync());
-#endif
 
             task.PersistedCredentialId = credentialId;
             task.PersistedCredentialUser = _identityService.UserName;
