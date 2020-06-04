@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 namespace AuthJanitor.Automation.Shared
 {
@@ -36,9 +37,9 @@ namespace AuthJanitor.Automation.Shared
         public static void ConfigureServices(IServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<Func<LoadedProviderMetadata, LoadedProviderViewModel>>(serviceProvider => provider => GetViewModel(serviceProvider, provider));
-            serviceCollection.AddTransient<Func<ManagedSecret, ManagedSecretViewModel>>(serviceProvider => secret => GetViewModel(serviceProvider, secret));
+            serviceCollection.AddTransient<Func<ManagedSecret, ManagedSecretViewModel>>(serviceProvider => secret => GetViewModel(serviceProvider, secret, CancellationToken.None));
             serviceCollection.AddTransient<Func<Resource, ResourceViewModel>>(serviceProvider => resource => GetViewModel(serviceProvider, resource));
-            serviceCollection.AddTransient<Func<RekeyingTask, RekeyingTaskViewModel>>(serviceProvider => rekeyingTask => GetViewModel(serviceProvider, rekeyingTask));
+            serviceCollection.AddTransient<Func<RekeyingTask, RekeyingTaskViewModel>>(serviceProvider => rekeyingTask => GetViewModel(serviceProvider, rekeyingTask, CancellationToken.None));
             serviceCollection.AddTransient<Func<ScheduleWindow, ScheduleWindowViewModel>>(serviceProvider => scheduleWindow => GetViewModel(serviceProvider, scheduleWindow));
             serviceCollection.AddTransient<Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel>>(serviceProvider => config => GetViewModel(serviceProvider, config));
         }
@@ -97,12 +98,12 @@ namespace AuthJanitor.Automation.Shared
                     SvgImage = provider.SvgImage
                 };
 
-        private static ManagedSecretViewModel GetViewModel(IServiceProvider serviceProvider, ManagedSecret secret)
+        private static ManagedSecretViewModel GetViewModel(IServiceProvider serviceProvider, ManagedSecret secret, CancellationToken cancellationToken)
         {
             var providerManagerService = serviceProvider.GetRequiredService<ProviderManagerService>();
             var resources = secret.ResourceIds
                                 .Select(resourceId => serviceProvider.GetRequiredService<IDataStore<Resource>>()
-                                                                    .GetOne(resourceId).Result)
+                                                                    .GetOne(resourceId, cancellationToken).Result)
                                 .Select(resource => serviceProvider.GetRequiredService<Func<Resource, ResourceViewModel>>()(resource));
             foreach (var resource in resources)
             {
@@ -124,13 +125,13 @@ namespace AuthJanitor.Automation.Shared
             };
         }
 
-        private static RekeyingTaskViewModel GetViewModel(IServiceProvider serviceProvider, RekeyingTask rekeyingTask)
+        private static RekeyingTaskViewModel GetViewModel(IServiceProvider serviceProvider, RekeyingTask rekeyingTask, CancellationToken cancellationToken)
         {
             ManagedSecretViewModel secret;
             try
             {
                 secret = serviceProvider.GetRequiredService<Func<ManagedSecret, ManagedSecretViewModel>>()(
-                             serviceProvider.GetRequiredService<IDataStore<ManagedSecret>>().GetOne(rekeyingTask.ManagedSecretId).Result);
+                             serviceProvider.GetRequiredService<IDataStore<ManagedSecret>>().GetOne(rekeyingTask.ManagedSecretId, cancellationToken).Result);
             }
             catch (Exception) { secret = new ManagedSecretViewModel() { ObjectId = Guid.Empty }; }
             string errorMessage = string.Empty;

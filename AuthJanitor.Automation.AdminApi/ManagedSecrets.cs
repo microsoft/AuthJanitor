@@ -16,6 +16,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.AdminApi
@@ -58,11 +59,11 @@ namespace AuthJanitor.Automation.AdminApi
         }
 
         [FunctionName("ManagedSecrets-Create")]
-        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret)
+        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret, CancellationToken cancellationToken)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            var resources = await _resources.Get();
+            var resources = await _resources.Get(cancellationToken);
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -81,7 +82,7 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await _managedSecrets.Create(newManagedSecret);
+            await _managedSecrets.Create(newManagedSecret, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(AdminApi.ManagedSecrets.Create), newManagedSecret);
 
@@ -89,47 +90,47 @@ namespace AuthJanitor.Automation.AdminApi
         }
 
         [FunctionName("ManagedSecrets-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await _managedSecrets.Get()).Select(s => _managedSecretViewModel(s)));
+            return new OkObjectResult((await _managedSecrets.Get(cancellationToken)).Select(s => _managedSecretViewModel(s)));
         }
 
         [FunctionName("ManagedSecrets-Get")]
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Get), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId)));
+            return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId, cancellationToken)));
         }
 
         [FunctionName("ManagedSecrets-Delete")]
         public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Delete), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            await _managedSecrets.Delete(secretId);
+            await _managedSecrets.Delete(secretId, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(AdminApi.ManagedSecrets.Delete), secretId);
 
@@ -139,17 +140,17 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("ManagedSecrets-Update")]
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.ManagedSecrets.Update), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var resources = await _resources.Get();
+            var resources = await _resources.Get(cancellationToken);
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -168,7 +169,7 @@ namespace AuthJanitor.Automation.AdminApi
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await _managedSecrets.Update(newManagedSecret);
+            await _managedSecrets.Update(newManagedSecret, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(AdminApi.ManagedSecrets.Update), newManagedSecret);
 

@@ -12,10 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -52,7 +50,7 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("Resources-Create")]
         public async Task<IActionResult> Create(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
-            HttpRequest req)
+            HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
@@ -74,7 +72,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await _resources.Create(newResource);
+            await _resources.Create(newResource, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(AdminApi.Resources.Create), newResource);
 
@@ -82,49 +80,49 @@ namespace AuthJanitor.Automation.AdminApi
         }
 
         [FunctionName("Resources-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await _resources.Get()).Select(r => _resourceViewModel(r)));
+            return new OkObjectResult((await _resources.Get(cancellationToken)).Select(r => _resourceViewModel(r)));
         }
 
         [FunctionName("Resources-Get")]
         public async Task<IActionResult> Get(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await _resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Get), "Resource not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId)));
+            return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId, cancellationToken)));
         }
 
         [FunctionName("Resources-Delete")]
         public async Task<IActionResult> Delete(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
-            if (!await _resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.Resources.Delete), "Resource not found");
                 return new NotFoundResult();
             }
 
-            await _resources.Delete(resourceId);
+            await _resources.Delete(resourceId, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(AdminApi.Resources.Delete), resourceId);
 
@@ -135,7 +133,7 @@ namespace AuthJanitor.Automation.AdminApi
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId:guid}")] ResourceViewModel resource,
             HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
@@ -158,7 +156,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await _resources.Update(newResource);
+            await _resources.Update(newResource, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(AdminApi.Resources.Update), newResource);
 

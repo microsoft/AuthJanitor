@@ -46,9 +46,9 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             _secureStorageProvider = secureStorageProvider;
         }
 
-        public async Task CacheBackCredentialsForTaskIdAsync(Guid taskId)
+        public async Task CacheBackCredentialsForTaskIdAsync(Guid taskId, CancellationToken cancellationToken)
         {
-            var task = await _rekeyingTasks.GetOne(taskId);
+            var task = await _rekeyingTasks.GetOne(taskId, cancellationToken);
             if (task == null)
                 throw new KeyNotFoundException("Task not found");
 
@@ -57,33 +57,38 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
             if (_secureStorageProvider == null)
                 throw new NotSupportedException("Must register an ISecureStorageProvider");
-            
+
+#if false
             var credentialId = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync()
                                        .ContinueWith(t => _secureStorageProvider.Persist(task.Expiry, t.Result))
                                        .Unwrap();
+#else
+            var credentialId = await _secureStorageProvider.Persist(task.Expiry,
+                                        await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync());
+#endif
 
             task.PersistedCredentialId = credentialId;
             task.PersistedCredentialUser = _identityService.UserName;
 
-            await _rekeyingTasks.Update(task);
+            await _rekeyingTasks.Update(task, cancellationToken);
         }
 
-        public async Task ExecuteTask(Guid taskId)
+        public async Task ExecuteTask(Guid taskId, CancellationToken cancellationToken)
         {
             // Prepare record
-            var task = await _rekeyingTasks.GetOne(taskId);
+            var task = await _rekeyingTasks.GetOne(taskId, cancellationToken);
             task.RekeyingInProgress = true;
             var rekeyingAttemptLog = new RekeyingAttemptLogger();
             task.Attempts.Add(rekeyingAttemptLog);
-            await _rekeyingTasks.Update(task);
+            await _rekeyingTasks.Update(task, cancellationToken);
 
             var logUpdateCancellationTokenSource = new CancellationTokenSource();
             var logUpdateTask = Task.Run(async () =>
             {
                 while (task.RekeyingInProgress)
                 {
-                    await Task.Delay(15*1000);
-                    await _rekeyingTasks.Update(task);
+                    await Task.Delay(15 * 1000);
+                    await _rekeyingTasks.Update(task, cancellationToken);
                 }
             }, logUpdateCancellationTokenSource.Token);
 
@@ -113,7 +118,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             }
             catch (Exception ex)
             {
-                await EmbedException(task, ex, "Exception retrieving Access Token");
+                await EmbedException(task, ex, cancellationToken, "Exception retrieving Access Token");
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
                 return;
             }
@@ -125,15 +130,15 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
 
             // Retrieve targets
-            var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
+            var secret = await _managedSecrets.GetOne(task.ManagedSecretId, cancellationToken);
             rekeyingAttemptLog.LogInformation("Beginning rekeying of secret ID {SecretId}", task.ManagedSecretId);
-            var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId));
+            var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId), cancellationToken);
 
             // Execute rekeying workflow
             try
             {
                 var providers = resources.Select(r => _providerManagerService.GetProviderInstance(
-                    r.ProviderType, 
+                    r.ProviderType,
                     r.ProviderConfiguration)).ToList();
 
                 // Link in automation bindings from the outer flow
@@ -143,7 +148,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
             }
             catch (Exception ex)
             {
-                await EmbedException(task, ex, "Error executing rekeying workflow!");
+                await EmbedException(task, ex, cancellationToken, "Error executing rekeying workflow!");
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
             }
 
@@ -154,7 +159,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
 
             logUpdateCancellationTokenSource.Cancel();
 
-            await _rekeyingTasks.Update(task);
+            await _rekeyingTasks.Update(task, cancellationToken);
 
             // Run cleanup if Task is complete
             if (task.RekeyingCompleted)
@@ -162,7 +167,7 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 try
                 {
                     secret.LastChanged = DateTimeOffset.UtcNow;
-                    await _managedSecrets.Update(secret);
+                    await _managedSecrets.Update(secret, cancellationToken);
 
                     if (task.PersistedCredentialId != default && task.PersistedCredentialId != Guid.Empty)
                     {
@@ -176,11 +181,11 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                     rekeyingAttemptLog.LogInformation("Completed rekeying workflow for ManagedSecret '{ManagedSecretName}' (ID {ManagedSecretId})", secret.Name, secret.ObjectId);
                     rekeyingAttemptLog.LogInformation("Rekeying task completed");
 
-                    await _rekeyingTasks.Update(task);
+                    await _rekeyingTasks.Update(task, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    await EmbedException(task, ex, "Error cleaning up after rekeying!");
+                    await EmbedException(task, ex, cancellationToken, "Error cleaning up after rekeying!");
                 }
 
 
@@ -193,14 +198,14 @@ namespace AuthJanitor.Automation.Shared.MetaServices
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
         }
 
-        private async Task EmbedException(RekeyingTask task, Exception ex, string text = "Exception Occurred")
+        private async Task EmbedException(RekeyingTask task, Exception ex, CancellationToken cancellationToken, string text = "Exception Occurred")
         {
             var myAttempt = task.Attempts.OrderByDescending(a => a.AttemptStarted).First();
             if (text != default) myAttempt.LogCritical(ex, text);
             myAttempt.OuterException = $"{ex.Message}{Environment.NewLine}{ex.StackTrace}";
             task.RekeyingInProgress = false;
             task.RekeyingFailed = true;
-            await _rekeyingTasks.Update(task);
+            await _rekeyingTasks.Update(task, cancellationToken);
         }
     }
 }

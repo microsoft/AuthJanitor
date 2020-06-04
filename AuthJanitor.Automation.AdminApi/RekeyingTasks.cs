@@ -16,6 +16,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -61,19 +62,19 @@ namespace AuthJanitor.Automation.AdminApi
         [FunctionName("RekeyingTasks-Create")]
         public async Task<IActionResult> Create(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Create), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var secret = await _managedSecrets.GetOne(secretId);
+            var secret = await _managedSecrets.GetOne(secretId, cancellationToken);
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminCachesSignOff) &&
                 !secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime))
             {
@@ -88,7 +89,7 @@ namespace AuthJanitor.Automation.AdminApi
                 ManagedSecretId = secret.ObjectId
             };
 
-            await _rekeyingTasks.Create(newTask);
+            await _rekeyingTasks.Create(newTask, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(AdminApi.RekeyingTasks.Create), newTask);
 
@@ -96,47 +97,47 @@ namespace AuthJanitor.Automation.AdminApi
         }
 
         [FunctionName("RekeyingTasks-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await _rekeyingTasks.Get()).Select(t => _rekeyingTaskViewModel(t)));
+            return new OkObjectResult((await _rekeyingTasks.Get(cancellationToken)).Select(t => _rekeyingTaskViewModel(t)));
         }
 
         [FunctionName("RekeyingTasks-Get")]
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+            Guid taskId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await _rekeyingTasks.ContainsId(taskId))
+            if (!await _rekeyingTasks.ContainsId(taskId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Get), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(_rekeyingTaskViewModel((await _rekeyingTasks.GetOne(taskId))));
+            return new OkObjectResult(_rekeyingTaskViewModel((await _rekeyingTasks.GetOne(taskId, cancellationToken))));
         }
 
         [FunctionName("RekeyingTasks-Delete")]
         public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+            Guid taskId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            if (!await _rekeyingTasks.ContainsId(taskId))
+            if (!await _rekeyingTasks.ContainsId(taskId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
-            await _rekeyingTasks.Delete(taskId);
+            await _rekeyingTasks.Delete(taskId, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskDeleted, nameof(AdminApi.RekeyingTasks.Delete), taskId);
 
@@ -145,13 +146,13 @@ namespace AuthJanitor.Automation.AdminApi
 
         [FunctionName("RekeyingTasks-Approve")]
         public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId)
+            Guid taskId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ServiceOperator)) return new UnauthorizedResult();
 
-            var toRekey = await _rekeyingTasks.GetOne(t => t.ObjectId == taskId);
+            var toRekey = await _rekeyingTasks.GetOne(t => t.ObjectId == taskId, cancellationToken);
             if (toRekey == null)
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(AdminApi.RekeyingTasks.Delete), "Rekeying Task not found");
@@ -165,9 +166,9 @@ namespace AuthJanitor.Automation.AdminApi
 
             // Just cache credentials if no workflow action is required
             if (toRekey.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff)
-                await _taskExecutionMetaService.CacheBackCredentialsForTaskIdAsync(toRekey.ObjectId);
+                await _taskExecutionMetaService.CacheBackCredentialsForTaskIdAsync(toRekey.ObjectId, cancellationToken);
             else
-                await _taskExecutionMetaService.ExecuteTask(toRekey.ObjectId);
+                await _taskExecutionMetaService.ExecuteTask(toRekey.ObjectId, cancellationToken);
 
             return new OkResult();
         }
