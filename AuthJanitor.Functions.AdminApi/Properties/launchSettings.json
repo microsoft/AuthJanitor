@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AuthJanitor.Functions.AdminApi": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --pause-on-error --port 16000",
+      "sqlDebugging": false
+    }
+  }
+}

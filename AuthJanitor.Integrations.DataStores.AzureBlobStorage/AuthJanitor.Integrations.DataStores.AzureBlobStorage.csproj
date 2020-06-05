@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
+    <ProjectReference Include="..\AuthJanitor.AspNet\AuthJanitor.AspNet.Core.csproj" />
       <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
   </ItemGroup>
 

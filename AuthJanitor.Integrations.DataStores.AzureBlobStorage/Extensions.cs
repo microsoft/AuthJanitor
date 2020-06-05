@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Automation.Shared.Models;
+using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.DataStores;
 using Microsoft.Extensions.DependencyInjection;
 using System;

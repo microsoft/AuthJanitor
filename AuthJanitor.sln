@@ -23,17 +23,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Automation", "Automation", "{45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.AdminApi", "AuthJanitor.Automation.AdminApi\AuthJanitor.Automation.AdminApi.csproj", "{8DBA0BBC-F92B-456D-8342-0C42E39EB81E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Functions.AdminApi", "AuthJanitor.Functions.AdminApi\AuthJanitor.Functions.AdminApi.csproj", "{8DBA0BBC-F92B-456D-8342-0C42E39EB81E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.Agent", "AuthJanitor.Automation.Agent\AuthJanitor.Automation.Agent.csproj", "{F9DCAB83-056E-4F4B-A8CA-9DDBBCF08394}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Functions.Agent", "AuthJanitor.Functions.Agent\AuthJanitor.Functions.Agent.csproj", "{F9DCAB83-056E-4F4B-A8CA-9DDBBCF08394}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.Shared", "AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj", "{5BDB5B18-884B-4BB5-BF20-A06114C5C928}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.AspNet.Core", "AuthJanitor.AspNet\AuthJanitor.AspNet.Core.csproj", "{5BDB5B18-884B-4BB5-BF20-A06114C5C928}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.AdminUi", "AuthJanitor.Automation.AdminUi\AuthJanitor.Automation.AdminUi.csproj", "{1221DBD5-BD6A-482D-B842-AF53611A48A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.AspNet.AdminUi", "AuthJanitor.AspNet.AdminUi\AuthJanitor.AspNet.AdminUi.csproj", "{1221DBD5-BD6A-482D-B842-AF53611A48A9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Admin", "Admin", "{4AB5E96D-1A78-44E0-A52B-5F1A7ABE3B40}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Automation.Components", "AuthJanitor.Automation.Components\AuthJanitor.Automation.Components.csproj", "{3BB075E4-75CE-4520-B185-6021F8B3F1BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.AspNet.UI.Razor", "AuthJanitor.AspNet.UI.Razor\AuthJanitor.AspNet.UI.Razor.csproj", "{3BB075E4-75CE-4520-B185-6021F8B3F1BA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthJanitor.Providers.AzureMaps", "AuthJanitor.Providers.AzureMaps\AuthJanitor.Providers.AzureMaps.csproj", "{CC3E1903-9A04-4A14-8EDB-59444BB57E05}"
 EndProject
@@ -185,7 +185,7 @@ Global
 		{5BDB5B18-884B-4BB5-BF20-A06114C5C928} = {45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}
 		{1221DBD5-BD6A-482D-B842-AF53611A48A9} = {4AB5E96D-1A78-44E0-A52B-5F1A7ABE3B40}
 		{4AB5E96D-1A78-44E0-A52B-5F1A7ABE3B40} = {45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}
-		{3BB075E4-75CE-4520-B185-6021F8B3F1BA} = {4AB5E96D-1A78-44E0-A52B-5F1A7ABE3B40}
+		{3BB075E4-75CE-4520-B185-6021F8B3F1BA} = {45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}
 		{CC3E1903-9A04-4A14-8EDB-59444BB57E05} = {93A3274C-6CD8-4399-9C45-7D0A4077E4E0}
 		{0E2B33F8-6CD0-43EE-AA35-337B6798B509} = {45A0E86E-0F1A-434E-B3F9-D9AE88C964E1}
 		{31D82FCB-3F22-482C-B7A4-F9D9D4A27EF6} = {07EE807A-D975-4B1D-B486-6633ED87B757}
