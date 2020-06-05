@@ -10,6 +10,6 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Core\AuthJanitor.Core.csproj" />
   </ItemGroup>
 </Project>

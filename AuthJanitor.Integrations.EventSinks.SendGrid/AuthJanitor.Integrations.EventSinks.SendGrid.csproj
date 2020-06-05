@@ -9,6 +9,6 @@
     <PackageReference Include="SendGrid" Version="9.15.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Contracts\AuthJanitor.Contracts.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Core\AuthJanitor.Core.csproj" />
   </ItemGroup>
 </Project>
