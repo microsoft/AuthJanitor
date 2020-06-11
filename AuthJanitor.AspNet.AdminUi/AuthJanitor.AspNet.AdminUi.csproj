@@ -11,17 +11,17 @@
     <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Blazorise" Version="0.9.0.2" />
-    <PackageReference Include="Blazorise.Bootstrap" Version="0.9.0.2" />
-    <PackageReference Include="Blazorise.Charts" Version="0.9.0.2" />
-    <PackageReference Include="Blazorise.Components" Version="0.9.0.2" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.0.2" />
-    <PackageReference Include="Blazorise.Sidebar" Version="0.9.0.2" />
-    <PackageReference Include="BlazorTable" Version="1.9.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0-preview2.20160.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0-preview2.20160.5" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0-preview2.20160.5" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.2.0-preview2.20160.5" />
+    <PackageReference Include="Blazorise" Version="0.9.0.3" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="0.9.0.3" />
+    <PackageReference Include="Blazorise.Charts" Version="0.9.0.3" />
+    <PackageReference Include="Blazorise.Components" Version="0.9.0.3" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.0.3" />
+    <PackageReference Include="Blazorise.Sidebar" Version="0.9.0.3" />
+    <PackageReference Include="BlazorTable" Version="1.11.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.2.0-preview3.20168.3" />
   </ItemGroup>
 
   <ItemGroup>
