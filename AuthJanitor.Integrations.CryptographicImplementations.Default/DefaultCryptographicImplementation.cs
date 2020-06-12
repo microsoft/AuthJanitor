@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.CryptographicImplementations;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;

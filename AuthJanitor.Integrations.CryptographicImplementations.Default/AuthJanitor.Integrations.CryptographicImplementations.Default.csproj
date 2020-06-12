@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Integrations\AuthJanitor.Integrations.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Core\AuthJanitor.Core.csproj" />
   </ItemGroup>
 
 </Project>
