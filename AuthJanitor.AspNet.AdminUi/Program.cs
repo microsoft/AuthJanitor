@@ -7,7 +7,6 @@ using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.UI
@@ -22,14 +21,8 @@ namespace AuthJanitor.UI
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 
-            // Create both HttpClient and AuthJanitorHttpClient -- the AJ client from the HttpClient
-            // ... this gets us the BaseAddress in the AJ-customized HttpClient   
-            builder.Services.AddSingleton(sp =>
-            new HttpClient
-            {
-                BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-            });
-            builder.Services.AddSingleton((s) => new AuthJanitorHttpClient(s.GetRequiredService<HttpClient>()));
+            builder.Services.AddHttpClient<AuthJanitorHttpClient>(
+                client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
 
             builder.RootComponents.Add<App>("app");
 
