@@ -1,31 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared.MetaServices;
-using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.UI.Shared.ViewModels;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
+using AuthJanitor.UI.Shared.MetaServices;
+using AuthJanitor.UI.Shared.Models;
+using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web.Http;
 
-namespace AuthJanitor
+namespace AuthJanitor.Services
 {
     /// <summary>
     /// API functions to control the creation and management of AuthJanitor Resources.
     /// A Resource is the description of how to connect to an object or resource, using a given Provider.
     /// </summary>
-    public class Resources
+    public class ResourcesService
     {
         private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
@@ -34,7 +31,7 @@ namespace AuthJanitor
         private readonly IDataStore<Resource> _resources;
         private readonly Func<Resource, ResourceViewModel> _resourceViewModel;
 
-        public Resources(
+        public ResourcesService(
             IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
@@ -49,10 +46,7 @@ namespace AuthJanitor
             _resourceViewModel = resourceViewModelDelegate;
         }
 
-        [FunctionName("Resources-Create")]
-        public async Task<IActionResult> Create(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
-            HttpRequest req)
+        public async Task<IActionResult> Create(ResourceViewModel resource, HttpRequest req)
         {
             _ = req;
 
@@ -76,13 +70,12 @@ namespace AuthJanitor
 
             await _resources.Create(newResource);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(Resources.Create), newResource);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(ResourcesService.Create), newResource);
 
             return new OkObjectResult(_resourceViewModel(newResource));
         }
 
-        [FunctionName("Resources-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
+        public async Task<IActionResult> List(HttpRequest req)
         {
             _ = req;
 
@@ -91,10 +84,7 @@ namespace AuthJanitor
             return new OkObjectResult((await _resources.Get()).Select(r => _resourceViewModel(r)));
         }
 
-        [FunctionName("Resources-Get")]
-        public async Task<IActionResult> Get(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+        public async Task<IActionResult> Get(HttpRequest req, Guid resourceId)
         {
             _ = req;
 
@@ -102,17 +92,14 @@ namespace AuthJanitor
 
             if (!await _resources.ContainsId(resourceId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(Resources.Get), "Resource not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ResourcesService.Get), "Resource not found");
                 return new NotFoundResult();
             }
 
             return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId)));
         }
 
-        [FunctionName("Resources-Delete")]
-        public async Task<IActionResult> Delete(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+        public async Task<IActionResult> Delete(HttpRequest req, Guid resourceId)
         {
             _ = req;
 
@@ -120,22 +107,18 @@ namespace AuthJanitor
 
             if (!await _resources.ContainsId(resourceId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(Resources.Delete), "Resource not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ResourcesService.Delete), "Resource not found");
                 return new NotFoundResult();
             }
 
             await _resources.Delete(resourceId);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(Resources.Delete), resourceId);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(ResourcesService.Delete), resourceId);
 
             return new OkResult();
         }
 
-        [FunctionName("Resources-Update")]
-        public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId:guid}")] ResourceViewModel resource,
-            HttpRequest req,
-            Guid resourceId)
+        public async Task<IActionResult> Update(ResourceViewModel resource, HttpRequest req, Guid resourceId)
         {
             _ = req;
 
@@ -160,7 +143,7 @@ namespace AuthJanitor
 
             await _resources.Update(newResource);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(Resources.Update), newResource);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(ResourcesService.Update), newResource);
 
             return new OkObjectResult(_resourceViewModel(newResource));
         }

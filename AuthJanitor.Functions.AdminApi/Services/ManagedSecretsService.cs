@@ -1,29 +1,27 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared.MetaServices;
-using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.UI.Shared.ViewModels;
 using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
+using AuthJanitor.UI.Shared.MetaServices;
+using AuthJanitor.UI.Shared.Models;
+using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor
+namespace AuthJanitor.Services
 {
     /// <summary>
     /// API functions to control the creation and management of AuthJanitor Managed Secrets.
     /// A Managed Secret is a grouping of Resources and Policies which describe the strategy around rekeying an object and the applications which consume it.
     /// </summary>
-    public class ManagedSecrets
+    public class ManagedSecretsService
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
@@ -35,7 +33,7 @@ namespace AuthJanitor
         private readonly IDataStore<Resource> _resources;
         private readonly Func<ManagedSecret, ManagedSecretViewModel> _managedSecretViewModel;
 
-        public ManagedSecrets(
+        public ManagedSecretsService(
             IOptions<AuthJanitorCoreConfiguration> configuration,
             IIdentityService identityService,
             ICryptographicImplementation cryptographicImplementation,
@@ -56,8 +54,7 @@ namespace AuthJanitor
             _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
-        [FunctionName("ManagedSecrets-Create")]
-        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret)
+        public async Task<IActionResult> Create(ManagedSecretViewModel inputSecret)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
@@ -65,7 +62,7 @@ namespace AuthJanitor
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecrets.Create), "New Managed Secret attempted to use one or more invalid Resource IDs");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Create), "New Managed Secret attempted to use one or more invalid Resource IDs");
                 return new NotFoundObjectResult("One or more Resource IDs not found!");
             }
 
@@ -82,13 +79,12 @@ namespace AuthJanitor
 
             await _managedSecrets.Create(newManagedSecret);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(ManagedSecrets.Create), newManagedSecret);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(ManagedSecretsService.Create), newManagedSecret);
 
             return new OkObjectResult(_managedSecretViewModel(newManagedSecret));
         }
 
-        [FunctionName("ManagedSecrets-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req)
+        public async Task<IActionResult> List(HttpRequest req)
         {
             _ = req;
 
@@ -97,9 +93,7 @@ namespace AuthJanitor
             return new OkObjectResult((await _managedSecrets.Get()).Select(s => _managedSecretViewModel(s)));
         }
 
-        [FunctionName("ManagedSecrets-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+        public async Task<IActionResult> Get(HttpRequest req, Guid secretId)
         {
             _ = req;
 
@@ -107,16 +101,14 @@ namespace AuthJanitor
 
             if (!await _managedSecrets.ContainsId(secretId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecrets.Get), "Secret ID not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Get), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
             return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId)));
         }
 
-        [FunctionName("ManagedSecrets-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+        public async Task<IActionResult> Delete(HttpRequest req, Guid secretId)
         {
             _ = req;
 
@@ -124,27 +116,24 @@ namespace AuthJanitor
 
             if (!await _managedSecrets.ContainsId(secretId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecrets.Delete), "Secret ID not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Delete), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
             await _managedSecrets.Delete(secretId);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(ManagedSecrets.Delete), secretId);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(ManagedSecretsService.Delete), secretId);
 
             return new OkResult();
         }
 
-        [FunctionName("ManagedSecrets-Update")]
-        public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
-            Guid secretId)
+        public async Task<IActionResult> Update(ManagedSecretViewModel inputSecret, Guid secretId)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
             if (!await _managedSecrets.ContainsId(secretId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecrets.Update), "Secret ID not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Update), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
@@ -152,7 +141,7 @@ namespace AuthJanitor
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecrets.Update), "New Managed Secret attempted to use one or more invalid Resource IDs");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Update), "New Managed Secret attempted to use one or more invalid Resource IDs");
                 return new NotFoundObjectResult("One or more Resource IDs not found!");
             }
 
@@ -169,7 +158,7 @@ namespace AuthJanitor
 
             await _managedSecrets.Update(newManagedSecret);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(ManagedSecrets.Update), newManagedSecret);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(ManagedSecretsService.Update), newManagedSecret);
 
             return new OkObjectResult(_managedSecretViewModel(newManagedSecret));
         }

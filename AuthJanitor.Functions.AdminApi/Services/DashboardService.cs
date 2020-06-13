@@ -1,22 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.UI.Shared.ViewModels;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
+using AuthJanitor.UI.Shared;
+using AuthJanitor.UI.Shared.Models;
+using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor
+namespace AuthJanitor.Services
 {
-    public class Dashboard
+    public class DashboardService
     {
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<Resource> _resources;
@@ -27,7 +25,7 @@ namespace AuthJanitor
         private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
 
-        public Dashboard(
+        public DashboardService(
             IIdentityService identityService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
@@ -45,8 +43,7 @@ namespace AuthJanitor
             _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
-        [FunctionName("Dashboard")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req)
+        public async Task<IActionResult> Run(HttpRequest req)
         {
             _ = req;
 
