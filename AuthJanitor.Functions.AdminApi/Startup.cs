@@ -15,6 +15,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using AuthJanitor.Services;
 
 [assembly: WebJobsStartup(typeof(AuthJanitor.Startup))]
 namespace AuthJanitor
@@ -72,6 +73,13 @@ namespace AuthJanitor
             {
                 o.VaultName = "vault";
             });
+
+            builder.Services.AddTransient<DashboardService>();
+            builder.Services.AddTransient<ManagedSecretsService>();
+            builder.Services.AddTransient<RekeyingTasksService>();
+            builder.Services.AddTransient<ScheduleRekeyingTasksService>();
+            builder.Services.AddTransient<ProvidersService>();
+            builder.Services.AddTransient<ResourcesService>();
 
             logger.LogDebug("Registering AuthJanitor MetaServices");
             AuthJanitorServiceRegistration.RegisterServices(builder.Services);

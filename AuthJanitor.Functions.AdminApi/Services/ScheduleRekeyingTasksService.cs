@@ -14,9 +14,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor
+namespace AuthJanitor.Services
 {
-    public class ScheduleRekeyingTasks
+    public class ScheduleRekeyingTasksService
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly ProviderManagerService _providerManager;
@@ -26,7 +26,7 @@ namespace AuthJanitor
         private readonly IDataStore<Resource> _resources;
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
 
-        public ScheduleRekeyingTasks(
+        public ScheduleRekeyingTasksService(
             IOptions<AuthJanitorCoreConfiguration> configuration,
             EventDispatcherMetaService eventDispatcherMetaService,
             ProviderManagerService providerManager,
@@ -43,8 +43,7 @@ namespace AuthJanitor
             _rekeyingTasks = rekeyingTaskStore;
         }
 
-        [FunctionName("ScheduleRekeyingTasks")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run(TimerInfo myTimer, ILogger log)
         {
             _ = myTimer; // unused but required for attribute
 
@@ -111,9 +110,9 @@ namespace AuthJanitor
             {
                 var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
                 if (task.ConfirmationType.UsesOBOTokens())
-                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(ScheduleRekeyingTasks.CreateAndNotify), task);
+                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(ScheduleRekeyingTasksService.CreateAndNotify), task);
                 else
-                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForAutomation, nameof(ScheduleRekeyingTasks.CreateAndNotify), task);
+                    await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForAutomation, nameof(ScheduleRekeyingTasksService.CreateAndNotify), task);
             }
         }
 

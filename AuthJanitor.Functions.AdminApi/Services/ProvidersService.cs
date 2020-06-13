@@ -15,13 +15,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 
-namespace AuthJanitor.Functions
+namespace AuthJanitor.Services
 {
     /// <summary>
     /// API functions to describe the loaded Providers and their configurations.
     /// A Provider is a library containing logic to either rekey an object/service or manage the lifecycle of an application.
     /// </summary>
-    public class Providers
+    public class ProvidersService
     {
         private readonly IIdentityService _identityService;
         private readonly EventDispatcherMetaService _eventDispatcher;
@@ -30,7 +30,7 @@ namespace AuthJanitor.Functions
         private readonly Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> _configViewModel;
         private readonly Func<LoadedProviderMetadata, LoadedProviderViewModel> _providerViewModel;
 
-        public Providers(
+        public ProvidersService(
             IIdentityService identityService,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
@@ -45,8 +45,7 @@ namespace AuthJanitor.Functions
             _providerViewModel = providerViewModelDelegate;
         }
 
-        [FunctionName("Providers-List")]
-        public IActionResult List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers")] HttpRequest req)
+        public IActionResult List(HttpRequest req)
         {
             _ = req;
 
@@ -55,10 +54,7 @@ namespace AuthJanitor.Functions
             return new OkObjectResult(_providerManager.LoadedProviders.Select(p => _providerViewModel(p)));
         }
 
-        [FunctionName("Providers-GetBlankConfiguration")]
-        public async Task<IActionResult> GetBlankConfiguration(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers/{providerType}")] HttpRequest req,
-            string providerType)
+        public async Task<IActionResult> GetBlankConfiguration(HttpRequest req, string providerType)
         {
             _ = req;
 
@@ -67,15 +63,14 @@ namespace AuthJanitor.Functions
             var provider = _providerManager.LoadedProviders.FirstOrDefault(p => p.ProviderTypeName == providerType);
             if (provider == null)
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(Providers.GetBlankConfiguration), "Invalid Provider specified");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ProvidersService.GetBlankConfiguration), "Invalid Provider specified");
                 return new NotFoundResult();
             }
             return new OkObjectResult(_configViewModel(_providerManager.GetProviderConfiguration(provider.ProviderTypeName)));
         }
 
-        [FunctionName("Providers-TestConfiguration")]
         public async Task<IActionResult> TestConfiguration(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "providers/{providerType}/test/{testContext}")] string providerConfiguration,
+            string providerConfiguration,
             HttpRequest req,
             string providerType,
             string testContext)
@@ -113,7 +108,7 @@ namespace AuthJanitor.Functions
             var provider = _providerManager.LoadedProviders.FirstOrDefault(p => p.ProviderTypeName == providerType);
             if (provider == null)
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(Providers.GetBlankConfiguration), "Invalid Provider specified");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ProvidersService.GetBlankConfiguration), "Invalid Provider specified");
                 return new NotFoundResult();
             }
 

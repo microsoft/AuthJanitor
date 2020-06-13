@@ -1,30 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
-using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.UI.Shared.ViewModels;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
+using AuthJanitor.UI.Shared;
+using AuthJanitor.UI.Shared.MetaServices;
+using AuthJanitor.UI.Shared.Models;
+using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 
-namespace AuthJanitor
+namespace AuthJanitor.Services
 {
     /// <summary>
     /// API functions to control the creation management, and approval of Rekeying Tasks.
     /// A Rekeying Task is a time-bounded description of one or more Managed Secrets to be rekeyed.
     /// </summary>
-    public class RekeyingTasks
+    public class RekeyingTasksService
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly IIdentityService _identityService;
@@ -36,7 +34,7 @@ namespace AuthJanitor
         private readonly IDataStore<RekeyingTask> _rekeyingTasks;
         private readonly Func<RekeyingTask, RekeyingTaskViewModel> _rekeyingTaskViewModel;
 
-        public RekeyingTasks(
+        public RekeyingTasksService(
             IOptions<AuthJanitorCoreConfiguration> configuration,
             IIdentityService identityService,
             TaskExecutionMetaService taskExecutionMetaService,
@@ -57,10 +55,7 @@ namespace AuthJanitor
             _rekeyingTaskViewModel = rekeyingTaskViewModelDelegate;
         }
 
-        [FunctionName("RekeyingTasks-Create")]
-        public async Task<IActionResult> Create(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+        public async Task<IActionResult> Create(HttpRequest req, Guid secretId)
         {
             _ = req;
 
@@ -68,7 +63,7 @@ namespace AuthJanitor
 
             if (!await _managedSecrets.ContainsId(secretId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Create), "Secret ID not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Create), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
@@ -76,7 +71,7 @@ namespace AuthJanitor
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminCachesSignOff) &&
                 !secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.AdminSignsOffJustInTime))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Create), "Managed Secret does not support adminstrator approval");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Create), "Managed Secret does not support adminstrator approval");
                 return new BadRequestErrorMessageResult("Managed Secret does not support administrator approval!");
             }
 
@@ -89,13 +84,12 @@ namespace AuthJanitor
 
             await _rekeyingTasks.Create(newTask);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(RekeyingTasks.Create), newTask);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(RekeyingTasksService.Create), newTask);
 
             return new OkObjectResult(newTask);
         }
 
-        [FunctionName("RekeyingTasks-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks")] HttpRequest req)
+        public async Task<IActionResult> List(HttpRequest req)
         {
             _ = req;
 
@@ -104,9 +98,7 @@ namespace AuthJanitor
             return new OkObjectResult((await _rekeyingTasks.Get()).Select(t => _rekeyingTaskViewModel(t)));
         }
 
-        [FunctionName("RekeyingTasks-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+        public async Task<IActionResult> Get(HttpRequest req, Guid taskId)
         {
             _ = req;
 
@@ -114,16 +106,14 @@ namespace AuthJanitor
 
             if (!await _rekeyingTasks.ContainsId(taskId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Get), "Rekeying Task not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Get), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
             return new OkObjectResult(_rekeyingTaskViewModel((await _rekeyingTasks.GetOne(taskId))));
         }
 
-        [FunctionName("RekeyingTasks-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId)
+        public async Task<IActionResult> Delete(HttpRequest req, Guid taskId)
         {
             _ = req;
 
@@ -131,20 +121,18 @@ namespace AuthJanitor
 
             if (!await _rekeyingTasks.ContainsId(taskId))
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Delete), "Rekeying Task not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Delete), "Rekeying Task not found");
                 return new NotFoundResult();
             }
 
             await _rekeyingTasks.Delete(taskId);
 
-            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskDeleted, nameof(RekeyingTasks.Delete), taskId);
+            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.RotationTaskDeleted, nameof(RekeyingTasksService.Delete), taskId);
 
             return new OkResult();
         }
 
-        [FunctionName("RekeyingTasks-Approve")]
-        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId)
+        public async Task<IActionResult> Approve(HttpRequest req, Guid taskId)
         {
             _ = req;
 
@@ -153,12 +141,12 @@ namespace AuthJanitor
             var toRekey = await _rekeyingTasks.GetOne(t => t.ObjectId == taskId);
             if (toRekey == null)
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Delete), "Rekeying Task not found");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Delete), "Rekeying Task not found");
                 return new NotFoundResult();
             }
             if (!toRekey.ConfirmationType.UsesOBOTokens())
             {
-                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasks.Approve), "Rekeying Task does not support Administrator approval");
+                await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(RekeyingTasksService.Approve), "Rekeying Task does not support Administrator approval");
                 return new BadRequestErrorMessageResult("Task does not support Administrator approval");
             }
 
