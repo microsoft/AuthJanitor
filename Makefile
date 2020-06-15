@@ -9,20 +9,15 @@ usage:
 	@echo "USAGE aj-admin-api | aj-admin-ui | aj-agent | all-services | run | stop"
 
 aj-admin-api: PROJECT_NAME = AuthJanitor.Automation.AdminApi
-aj-admin-api: admin_api_build_publish service_admin_api
+aj-admin-api: dotnet_build dotnet_publish service_admin_api
 
 aj-admin-ui: PROJECT_NAME = AuthJanitor.Automation.AdminUi
-aj-admin-ui: admin_ui_build_publish service_admin_ui
+aj-admin-ui: dotnet_build dotnet_publish service_admin_ui
 
 aj-agent: PROJECT_NAME = AuthJanitor.Automation.Agent
-aj-agent: agent_build_publish service_agent
+aj-agent: dotnet_build dotnet_publish service_agent
 
 all-services: aj-admin-api aj-admin-ui aj-agent
-
-admin_api_build_publish: dotnet_build dotnet_publish
-admin_ui_build_publish: dotnet_build dotnet_publish
-agent_build_publish: dotnet_build dotnet_publish
-
 #################
 
 define update_service_name		
