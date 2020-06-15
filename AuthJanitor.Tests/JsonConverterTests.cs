@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using System;
 using System.Text.Json;
 using AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory;
 using Xunit;
