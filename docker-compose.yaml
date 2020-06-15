@@ -1,0 +1,10 @@
+version: '3'
+services:
+  admin:
+    image: authjanitor.automation.adminapi
+  agent:
+    image: authjanitor.automation.agent
+  client:
+    image: authjanitor.automation.adminui    
+    ports: 
+      - "8080:80"
