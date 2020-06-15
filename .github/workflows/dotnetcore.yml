@@ -8,8 +8,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    env:
+      src: ./src
 
     steps:
     - uses: actions/checkout@v2
@@ -19,7 +20,11 @@ jobs:
         dotnet-version: 3.1.200
     - name: Install dependencies
       run: dotnet restore
+      working-directory: ${{env.src}}
     - name: Build
       run: dotnet build --configuration Release --no-restore
+      working-directory: ${{env.src}}
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+      working-directory: ${{env.src}}
+
