@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AuthJanitor.Automation.Shared\AuthJanitor.Automation.Shared.csproj" />
-    <ProjectReference Include="..\AuthJanitor.Integrations\AuthJanitor.Integrations.csproj" />
+    <ProjectReference Include="..\AuthJanitor.AspNet\AuthJanitor.AspNet.Core.csproj" />
+      <ProjectReference Include="..\AuthJanitor.Core\AuthJanitor.Core.csproj" />
   </ItemGroup>
 
 </Project>

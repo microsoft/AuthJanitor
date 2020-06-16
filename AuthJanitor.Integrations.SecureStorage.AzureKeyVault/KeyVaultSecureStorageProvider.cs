@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.CryptographicImplementations;
-using AuthJanitor.Integrations.IdentityServices;
+using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.IdentityServices;
+using AuthJanitor.SecureStorage;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Options;
 using System;

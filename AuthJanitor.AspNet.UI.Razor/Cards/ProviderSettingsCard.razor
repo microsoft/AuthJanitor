@@ -1,0 +1,41 @@
+﻿<Card>
+    <CardHeader Class="text-info">
+        <Row>
+            <Column ColumnSize="ColumnSize.Is6" Padding="Padding.Is2.FromTop" Style="margin: auto 0;">
+                Provider Settings
+            </Column>
+            <Column ColumnSize="ColumnSize.Is6" Class="text-right">
+                <ConfigurationTestButton ProviderType="@ProviderType"
+                                         ProviderConfiguration="@ProviderConfiguration"
+                                         DefaultColor="Color.Secondary"
+                                         Context="TestAsContexts.AsUser" />
+                <ConfigurationTestButton ProviderType="@ProviderType"
+                                         ProviderConfiguration="@ProviderConfiguration"
+                                         DefaultColor="Color.Secondary"
+                                         Context="TestAsContexts.AsApp" />
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody Padding="Padding.Is0">
+        <ConfigurationVisualizer @bind-ShowEditControls="@ShowEditControls"
+                                 @bind-Value="@ProviderConfiguration" />
+    </CardBody>
+</Card>
+
+@using AuthJanitor.UI.Common.Providers
+@code {
+    [Parameter]
+    public ProviderConfigurationViewModel ProviderConfiguration { get; set; } = new ProviderConfigurationViewModel();
+
+    [Parameter]
+    public EventCallback<ProviderConfigurationViewModel> ProviderConfigurationChanged { get; set; }
+
+    [Parameter]
+    public string ProviderType { get; set; }
+
+    [Parameter]
+    public bool ShowEditControls { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> ShowEditControlsChanged { get; set; }
+}
