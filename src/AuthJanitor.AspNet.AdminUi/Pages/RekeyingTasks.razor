@@ -20,7 +20,7 @@
                 <Template>
                     <Blazorise.Buttons Role="ButtonsRole.Toolbar">
                         <Blazorise.Button Color="Color.Info"
-                                            Clicked="@(() => NavigationManager.NavigateTo($"/aj/rekeyingTasks/{context.ObjectId}"))">
+                                            Clicked="@(() => NavigationManager.NavigateTo($"/rekeyingTasks/{context.ObjectId}"))">
                             <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
                         </Blazorise.Button>
                         <Blazorise.Button Color="Color.Success" Clicked="@(() => { SelectedValue = context; ApproveModalShowing = true; })">
