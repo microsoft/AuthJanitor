@@ -1,0 +1,51 @@
+version: '3'
+services:
+  base:
+    image: auth-janitor
+    build: 
+      context: ./src
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: DEBUG
+  storage:
+    image: mcr.microsoft.com/azure-storage/azurite
+  api-host:
+    build: 
+      context: .docker/FunctionsHost
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: DEBUG        
+        APP_ROOT: AuthJanitor.Functions.AdminApi
+    depends_on:
+      - base
+      - storage
+    environment:
+      STORAGE_WEB_URL: UNKNOWN_STORAGE_URL
+      SENDGRID_API_KEY: UNKNOWN_SENDGRID_KEY
+      CLIENT_ID: UNKNOWN_CLIENT_ID
+      CLIENT_SECRET: UNKNOWN_CLIENT_SECRET
+      TENANT_ID: UNKNOWN_TENANT_ID
+  agent-host:
+    build: 
+      context: .docker/FunctionsHost
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: DEBUG        
+        APP_ROOT: AuthJanitor.Functions.Agent
+    depends_on:
+      - base
+      - storage
+    environment:
+      SENDGRID_API_KEY: UNKNOWN
+  ui:
+    build: 
+      context: .docker/UI
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: DEBUG        
+        APP_ROOT: AuthJanitor.AspNet.AdminUi
+    ports:
+      - 8000:80
+    depends_on:
+      - base
+      - api-host
