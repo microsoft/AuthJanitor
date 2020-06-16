@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AuthJanitor.Integrations.CryptographicImplementations.Default\AuthJanitor.Integrations.CryptographicImplementations.Default.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory.csproj" />
   </ItemGroup>
 
 </Project>
