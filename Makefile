@@ -8,21 +8,17 @@ TENANT_ID?=authjanitor-admin-application-tenant-id
 usage:
 	@echo "USAGE aj-admin-api | aj-admin-ui | aj-agent | all-services | run | stop"
 
-aj-admin-api: PROJECT_NAME = AuthJanitor.Automation.AdminApi
+aj-admin-api: PROJECT_NAME = AuthJanitor.Functions.AdminApi
 aj-admin-api: dotnet_build dotnet_publish service_admin_api
 
-aj-admin-ui: PROJECT_NAME = AuthJanitor.Automation.AdminUi
+aj-admin-ui: PROJECT_NAME = AuthJanitor.AspNet.AdminUi
 aj-admin-ui: dotnet_build dotnet_publish service_admin_ui
 
-aj-agent: PROJECT_NAME = AuthJanitor.Automation.Agent
+aj-agent: PROJECT_NAME = AuthJanitor.Functions.Agent
 aj-agent: dotnet_build dotnet_publish service_agent
 
 all-services: aj-admin-api aj-admin-ui aj-agent
 #################
-
-define update_service_name		
-	$(eval SERVICE_NAME=$(shell echo "$(1)" | tr '[:upper:]' '[:lower:]'))
-endef
 
 dotnet_build:
 	dotnet build ./${PROJECT_NAME} -c ${ENVIRONMENT}
@@ -32,8 +28,7 @@ dotnet_publish:
 	dotnet publish -c ${ENVIRONMENT} ./${PROJECT_NAME} -o ./${PROJECT_NAME}/bin/${ENVIRONMENT}/publish
 
 service_admin_api:
-	$(call update_service_name,${PROJECT_NAME})
-	docker build -t ${SERVICE_NAME} \
+	docker build -t authjanitor.functions.adminapi \
 	--build-arg ENVIRONMENT=$(ENVIRONMENT) \
 	--build-arg STORAGE_WEB_URL=$(STORAGE_WEB_URL) \
 	--build-arg SENDGRID_API_KEY=$(SENDGRID_API_KEY) \
@@ -43,14 +38,12 @@ service_admin_api:
 	./${PROJECT_NAME}/.
 
 service_admin_ui:
-	$(call update_service_name,${PROJECT_NAME})
-	@docker build -t ${SERVICE_NAME} \
+	docker build -t authjanitor.aspnet.adminui \
 	--build-arg ENVIRONMENT=$(ENVIRONMENT) \
 	./$(PROJECT_NAME)/.
 
 service_agent:
-	$(call update_service_name,${PROJECT_NAME})
-	docker build -t ${SERVICE_NAME} \
+	docker build -t authjanitor.functions.agent \
 	--build-arg ENVIRONMENT=$(ENVIRONMENT) \
 	--build-arg SENDGRID_API_KEY=$(SENDGRID_API_KEY) \
 	./${PROJECT_NAME}/.

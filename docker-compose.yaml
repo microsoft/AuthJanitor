@@ -1,10 +1,10 @@
 version: '3'
 services:
   admin:
-    image: authjanitor.automation.adminapi
+    image: authjanitor.functions.adminapi
   agent:
-    image: authjanitor.automation.agent
+    image: authjanitor.functions.agent
   client:
-    image: authjanitor.automation.adminui    
+    image: authjanitor.aspnet.adminui    
     ports: 
       - "8080:80"
