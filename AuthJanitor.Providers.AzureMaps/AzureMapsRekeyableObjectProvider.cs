@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using Microsoft.Azure.Management.Maps;
 using Microsoft.Azure.Management.Maps.Models;
@@ -48,7 +49,7 @@ namespace AuthJanitor.Providers.AzureMaps
             {
                 Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
                 UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(keys, GetOtherKeyType)
+                NewSecretValue = GetKeyValue(keys, GetOtherKeyType).GetSecureString()
             };
         }
 
@@ -64,7 +65,7 @@ namespace AuthJanitor.Providers.AzureMaps
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = GetKeyValue(keys, GetKeyType)
+                NewSecretValue = GetKeyValue(keys, GetKeyType).GetSecureString()
             };
         }
 

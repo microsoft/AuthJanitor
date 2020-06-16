@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
@@ -38,7 +39,7 @@ namespace AuthJanitor.Providers.AzureAD
             return new RegeneratedSecret()
             {
                 UserHint = Configuration.UserHint,
-                NewSecretValue = token.Token,
+                NewSecretValue = token.Token.GetSecureString(),
                 Expiry = token.ExpiresOn
             };
         }

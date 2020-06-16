@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.Redis.Fluent;
@@ -27,12 +28,12 @@ namespace AuthJanitor.Providers.Redis
         protected override RegeneratedSecret CreateSecretFromKeyring(IRedisAccessKeys keyring, RedisCacheKeyConfiguration.RedisKeyTypes keyType) =>
             new RegeneratedSecret()
             {
-                NewSecretValue = keyType switch
+                NewSecretValue = (keyType switch
                 {
                     RedisCacheKeyConfiguration.RedisKeyTypes.Primary => keyring.PrimaryKey,
                     RedisCacheKeyConfiguration.RedisKeyTypes.Secondary => keyring.SecondaryKey,
                     _ => throw new NotImplementedException(),
-                }
+                }).GetSecureString()
             };
 
         protected override ISupportsGettingByResourceGroup<IRedisCache> GetResourceCollection(IAzure azure) => azure.RedisCaches;

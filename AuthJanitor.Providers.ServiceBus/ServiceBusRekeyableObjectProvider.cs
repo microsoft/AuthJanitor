@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
@@ -40,18 +41,18 @@ namespace AuthJanitor.Providers.ServiceBus
         protected override RegeneratedSecret CreateSecretFromKeyring(IAuthorizationKeys keyring, ServiceBusKeyConfiguration.ServiceBusKeyTypes keyType) =>
             new RegeneratedSecret()
             {
-                NewSecretValue = keyType switch
+                NewSecretValue = (keyType switch
                 {
                     ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary => keyring.PrimaryKey,
                     ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => keyring.SecondaryKey,
                     _ => throw new NotImplementedException(),
-                },
-                NewConnectionString = keyType switch
+                }).GetSecureString(),
+                NewConnectionString = (keyType switch
                 {
                     ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary => keyring.PrimaryConnectionString,
                     ServiceBusKeyConfiguration.ServiceBusKeyTypes.Secondary => keyring.SecondaryConnectionString,
                     _ => throw new NotImplementedException(),
-                },
+                }).GetSecureString(),
             };
 
         protected override ISupportsGettingByResourceGroup<IServiceBusNamespace> GetResourceCollection(IAzure azure) => azure.ServiceBusNamespaces;

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.CosmosDB.Fluent;
 using Microsoft.Azure.Management.Fluent;
@@ -31,14 +32,14 @@ namespace AuthJanitor.Providers.CosmosDb
         protected override RegeneratedSecret CreateSecretFromKeyring(IDatabaseAccountListKeysResult keyring, CosmosDbKeyConfiguration.CosmosDbKeyKinds keyType) =>
             new RegeneratedSecret()
             {
-                NewSecretValue = keyType switch
+                NewSecretValue = (keyType switch
                 {
                     CosmosDbKeyConfiguration.CosmosDbKeyKinds.Primary => keyring.PrimaryMasterKey,
                     CosmosDbKeyConfiguration.CosmosDbKeyKinds.Secondary => keyring.SecondaryMasterKey,
                     CosmosDbKeyConfiguration.CosmosDbKeyKinds.PrimaryReadOnly => keyring.PrimaryReadonlyMasterKey,
                     CosmosDbKeyConfiguration.CosmosDbKeyKinds.SecondaryReadOnly => keyring.SecondaryReadonlyMasterKey,
                     _ => throw new NotImplementedException()
-                }
+                }).GetSecureString()
             };
 
         protected override ISupportsGettingByResourceGroup<ICosmosDBAccount> GetResourceCollection(IAzure azure) => azure.CosmosDBAccounts;
