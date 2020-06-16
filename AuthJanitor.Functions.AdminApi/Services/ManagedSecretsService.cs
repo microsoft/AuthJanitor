@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Integrations.DataStores;
@@ -75,7 +75,7 @@ namespace AuthJanitor.Services
                 LastChanged = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallyRandomString(_configuration.DefaultNonceLength)
             };
 
             await _managedSecrets.Create(newManagedSecret, cancellationToken);
@@ -154,7 +154,7 @@ namespace AuthJanitor.Services
                 ValidPeriod = TimeSpan.FromMinutes(inputSecret.ValidPeriodMinutes),
                 TaskConfirmationStrategies = inputSecret.TaskConfirmationStrategies,
                 ResourceIds = resourceIds,
-                Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
+                Nonce = await _cryptographicImplementation.GenerateCryptographicallyRandomString(_configuration.DefaultNonceLength)
             };
 
             await _managedSecrets.Update(newManagedSecret, cancellationToken);

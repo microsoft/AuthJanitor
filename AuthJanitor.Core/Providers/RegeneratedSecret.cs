@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using System;
+using System.Security;
 
 namespace AuthJanitor.Providers
 {
@@ -12,17 +13,17 @@ namespace AuthJanitor.Providers
         /// <summary>
         /// Newly generated key
         /// </summary>
-        public string NewSecretValue { get; set; }
+        public SecureString NewSecretValue { get; set; }
 
         /// <summary>
         /// Newly generated connection string, if appropriate
         /// </summary>
-        public string NewConnectionString { get; set; }
+        public SecureString NewConnectionString { get; set; }
 
         /// <summary>
         /// Retrieve either the Connection String, or if that is not specified, the newly generated Key
         /// </summary>
-        public string NewConnectionStringOrKey => string.IsNullOrEmpty(NewConnectionString) ? NewSecretValue : NewConnectionString;
+        public SecureString NewConnectionStringOrKey => (NewConnectionString == null || NewConnectionString.Length == 0) ? NewSecretValue : NewConnectionString;
 
         /// <summary>
         /// Arbitrary user-specified hint string (from Provider Configuration) used to distinguish among multiple 

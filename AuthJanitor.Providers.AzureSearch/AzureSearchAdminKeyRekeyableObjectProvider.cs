@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
@@ -38,12 +39,12 @@ namespace AuthJanitor.Providers.AzureSearch
         protected override RegeneratedSecret CreateSecretFromKeyring(IAdminKeys keyring, AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds keyType) =>
             new RegeneratedSecret()
             {
-                NewSecretValue = keyType switch
+                NewSecretValue = (keyType switch
                 {
                     AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds.Primary => keyring.PrimaryKey,
                     AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds.Secondary => keyring.SecondaryKey,
                     _ => throw new NotImplementedException(),
-                }
+                }).GetSecureString()
             };
 
         protected override ISupportsGettingByResourceGroup<ISearchService> GetResourceCollection(IAzure azure) => azure.SearchServices;

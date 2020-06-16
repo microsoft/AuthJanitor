@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
@@ -35,7 +36,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
                 updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)
                               updateBase.WithoutConnectionString(connectionStringName);
                 updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)
-                              updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey, Configuration.ConnectionStringType);
+                              updateBase.WithConnectionString(connectionStringName, secret.NewConnectionStringOrKey.GetNormalString(), Configuration.ConnectionStringType);
             }
             await updateBase.ApplyAsync();
         }

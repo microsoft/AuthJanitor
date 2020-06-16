@@ -1,4 +1,4 @@
-using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Integrations.CryptographicImplementations.Default;
 using Microsoft.Extensions.Options;
 using System;
@@ -12,23 +12,44 @@ namespace AuthJanitor.Tests
     public class CryptographicTests
     {
         [Fact]
-        public async Task ValidatesSecureStringLengthIsCorrect()
+        public async Task ValidatesRandomStringLengthIsCorrect()
         {
             var expectedLength = 24;
 
             var notary = GetCryptoNotary();
-            var secureString = await notary.GenerateCryptographicallySecureString(expectedLength);
+            var secureString = await notary.GenerateCryptographicallyRandomString(expectedLength);
             Assert.Equal(expectedLength, secureString.Length);
         }
 
         [Fact]
-        public async Task ValidatesSecureStringsDiffer()
+        public async Task ValidatesRandomSecureStringLengthIsCorrect()
         {
             var expectedLength = 24;
 
             var notary = GetCryptoNotary();
-            var secureStringA = await notary.GenerateCryptographicallySecureString(expectedLength);
-            var secureStringB = await notary.GenerateCryptographicallySecureString(expectedLength);
+            var secureString = await notary.GenerateCryptographicallyRandomSecureString(expectedLength);
+            Assert.Equal(expectedLength, secureString.Length);
+        }
+
+        [Fact]
+        public async Task ValidatesRandomStringsDiffer()
+        {
+            var expectedLength = 24;
+
+            var notary = GetCryptoNotary();
+            var secureStringA = await notary.GenerateCryptographicallyRandomString(expectedLength);
+            var secureStringB = await notary.GenerateCryptographicallyRandomString(expectedLength);
+            Assert.NotEqual(secureStringA, secureStringB);
+        }
+
+        [Fact]
+        public async Task ValidatesRandomSecureStringsDiffer()
+        {
+            var expectedLength = 24;
+
+            var notary = GetCryptoNotary();
+            var secureStringA = await notary.GenerateCryptographicallyRandomSecureString(expectedLength);
+            var secureStringB = await notary.GenerateCryptographicallyRandomSecureString(expectedLength);
             Assert.NotEqual(secureStringA, secureStringB);
         }
 

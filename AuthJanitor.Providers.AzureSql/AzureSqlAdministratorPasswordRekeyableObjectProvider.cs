@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
@@ -43,7 +43,7 @@ namespace AuthJanitor.Providers.AzureSql
         public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Generating new password of length {PasswordLength}", Configuration.PasswordLength);
-            var newPassword = await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.PasswordLength);
+            var newPassword = await _cryptographicImplementation.GenerateCryptographicallyRandomString(Configuration.PasswordLength);
             var sqlServer = await GetResourceAsync();
             _logger.LogInformation("Updating administrator password...");
             await sqlServer.Update()
@@ -55,8 +55,9 @@ namespace AuthJanitor.Providers.AzureSql
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = newPassword,
+                NewSecretValue = newPassword.GetSecureString(),
                 NewConnectionString = $"Server=tcp:{Configuration.ResourceName}.database.windows.net,1433;Database={Configuration.DatabaseName};User ID={sqlServer.AdministratorLogin}@{Configuration.ResourceName};Password={newPassword};Trusted_Connection=False;Encrypt=True;"
+                                       .GetSecureString()
             };
         }
 

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
@@ -36,8 +37,8 @@ namespace AuthJanitor.Providers.Storage
             var key = keyring.First(k => k.KeyName == Translate(keyType)).Value;
             return new RegeneratedSecret()
             {
-                NewSecretValue = key,
-                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={Configuration.ResourceName};AccountKey={key};EndpointSuffix=core.windows.net"
+                NewSecretValue = key.GetSecureString(),
+                NewConnectionString = $"DefaultEndpointsProtocol=https;AccountName={Configuration.ResourceName};AccountKey={key};EndpointSuffix=core.windows.net".GetSecureString()
             };
         }
 

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
@@ -46,7 +46,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
                 UserHint = Configuration.UserHint,
-                NewSecretValue = await _cryptographicImplementation.GenerateCryptographicallySecureString(Configuration.KeyLength)
+                NewSecretValue = await _cryptographicImplementation.GenerateCryptographicallyRandomSecureString(Configuration.KeyLength)
             };
 
             var functionsApp = await GetResourceAsync();
@@ -57,7 +57,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             await functionsApp.RemoveFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName);
 
             _logger.LogInformation("Adding new Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
-            await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue);
+            await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue.GetNormalString());
 
             return newKey;
         }

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.Eventhub.Fluent;
 using Microsoft.Azure.Management.EventHub.Fluent.Models;
@@ -28,18 +29,18 @@ namespace AuthJanitor.Providers.EventHub
         protected override RegeneratedSecret CreateSecretFromKeyring(IEventHubAuthorizationKey keyring, EventHubKeyConfiguration.EventHubKeyTypes keyType) =>
             new RegeneratedSecret()
             {
-                NewSecretValue = keyType switch
+                NewSecretValue = (keyType switch
                 {
                     EventHubKeyConfiguration.EventHubKeyTypes.Primary => keyring.PrimaryKey,
                     EventHubKeyConfiguration.EventHubKeyTypes.Secondary => keyring.SecondaryKey,
                     _ => throw new NotImplementedException(),
-                },
-                NewConnectionString = keyType switch
+                }).GetSecureString(),
+                NewConnectionString = (keyType switch
                 {
                     EventHubKeyConfiguration.EventHubKeyTypes.Primary => keyring.PrimaryConnectionString,
                     EventHubKeyConfiguration.EventHubKeyTypes.Secondary => keyring.SecondaryConnectionString,
                     _ => throw new NotImplementedException(),
-                }
+                }).GetSecureString()
             };
 
         protected override ISupportsGettingByResourceGroup<IEventHubNamespace> GetResourceCollection(IAzure azure) => azure.EventHubNamespaces;
