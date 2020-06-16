@@ -1,24 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared.MetaServices;
-using AuthJanitor.UI.Shared.Models;
+using AuthJanitor.Services;
 using AuthJanitor.UI.Shared.ViewModels;
-using AuthJanitor.EventSinks;
-using AuthJanitor.IdentityServices;
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Http;
-using AuthJanitor.Services;
 
 namespace AuthJanitor.Functions
 {
@@ -38,40 +28,40 @@ namespace AuthJanitor.Functions
         [FunctionName("Resources-Create")]
         public async Task<IActionResult> Create(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
-            HttpRequest req)
+            HttpRequest req, CancellationToken cancellationToken)
         {
-            return await _service.Create(resource, req);
+            return await _service.Create(resource, req, cancellationToken);
         }
 
         [FunctionName("Resources-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources")] HttpRequest req, CancellationToken cancellationToken)
         {
-            return await _service.List(req);
+            return await _service.List(req, cancellationToken);
         }
 
         [FunctionName("Resources-Get")]
         public async Task<IActionResult> Get(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Get(req, resourceId);
+            return await _service.Get(req, resourceId, cancellationToken);
         }
 
         [FunctionName("Resources-Delete")]
         public async Task<IActionResult> Delete(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Delete(req, resourceId);
+            return await _service.Delete(req, resourceId, cancellationToken);
         }
 
         [FunctionName("Resources-Update")]
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId:guid}")] ResourceViewModel resource,
             HttpRequest req,
-            Guid resourceId)
+            Guid resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Update(resource, req, resourceId);
+            return await _service.Update(resource, req, resourceId, cancellationToken);
         }
     }
 }

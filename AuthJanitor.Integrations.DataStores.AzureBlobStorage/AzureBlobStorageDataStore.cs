@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
@@ -36,14 +37,14 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
             Configuration = configuration.Value;
         }
 
-        public async Task<bool> ContainsId(Guid objectId)
+        public async Task<bool> ContainsId(Guid objectId, CancellationToken cancellationToken)
         {
             await Cache();
 
             return CachedCollection.Any(m => m.ObjectId == objectId);
         }
 
-        public async Task<TStoredModel> Create(TStoredModel model)
+        public async Task<TStoredModel> Create(TStoredModel model, CancellationToken cancellationToken)
         {
             await Cache();
 
@@ -56,7 +57,7 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
             return model;
         }
 
-        public async Task Delete(Guid objectId)
+        public async Task Delete(Guid objectId, CancellationToken cancellationToken)
         {
             await Cache();
 
@@ -67,35 +68,35 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
             await Commit();
         }
 
-        public async Task<ICollection<TStoredModel>> Get()
+        public async Task<ICollection<TStoredModel>> Get(CancellationToken cancellationToken)
         {
             await Cache();
 
             return new List<TStoredModel>(CachedCollection);
         }
 
-        public async Task<ICollection<TStoredModel>> Get(Func<TStoredModel, bool> whereClause)
+        public async Task<ICollection<TStoredModel>> Get(Func<TStoredModel, bool> whereClause, CancellationToken cancellationToken)
         {
             await Cache();
 
             return new List<TStoredModel>(CachedCollection.Where(whereClause));
         }
 
-        public async Task<TStoredModel> GetOne(Guid objectId)
+        public async Task<TStoredModel> GetOne(Guid objectId, CancellationToken cancellationToken)
         {
             await Cache();
 
             return CachedCollection.FirstOrDefault(c => c.ObjectId == objectId);
         }
 
-        public async Task<TStoredModel> GetOne(Func<TStoredModel, bool> whereClause)
+        public async Task<TStoredModel> GetOne(Func<TStoredModel, bool> whereClause, CancellationToken cancellationToken)
         {
             await Cache();
 
             return CachedCollection.FirstOrDefault(whereClause);
         }
 
-        public async Task<TStoredModel> Update(TStoredModel model)
+        public async Task<TStoredModel> Update(TStoredModel model, CancellationToken cancellationToken)
         {
             await Cache();
 

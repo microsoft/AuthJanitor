@@ -9,10 +9,9 @@ using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 
@@ -46,7 +45,7 @@ namespace AuthJanitor.Services
             _resourceViewModel = resourceViewModelDelegate;
         }
 
-        public async Task<IActionResult> Create(ResourceViewModel resource, HttpRequest req)
+        public async Task<IActionResult> Create(ResourceViewModel resource, HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
@@ -68,57 +67,57 @@ namespace AuthJanitor.Services
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await _resources.Create(newResource);
+            await _resources.Create(newResource, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceCreated, nameof(ResourcesService.Create), newResource);
 
             return new OkObjectResult(_resourceViewModel(newResource));
         }
 
-        public async Task<IActionResult> List(HttpRequest req)
+        public async Task<IActionResult> List(HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await _resources.Get()).Select(r => _resourceViewModel(r)));
+            return new OkObjectResult((await _resources.Get(cancellationToken)).Select(r => _resourceViewModel(r)));
         }
 
-        public async Task<IActionResult> Get(HttpRequest req, Guid resourceId)
+        public async Task<IActionResult> Get(HttpRequest req, Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await _resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ResourcesService.Get), "Resource not found");
                 return new NotFoundResult();
             }
 
-            return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId)));
+            return new OkObjectResult(_resourceViewModel(await _resources.GetOne(resourceId, cancellationToken)));
         }
 
-        public async Task<IActionResult> Delete(HttpRequest req, Guid resourceId)
+        public async Task<IActionResult> Delete(HttpRequest req, Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.ResourceAdmin)) return new UnauthorizedResult();
 
-            if (!await _resources.ContainsId(resourceId))
+            if (!await _resources.ContainsId(resourceId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ResourcesService.Delete), "Resource not found");
                 return new NotFoundResult();
             }
 
-            await _resources.Delete(resourceId);
+            await _resources.Delete(resourceId, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceDeleted, nameof(ResourcesService.Delete), resourceId);
 
             return new OkResult();
         }
 
-        public async Task<IActionResult> Update(ResourceViewModel resource, HttpRequest req, Guid resourceId)
+        public async Task<IActionResult> Update(ResourceViewModel resource, HttpRequest req, Guid resourceId, CancellationToken cancellationToken)
         {
             _ = req;
 
@@ -141,7 +140,7 @@ namespace AuthJanitor.Services
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
 
-            await _resources.Update(newResource);
+            await _resources.Update(newResource, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.ResourceUpdated, nameof(ResourcesService.Update), newResource);
 

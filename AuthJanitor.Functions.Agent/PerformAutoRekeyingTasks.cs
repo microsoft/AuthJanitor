@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor
@@ -30,7 +31,7 @@ namespace AuthJanitor
         }
 
         [FunctionName("PerformAutoRekeyingTasks")]
-        public async Task Run([TimerTrigger("0 */2 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 */2 * * * *")] TimerInfo myTimer, ILogger log, CancellationToken cancellationToken)
         {
             _ = myTimer; // unused but required for attribute
 
@@ -40,11 +41,11 @@ namespace AuthJanitor
                 (t.ConfirmationType == TaskConfirmationStrategies.AdminCachesSignOff ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingAsNeeded ||
                  t.ConfirmationType == TaskConfirmationStrategies.AutomaticRekeyingScheduled) &&
-                DateTimeOffset.UtcNow + TimeSpan.FromHours(_configuration.AutomaticRekeyableJustInTimeLeadTimeHours) > t.Expiry);
+                DateTimeOffset.UtcNow + TimeSpan.FromHours(_configuration.AutomaticRekeyableJustInTimeLeadTimeHours) > t.Expiry, cancellationToken);
 
             foreach (var task in toRekey)
             {
-                await _taskExecutionMetaService.ExecuteTask(task.ObjectId);
+                await _taskExecutionMetaService.ExecuteTask(task.ObjectId, cancellationToken);
             }
         }
     }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Functions
@@ -25,37 +26,37 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("ManagedSecrets-Create")]
-        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret)
+        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret, CancellationToken cancellationToken)
         {
-            return await _service.Create(inputSecret);
+            return await _service.Create(inputSecret, cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-List")]
-        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req)
+        public async Task<IActionResult> List([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets")] HttpRequest req, CancellationToken cancellationToken)
         {
-            return await _service.List(req);
+            return await _service.List(req, cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-Get")]
         public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
-            return await _service.Get(req, secretId);
+            return await _service.Get(req, secretId, cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-Delete")]
         public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
-            return await _service.Delete(req, secretId);
+            return await _service.Delete(req, secretId, cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-Update")]
         public async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
-            Guid secretId)
+            Guid secretId, CancellationToken cancellationToken)
         {
-            return await _service.Update(inputSecret, secretId);
+            return await _service.Update(inputSecret, secretId, cancellationToken);
         }
     }
 }

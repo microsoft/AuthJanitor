@@ -3,6 +3,7 @@
 using AuthJanitor.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Functions
@@ -17,9 +18,9 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("ScheduleRekeyingTasks")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, ILogger log, CancellationToken cancellationToken)
         {
-            await _service.Run(myTimer, log);
+            await _service.Run(myTimer, log, cancellationToken);
         }
     }
 }

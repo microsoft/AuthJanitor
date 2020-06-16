@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Functions
@@ -19,9 +20,9 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("Dashboard")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "dashboard")] HttpRequest req, CancellationToken cancellationToken)
         {
-            return await _service.Run(req);
+            return await _service.Run(req, cancellationToken);
         }
     }
 }
