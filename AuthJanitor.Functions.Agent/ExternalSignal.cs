@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.UI.Shared;
 using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.UI.Shared.ViewModels;
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -13,7 +11,6 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,19 +50,20 @@ namespace AuthJanitor
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "secrets/{managedSecretId:guid}/{nonce}")] HttpRequest req,
             Guid managedSecretId,
             string nonce,
-            ILogger log)
+            ILogger log,
+            CancellationToken cancellationToken)
         {
             _ = req; // unused but required for attribute
 
             log.LogInformation("External signal called to check ManagedSecret ID {ManagedSecretId} against nonce {Nonce}", managedSecretId, nonce);
 
-            var secret = await _managedSecrets.GetOne(managedSecretId);
+            var secret = await _managedSecrets.GetOne(managedSecretId, cancellationToken);
             if (secret == null)
                 return new BadRequestErrorMessageResult("Invalid ManagedSecret ID");
             if (!secret.TaskConfirmationStrategies.HasFlag(TaskConfirmationStrategies.ExternalSignal))
                 return new BadRequestErrorMessageResult("This ManagedSecret cannot be used with External Signals");
 
-            if ((await _rekeyingTasks.Get(t => t.ManagedSecretId == secret.ObjectId))
+            if ((await _rekeyingTasks.Get(t => t.ManagedSecretId == secret.ObjectId, cancellationToken))
                                     .Any(t => t.RekeyingInProgress))
             {
                 return new OkObjectResult(RETURN_RETRY_SHORTLY);
@@ -82,12 +80,12 @@ namespace AuthJanitor
                             Queued = DateTimeOffset.UtcNow,
                             RekeyingInProgress = true
                         };
-                        
-                        await _rekeyingTasks.Create(rekeyingTask).ConfigureAwait(false);
 
-                        await _taskExecutionMetaService.ExecuteTask(rekeyingTask.ObjectId).ConfigureAwait(false);
+                        await _rekeyingTasks.Create(rekeyingTask, cancellationToken).ConfigureAwait(false);
+
+                        await _taskExecutionMetaService.ExecuteTask(rekeyingTask.ObjectId, cancellationToken).ConfigureAwait(false);
                     });
-                
+
                 var timeout = TimeSpan.FromSeconds(MAX_EXECUTION_SECONDS_BEFORE_RETRY);
                 var timeoutCancellationTokenSource = new CancellationTokenSource();
                 var timeoutTask = Task.Delay(timeout, timeoutCancellationTokenSource.Token);

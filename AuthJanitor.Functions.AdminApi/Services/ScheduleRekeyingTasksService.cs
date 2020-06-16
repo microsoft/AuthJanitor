@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
-using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.EventSinks;
 using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
+using AuthJanitor.UI.Shared;
+using AuthJanitor.UI.Shared.MetaServices;
+using AuthJanitor.UI.Shared.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Services
@@ -43,23 +44,23 @@ namespace AuthJanitor.Services
             _rekeyingTasks = rekeyingTaskStore;
         }
 
-        public async Task Run(TimerInfo myTimer, ILogger log)
+        public async Task Run(TimerInfo myTimer, ILogger log, CancellationToken cancellationToken)
         {
             _ = myTimer; // unused but required for attribute
 
             log.LogInformation($"Scheduling Rekeying Tasks for upcoming ManagedSecret expirations");
 
-            await ScheduleApprovalRequiredTasks(log);
-            await ScheduleAutoRekeyingTasks(log);
+            await ScheduleApprovalRequiredTasks(log, cancellationToken);
+            await ScheduleAutoRekeyingTasks(log, cancellationToken);
         }
 
-        public async Task ScheduleApprovalRequiredTasks(ILogger log)
+        public async Task ScheduleApprovalRequiredTasks(ILogger log, CancellationToken cancellationToken)
         {
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminSignsOffJustInTime,
-                _configuration.ApprovalRequiredLeadTimeHours);
+                _configuration.ApprovalRequiredLeadTimeHours, cancellationToken);
             log.LogInformation("Creating {TaskCount} tasks for just-in-time administrator approval", jitCandidates.Count);
-            await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
+            await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)), cancellationToken);
 
             // TODO: Implement schedule of availability windows and adjust timing here to match...
             // ... e.g. if a ManagedSecret expires on a Thursday but schedule only allows key changes
@@ -67,18 +68,18 @@ namespace AuthJanitor.Services
             //     expiry.
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AdminCachesSignOff,
-                _configuration.ApprovalRequiredLeadTimeHours);
+                _configuration.ApprovalRequiredLeadTimeHours, cancellationToken);
             log.LogInformation("Creating {TaskCount} tasks for cached administrator approval", cachedCandidates.Count);
-            await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
+            await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)), cancellationToken);
         }
 
-        public async Task ScheduleAutoRekeyingTasks(ILogger log)
+        public async Task ScheduleAutoRekeyingTasks(ILogger log, CancellationToken cancellationToken)
         {
             var jitCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingAsNeeded,
-                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
+                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours, cancellationToken);
             log.LogInformation("Creating {TaskCount} tasks for just-in-time auto-rekeying", jitCandidates.Count);
-            await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
+            await CreateAndNotify(jitCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)), cancellationToken);
 
             // TODO: Implement schedule of availability windows and adjust timing here to match...
             // ... e.g. if a ManagedSecret expires on a Thursday but schedule only allows key changes
@@ -86,9 +87,9 @@ namespace AuthJanitor.Services
             //     expiry.
             var cachedCandidates = await GetSecretsForRekeyingTask(
                 TaskConfirmationStrategies.AutomaticRekeyingScheduled,
-                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours);
+                _configuration.AutomaticRekeyableTaskCreationLeadTimeHours, cancellationToken);
             log.LogInformation("Creating {TaskCount} tasks for scheduled auto-rekeying", cachedCandidates.Count);
-            await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)));
+            await CreateAndNotify(cachedCandidates.Select(s => CreateRekeyingTask(s, s.Expiry)), cancellationToken);
         }
 
         private RekeyingTask CreateRekeyingTask(ManagedSecret secret, DateTimeOffset expiry) =>
@@ -101,14 +102,14 @@ namespace AuthJanitor.Services
                 RekeyingInProgress = false
             };
 
-        private async Task CreateAndNotify(IEnumerable<RekeyingTask> tasks)
+        private async Task CreateAndNotify(IEnumerable<RekeyingTask> tasks, CancellationToken cancellationToken)
         {
             if (!tasks.Any()) return;
-            await Task.WhenAll(tasks.Select(t => _rekeyingTasks.Create(t)));
+            await Task.WhenAll(tasks.Select(t => _rekeyingTasks.Create(t, cancellationToken)));
 
             foreach (var task in tasks)
             {
-                var secret = await _managedSecrets.GetOne(task.ManagedSecretId);
+                var secret = await _managedSecrets.GetOne(task.ManagedSecretId, cancellationToken);
                 if (task.ConfirmationType.UsesOBOTokens())
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCreatedForApproval, nameof(ScheduleRekeyingTasksService.CreateAndNotify), task);
                 else
@@ -129,13 +130,14 @@ namespace AuthJanitor.Services
 
         private async Task<List<ManagedSecret>> GetSecretsForRekeyingTask(
             TaskConfirmationStrategies taskConfirmationStrategies,
-            int leadTimeHours)
+            int leadTimeHours,
+            CancellationToken cancellationToken)
         {
             var secretsToRotate = await _managedSecrets.Get(s =>
                 s.TaskConfirmationStrategies.HasFlag(taskConfirmationStrategies) &&
-                s.Expiry < DateTimeOffset.UtcNow + TimeSpan.FromHours(leadTimeHours));
+                s.Expiry < DateTimeOffset.UtcNow + TimeSpan.FromHours(leadTimeHours), cancellationToken);
 
-            var rekeyingTasks = await _rekeyingTasks.Get();
+            var rekeyingTasks = await _rekeyingTasks.Get(cancellationToken);
             return secretsToRotate
                         .Where(s => !rekeyingTasks.Any(t =>
                             t.ManagedSecretId == s.ObjectId &&

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Services
@@ -43,15 +44,15 @@ namespace AuthJanitor.Services
             _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
-        public async Task<IActionResult> Run(HttpRequest req)
+        public async Task<IActionResult> Run(HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            var allSecrets = await _managedSecrets.Get();
-            var allResources = await _resources.Get();
-            var allTasks = await _rekeyingTasks.Get();
+            var allSecrets = await _managedSecrets.Get(cancellationToken);
+            var allResources = await _resources.Get(cancellationToken);
+            var allTasks = await _rekeyingTasks.Get(cancellationToken);
 
             var expiringInNextWeek = allSecrets.Where(s => DateTimeOffset.UtcNow.AddDays(7) < (s.LastChanged + s.ValidPeriod));
             var expired = allSecrets.Where(s => !s.IsValid);

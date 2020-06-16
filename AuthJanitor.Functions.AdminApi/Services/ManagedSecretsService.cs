@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Services
@@ -54,11 +55,11 @@ namespace AuthJanitor.Services
             _managedSecretViewModel = managedSecretViewModelDelegate;
         }
 
-        public async Task<IActionResult> Create(ManagedSecretViewModel inputSecret)
+        public async Task<IActionResult> Create(ManagedSecretViewModel inputSecret, CancellationToken cancellationToken)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            var resources = await _resources.Get();
+            var resources = await _resources.Get(cancellationToken);
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -77,67 +78,67 @@ namespace AuthJanitor.Services
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await _managedSecrets.Create(newManagedSecret);
+            await _managedSecrets.Create(newManagedSecret, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretCreated, nameof(ManagedSecretsService.Create), newManagedSecret);
 
             return new OkObjectResult(_managedSecretViewModel(newManagedSecret));
         }
 
-        public async Task<IActionResult> List(HttpRequest req)
+        public async Task<IActionResult> List(HttpRequest req, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            return new OkObjectResult((await _managedSecrets.Get()).Select(s => _managedSecretViewModel(s)));
+            return new OkObjectResult((await _managedSecrets.Get(cancellationToken)).Select(s => _managedSecretViewModel(s)));
         }
 
-        public async Task<IActionResult> Get(HttpRequest req, Guid secretId)
+        public async Task<IActionResult> Get(HttpRequest req, Guid secretId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Get), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId)));
+            return new OkObjectResult(_managedSecretViewModel(await _managedSecrets.GetOne(secretId, cancellationToken)));
         }
 
-        public async Task<IActionResult> Delete(HttpRequest req, Guid secretId)
+        public async Task<IActionResult> Delete(HttpRequest req, Guid secretId, CancellationToken cancellationToken)
         {
             _ = req;
 
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Delete), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            await _managedSecrets.Delete(secretId);
+            await _managedSecrets.Delete(secretId, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretDeleted, nameof(ManagedSecretsService.Delete), secretId);
 
             return new OkResult();
         }
 
-        public async Task<IActionResult> Update(ManagedSecretViewModel inputSecret, Guid secretId)
+        public async Task<IActionResult> Update(ManagedSecretViewModel inputSecret, Guid secretId, CancellationToken cancellationToken)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.SecretAdmin)) return new UnauthorizedResult();
 
-            if (!await _managedSecrets.ContainsId(secretId))
+            if (!await _managedSecrets.ContainsId(secretId, cancellationToken))
             {
                 await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(ManagedSecretsService.Update), "Secret ID not found");
                 return new NotFoundObjectResult("Secret not found!");
             }
 
-            var resources = await _resources.Get();
+            var resources = await _resources.Get(cancellationToken);
             var resourceIds = inputSecret.ResourceIds.Split(';').Select(r => Guid.Parse(r)).ToList();
             if (resourceIds.Any(id => !resources.Any(r => r.ObjectId == id)))
             {
@@ -156,7 +157,7 @@ namespace AuthJanitor.Services
                 Nonce = await _cryptographicImplementation.GenerateCryptographicallySecureString(_configuration.DefaultNonceLength)
             };
 
-            await _managedSecrets.Update(newManagedSecret);
+            await _managedSecrets.Update(newManagedSecret, cancellationToken);
 
             await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.SecretUpdated, nameof(ManagedSecretsService.Update), newManagedSecret);
 
