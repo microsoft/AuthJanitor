@@ -1,4 +1,6 @@
-﻿using AuthJanitor.DataStores;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.DataStores;
 using AuthJanitor.Integrations.DataStores.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;

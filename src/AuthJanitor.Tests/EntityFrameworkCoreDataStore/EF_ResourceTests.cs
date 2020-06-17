@@ -1,4 +1,6 @@
-﻿using AuthJanitor.UI.Shared.Models;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.UI.Shared.Models;
 using System;
 
 namespace AuthJanitor.Tests.EntityFrameworkCoreDataStore
