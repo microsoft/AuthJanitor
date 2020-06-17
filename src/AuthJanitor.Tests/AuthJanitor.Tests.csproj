@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
@@ -14,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AuthJanitor.AspNet\AuthJanitor.AspNet.Core.csproj" />
     <ProjectReference Include="..\AuthJanitor.Integrations.CryptographicImplementations.Default\AuthJanitor.Integrations.CryptographicImplementations.Default.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Integrations.DataStores.EntityFrameworkCore\AuthJanitor.Integrations.DataStores.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory\AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory.csproj" />
   </ItemGroup>
 
