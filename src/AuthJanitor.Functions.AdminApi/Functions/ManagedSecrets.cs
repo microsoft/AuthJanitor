@@ -38,25 +38,25 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("ManagedSecrets-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "managedSecrets/{secretId}")] HttpRequest req,
+            string secretId, CancellationToken cancellationToken)
         {
-            return await _service.Get(req, secretId, cancellationToken);
+            return await _service.Get(req, Guid.Parse(secretId), cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId:guid}")] HttpRequest req,
-            Guid secretId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "managedSecrets/{secretId}")] HttpRequest req,
+            string secretId, CancellationToken cancellationToken)
         {
-            return await _service.Delete(req, secretId, cancellationToken);
+            return await _service.Delete(req, Guid.Parse(secretId), cancellationToken);
         }
 
         [FunctionName("ManagedSecrets-Update")]
         public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId:guid}")] ManagedSecretViewModel inputSecret,
-            Guid secretId, CancellationToken cancellationToken)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId}")] ManagedSecretViewModel inputSecret,
+            string secretId, CancellationToken cancellationToken)
         {
-            return await _service.Update(inputSecret, secretId, cancellationToken);
+            return await _service.Update(inputSecret, Guid.Parse(secretId), cancellationToken);
         }
     }
 }

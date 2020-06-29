@@ -26,10 +26,10 @@ namespace AuthJanitor.Functions
 
         [FunctionName("RekeyingTasks-Create")]
         public async Task<IActionResult> Create(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId:guid}")] HttpRequest req,
-            Guid secretId, CancellationToken cancellationToken)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{secretId}")] HttpRequest req,
+            string secretId, CancellationToken cancellationToken)
         {
-            return await _service.Create(req, secretId, cancellationToken);
+            return await _service.Create(req, Guid.Parse(secretId), cancellationToken);
         }
 
         [FunctionName("RekeyingTasks-List")]
@@ -39,24 +39,24 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("RekeyingTasks-Get")]
-        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Get([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "tasks/{taskId}")] HttpRequest req,
+            string taskId, CancellationToken cancellationToken)
         {
-            return await _service.Get(req, taskId, cancellationToken);
+            return await _service.Get(req, Guid.Parse(taskId), cancellationToken);
         }
 
         [FunctionName("RekeyingTasks-Delete")]
-        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId:guid}")] HttpRequest req,
-            Guid taskId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete([HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "tasks/{taskId}")] HttpRequest req,
+            string taskId, CancellationToken cancellationToken)
         {
-            return await _service.Delete(req, taskId, cancellationToken);
+            return await _service.Delete(req, Guid.Parse(taskId), cancellationToken);
         }
 
         [FunctionName("RekeyingTasks-Approve")]
-        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId:guid}/approve")] HttpRequest req,
-            Guid taskId, CancellationToken cancellationToken)
+        public async Task<IActionResult> Approve([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "tasks/{taskId}/approve")] HttpRequest req,
+            string taskId, CancellationToken cancellationToken)
         {
-            return await _service.Approve(req, taskId, cancellationToken);
+            return await _service.Approve(req, Guid.Parse(taskId), cancellationToken);
         }
     }
 }
