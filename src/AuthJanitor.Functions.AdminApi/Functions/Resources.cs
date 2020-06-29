@@ -41,27 +41,27 @@ namespace AuthJanitor.Functions
 
         [FunctionName("Resources-Get")]
         public async Task<IActionResult> Get(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId, CancellationToken cancellationToken)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "resources/{resourceId}")] HttpRequest req,
+            string resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Get(req, resourceId, cancellationToken);
+            return await _service.Get(req, Guid.Parse(resourceId), cancellationToken);
         }
 
         [FunctionName("Resources-Delete")]
         public async Task<IActionResult> Delete(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId:guid}")] HttpRequest req,
-            Guid resourceId, CancellationToken cancellationToken)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "resources/{resourceId}")] HttpRequest req,
+            string resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Delete(req, resourceId, cancellationToken);
+            return await _service.Delete(req, Guid.Parse(resourceId), cancellationToken);
         }
 
         [FunctionName("Resources-Update")]
         public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId:guid}")] ResourceViewModel resource,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId}")] ResourceViewModel resource,
             HttpRequest req,
-            Guid resourceId, CancellationToken cancellationToken)
+            string resourceId, CancellationToken cancellationToken)
         {
-            return await _service.Update(resource, req, resourceId, cancellationToken);
+            return await _service.Update(resource, req, Guid.Parse(resourceId), cancellationToken);
         }
     }
 }
