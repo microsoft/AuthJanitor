@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using AuthJanitor.IdentityServices;
 
 namespace AuthJanitor.UI.Shared
 {
@@ -42,6 +43,7 @@ namespace AuthJanitor.UI.Shared
             serviceCollection.AddTransient<Func<RekeyingTask, RekeyingTaskViewModel>>(serviceProvider => rekeyingTask => GetViewModel(serviceProvider, rekeyingTask, CancellationToken.None));
             serviceCollection.AddTransient<Func<ScheduleWindow, ScheduleWindowViewModel>>(serviceProvider => scheduleWindow => GetViewModel(serviceProvider, scheduleWindow));
             serviceCollection.AddTransient<Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel>>(serviceProvider => config => GetViewModel(serviceProvider, config));
+            serviceCollection.AddTransient<Func<AuthJanitorAuthorizedUser, AuthJanitorAuthorizedUserViewModel>>(serviceProvider => authorizedUser => GetViewModel(serviceProvider, authorizedUser));
         }
 
 #pragma warning disable IDE0060 // Remove unused parameter
@@ -182,5 +184,13 @@ namespace AuthJanitor.UI.Shared
                 ObjectId = scheduleWindow.ObjectId,
                 CronStrings = new List<string>(scheduleWindow.CronStrings)
             };
+
+        private static AuthJanitorAuthorizedUserViewModel GetViewModel(IServiceProvider serviceProvider, AuthJanitorAuthorizedUser authorizedUser) =>
+                new AuthJanitorAuthorizedUserViewModel()
+                {
+                    UPN = authorizedUser.UPN,
+                    DisplayName = authorizedUser.DisplayName,
+                    RoleValue = authorizedUser.RoleValue
+                };
     }
 }

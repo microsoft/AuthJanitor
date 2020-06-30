@@ -21,6 +21,10 @@
       "matchCondition": { "route": "/integrityReports" },
       "backendUri": "%STORAGE_WEB_URL%/integrityReports"
     },
+    "ui-accessManagement": {
+      "matchCondition": { "route": "/accessManagement" },
+      "backendUri": "%STORAGE_WEB_URL%/accessManagement"
+    },
 
     "ui-managedSecrets": {
       "matchCondition": { "route": "/managedSecrets" },

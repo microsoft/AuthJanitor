@@ -55,5 +55,18 @@ namespace AuthJanitor
 
         [JsonPropertyName("token_type")]
         public string TokenType { get; set; }
+
+        // ---
+
+        public bool IsInError => string.IsNullOrEmpty(AccessToken);
+
+        [JsonPropertyName("error")]
+        public string ErrorType { get; set; }
+
+        [JsonPropertyName("suberror")]
+        public string SubErrorType { get; set; }
+
+        [JsonPropertyName("error_codes")]
+        public int[] ErrorCodes { get; set; }
     }
 }

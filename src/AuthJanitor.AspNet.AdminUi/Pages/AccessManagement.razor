@@ -1,0 +1,146 @@
+﻿@page "/accessManagement"
+
+<Container Fluid="true">
+    <Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
+        <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
+            <DisplayHeading Size="DisplayHeadingSize.Is4">Access Management</DisplayHeading>
+        </Column>
+    </Row>
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <BlazorTable.Table TableItem="AuthJanitorAuthorizedUserViewModel"
+                               TableClass="table table-striped table-bordered"
+                               @bind-Items="@Users">
+
+                <!-- Controls -->
+                <BlazorTable.Column TableItem="AuthJanitorAuthorizedUserViewModel"
+                                    Title="" Field="@(x => x.UPN)"
+                                    Width="1%"
+                                    Sortable="false" Filterable="false">
+                    <Template>
+                        <Blazorise.Buttons Role="ButtonsRole.Toolbar">
+                            <Blazorise.Button Color="Color.Danger" Clicked="@(() => { SelectedValue = context; DeleteRoleModalShowing = true; })">
+                                <Icon Name="FontAwesomeIcons.Trash" Class="text-light" />
+                            </Blazorise.Button>
+                        </Blazorise.Buttons>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- User Display Name -->
+                <BlazorTable.Column TableItem="AuthJanitorAuthorizedUserViewModel"
+                                    Title="User Display Name" Field="@(x => x.DisplayName)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <Paragraph>@context.DisplayName</Paragraph>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- UPN -->
+                <BlazorTable.Column TableItem="AuthJanitorAuthorizedUserViewModel"
+                                    Title="UPN" Field="@(x => x.UPN)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <Paragraph>@context.UPN</Paragraph>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Role -->
+                <BlazorTable.Column TableItem="AuthJanitorAuthorizedUserViewModel"
+                                    Title="Role" Field="@(x => x.RoleValue)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <Paragraph>@context.RoleValue</Paragraph>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Pager -->
+                <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+            </BlazorTable.Table>
+        </Column>
+    </Row>
+    <Row>
+        <Column>
+            <Blazorise.Button Size="ButtonSize.Large" Color="Color.Primary" Clicked="@CreateNew">
+                <Icon Name="FontAwesomeIcons.Plus" Margin="Margin.Is2.FromRight" IconStyle="IconStyle.Solid" />
+                Add New Authorized User
+            </Blazorise.Button>
+        </Column>
+    </Row>
+</Container>
+                
+
+<DataModal @bind-Visible="@CreateModalShowing"
+            Title="Add New User"
+            YesButton="Add"
+            NoButton="Cancel"
+            ResultClicked="@CreateCallback">
+    <AuthorizedUserEditor @bind-Value="@SelectedValue" />
+</DataModal>
+<DeleteConfirmationModal @bind-Visible="@DeleteRoleModalShowing"
+                            ObjectId="@Guid.Empty"
+                            ObjectName="@($"{SelectedValue.RoleValue} on {SelectedValue.DisplayName}")"
+                            ResultClicked="@DeleteRoleConfirmCallback" />
+<DeleteConfirmationModal @bind-Visible="@DeleteUserModalShowing"
+                         ObjectId="@Guid.Empty"
+                         ObjectName="@($"{SelectedValue.DisplayName} ({SelectedValue.UPN})")"
+                         ResultClicked="@DeleteUserConfirmCallback" />
+
+@using AuthJanitor.UI.Editors
+@using AuthJanitor.UI.Modals
+@using Newtonsoft.Json
+@code {
+    protected IEnumerable<AuthJanitorAuthorizedUserViewModel> Users { get; set; } = new List<AuthJanitorAuthorizedUserViewModel>();
+
+    protected bool CreateModalShowing { get; set; }
+    protected bool DeleteRoleModalShowing { get; set; }
+    protected bool DeleteUserModalShowing { get; set; }
+
+    [Parameter]
+    public AuthJanitorAuthorizedUserViewModel SelectedValue { get; set; } = new AuthJanitorAuthorizedUserViewModel();
+
+    [Parameter]
+    public EventCallback<AuthJanitorAuthorizedUserViewModel> SelectedValueChanged { get; set; }
+
+    protected override Task OnInitializedAsync() => LoadData();
+
+    protected async Task LoadData()
+    {
+        Users = await Http.AJList<AuthJanitorAuthorizedUserViewModel>();
+    }
+
+    protected void CreateNew()
+    {
+        SelectedValue = new AuthJanitorAuthorizedUserViewModel();
+        CreateModalShowing = true;
+    }
+
+    protected async Task CreateCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.AJCreate<AuthJanitorAuthorizedUserViewModel>(SelectedValue);
+            await LoadData();
+        }
+        CreateModalShowing = false;
+    }
+
+    protected async Task DeleteRoleConfirmCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.PostAsync($"/api/access/removeRole", new StringContent(JsonConvert.SerializeObject(SelectedValue)));
+            await LoadData();
+        }
+        DeleteRoleModalShowing = false;
+    }
+
+    protected async Task DeleteUserConfirmCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.PostAsync($"/api/access/removeUser", new StringContent(JsonConvert.SerializeObject(SelectedValue)));
+            await LoadData();
+        }
+        DeleteUserModalShowing = false;
+    }
+}

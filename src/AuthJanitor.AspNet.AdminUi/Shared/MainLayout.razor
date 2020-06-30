@@ -14,6 +14,15 @@
                         Dashboard
                     </BarLink>
                 </BarItem>
+                @if (Metrics.SignedInRoles.Contains(AuthJanitor.IdentityServices.AuthJanitorRoles.GlobalAdmin))
+                {
+                    <BarItem>
+                        <BarLink To="/accessManagement">
+                            <Icon Name="FontAwesomeIcons.UserEdit" Margin="Margin.Is1.FromRight" />
+                            Access Management
+                        </BarLink>
+                    </BarItem>
+                }
                 <BarItem>
                     <BarLink To="/integrityReports">
                         <Icon Name="FontAwesomeIcons.ClipboardCheck" Margin="Margin.Is1.FromRight" />
@@ -64,18 +73,14 @@
                         </Column>
                         <Column></Column>
                         <Column ColumnSize="ColumnSize.IsAuto" Class="m-0 p-0">
-                            <div class="text-light p-0 mr-1 mt-1">
-                                <img src="@GetGravatar()" style="height: 2.7em;" class="img-fluid rounded mr-2" alt="Avatar Image" />
-                                @if (!string.IsNullOrEmpty(Metrics.SignedInRoles))
-                                {
-                                    <span title="Roles: @Metrics.SignedInRoles">
+                            <div class="text-light p-0">
+                                <div class="float-left">
+                                    <div title="Roles: @Metrics.SignedInRoles">
                                         @Metrics.SignedInName
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span>@Metrics.SignedInName</span>
-                                }
+                                    </div>
+                                    <a class="text-light text-decoration-none" href="/.auth/logout" style="font-size: 0.6em">Log Out</a>
+                                </div>
+                                <img src="@GetGravatar()" style="height: 2.7em;" class="img-fluid rounded ml-2" alt="Avatar Image" />
                             </div>
                         </Column>
                         <Column ColumnSize="ColumnSize.IsAuto">
