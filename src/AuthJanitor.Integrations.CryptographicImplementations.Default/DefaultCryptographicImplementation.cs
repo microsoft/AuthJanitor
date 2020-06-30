@@ -96,7 +96,7 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         public Task<string> Hash(byte[] inputBytes)
         {
             byte[] bytes = SHA256.Create().ComputeHash(inputBytes);
-            return Task.FromResult(BitConverter.ToString(bytes).Replace("-", ""));
+            return Task.FromResult(BitConverter.ToString(bytes).Replace("-", "").ToLower());
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
             using (FileStream stream = File.OpenRead(filePath))
             {
                 var bytes = SHA256.Create().ComputeHash(stream);
-                return Task.FromResult(BitConverter.ToString(bytes).Replace("-", ""));
+                return Task.FromResult(BitConverter.ToString(bytes).Replace("-", "").ToLower());
             }
         }
 
