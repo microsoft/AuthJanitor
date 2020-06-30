@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AuthenticodeExaminer" Version="0.3.0" />
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.4" />

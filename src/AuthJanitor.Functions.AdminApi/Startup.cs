@@ -20,7 +20,7 @@ using AuthJanitor.Services;
 [assembly: WebJobsStartup(typeof(AuthJanitor.Startup))]
 namespace AuthJanitor
 {
-    public class Startup : IWebJobsStartup
+    public class Startup : IWebJobsStartup, IAuthJanitorIntegrityIncluded
     {
         private const string PROVIDER_SEARCH_MASK = "AuthJanitor.Providers.*.dll";
         private static readonly string PROVIDER_SEARCH_PATH = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ".."));
@@ -75,6 +75,7 @@ namespace AuthJanitor
             });
 
             builder.Services.AddTransient<DashboardService>();
+            builder.Services.AddTransient<SystemService>();
             builder.Services.AddTransient<ManagedSecretsService>();
             builder.Services.AddTransient<RekeyingTasksService>();
             builder.Services.AddTransient<ScheduleRekeyingTasksService>();

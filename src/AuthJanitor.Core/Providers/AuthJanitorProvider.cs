@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
 {
-    public interface IAuthJanitorProvider
+    public interface IAuthJanitorProvider : IAuthJanitorExtensibilityPoint
     {
         /// <summary>
         /// Serialized ProviderConfiguration

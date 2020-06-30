@@ -20,5 +20,17 @@ namespace AuthJanitor
 
         [Description("Length of Secret version nonce")]
         public int DefaultNonceLength { get; set; } = 64;
+
+        [Description("Enforce a single issuer for all AuthJanitor modules")]
+        public bool EnforceSingleIssuer { get; set; } = false;
+
+        [Description("Require that all Providers be signed")]
+        public bool EnforceProviderSignature { get; set; } = false;
+
+        [Description("Require that all Providers/Integrations be signed")]
+        public bool EnforceAllExtensibilitySignatures { get; set; } = false;
+
+        [Description("Require that everything is signed")]
+        public bool EnforceAllSignatures { get; set; } = false;
     }
 }

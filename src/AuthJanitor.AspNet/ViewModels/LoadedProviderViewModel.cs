@@ -13,7 +13,5 @@ namespace AuthJanitor.UI.Shared.ViewModels
         public string SvgImage { get; set; }
 
         public string AssemblyVersion { get; set; }
-        public byte[] AssemblyPublicKey { get; set; }
-        public byte[] AssemblyPublicKeyToken { get; set; }
     }
 }

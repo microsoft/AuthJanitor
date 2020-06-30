@@ -89,8 +89,6 @@ namespace AuthJanitor.UI.Shared
                 new LoadedProviderViewModel()
                 {
                     AssemblyVersion = provider.AssemblyName.Version.ToString(),
-                    AssemblyPublicKey = provider.AssemblyName.GetPublicKey(),
-                    AssemblyPublicKeyToken = provider.AssemblyName.GetPublicKeyToken(),
                     Details = provider.Details,
                     IsRekeyableObjectProvider = provider.IsRekeyableObjectProvider,
                     OriginatingFile = Path.GetFileName(provider.OriginatingFile),

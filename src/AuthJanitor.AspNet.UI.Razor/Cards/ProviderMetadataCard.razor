@@ -16,17 +16,6 @@
                 </CardTitle>
                 <CardText>@Provider.Details.Description</CardText>
                 <CardText><small class="text-muted">@System.IO.Path.GetFileName(Provider.OriginatingFile)</small></CardText>
-                <CardText>
-                    @if (Provider.AssemblyPublicKeyToken != null &&
-                       Provider.AssemblyPublicKeyToken.Any())
-                    {
-                        <small class="text-muted">@BitConverter.ToString(Provider.AssemblyPublicKeyToken).Replace("-", "")</small>
-                    }
-                    else
-                    {
-                        <small class="text-warning font-weight-bold">This Provider assembly was not signed!</small>
-                    }
-                </CardText>
             </CardBody>
             
             <CardFooter Class="text-right border-left">
@@ -51,6 +40,7 @@
     </Row>
 </Card>
 
+@using AuthJanitor.UI.Common
 @code {
     [Parameter]
     public LoadedProviderViewModel Provider { get; set; } = new LoadedProviderViewModel();

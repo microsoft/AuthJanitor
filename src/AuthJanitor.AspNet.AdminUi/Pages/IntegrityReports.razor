@@ -1,0 +1,129 @@
+﻿@page "/integrityReports"
+
+<Container Fluid="true">
+    <Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
+        <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
+            <DisplayHeading Size="DisplayHeadingSize.Is4">System Integrity</DisplayHeading>
+        </Column>
+    </Row>
+    <Row>
+        <Column ColumnSize="ColumnSize.Is12">
+            <BlazorTable.Table TableItem="IntegrityReport"
+                               TableClass="table table-striped table-bordered"
+                               @bind-Items="@IntegrityReportList">
+
+                <BlazorTable.Column TableItem="IntegrityReport"
+                                    Title="Assembly Name" Field="@(x => x.AssemblyName)"
+                                    Sortable="true" Filterable="true" />
+
+                <BlazorTable.Column TableItem="IntegrityReport"
+                                    Title="Library File" Field="@(x => x.LibraryFile)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <span title="@context.LibraryFile">@System.IO.Path.GetFileName(context.LibraryFile)</span>
+                    </Template>
+                </BlazorTable.Column>
+
+                <BlazorTable.Column TableItem="IntegrityReport"
+                                    Title="Library File Hash" Field="@(x => x.LibraryFileHash)" />
+
+                <BlazorTable.Column TableItem="IntegrityReport"
+                                    Title="Signature Check" Field="@(x => x.SignatureCheckResult)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        @context.SignatureCheckResult
+                        @if (context.SignatureCheckResult != IntegrityReport.IntegritySignatureCheckResult.NoSignature)
+                        {
+                            @foreach (var signature in context.Signatures)
+                            {
+                        <ListGroup Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">
+                            <ListGroupItem>
+                                <strong>Friendly Name</strong> @signature.FriendlyName
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Issuer</strong> @signature.Issuer
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Not Before</strong> @signature.NotBefore
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Not After</strong> @signature.NotAfter
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Subject</strong> @signature.Subject
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Version</strong> @signature.Version
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Thumbprint</strong> @signature.Thumbprint
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Publisher Description</strong> @signature.PublisherDescription
+                            </ListGroupItem>
+                            <ListGroupItem>
+                                <strong>Publisher URL</strong> @signature.PublisherUrl
+                            </ListGroupItem>
+                        </ListGroup>
+                            }
+                        }
+</Template>
+                    </BlazorTable.Column>
+
+                <BlazorTable.Column TableItem="IntegrityReport"
+                                    Title="AuthJanitor Types" Field="@(x => x.AuthJanitorTypes)">
+                    <Template>
+                        <ListGroup Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">
+                            @foreach (var ajType in context.AuthJanitorTypes)
+                            {
+                            <ListGroupItem Padding="Padding.Is2.OnAll">
+                                @{
+                                    string iconName = FontAwesomeIcons.Box;
+                                    switch (ajType.ExtensibilityType)
+                                    {
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.CryptographicImplementation:
+                                            iconName = FontAwesomeIcons.Lock;
+                                            break;
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.DataStore:
+                                            iconName = FontAwesomeIcons.Database;
+                                            break;
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.EventSink:
+                                            iconName = FontAwesomeIcons.Bell;
+                                            break;
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.Identity:
+                                            iconName = FontAwesomeIcons.UserCheck;
+                                            break;
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.Provider:
+                                            iconName = FontAwesomeIcons.Cogs;
+                                            break;
+                                        case AuthJanitor.Integrity.IntegrityReportExtensibilityType.ExtensibilityTypes.SecureStorage:
+                                            iconName = FontAwesomeIcons.UserSecret;
+                                            break;
+                                    }
+                                    <Icon Name="@iconName" Float="Float.Left" Margin="Margin.Is2.FromRight" />
+                                    <Heading Size="HeadingSize.Is6" Float="Float.Left" Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">@ajType.TypeName</Heading>
+                                    <div class="clearfix"></div>
+                                }
+                            </ListGroupItem>
+                            }
+                        </ListGroup>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Pager -->
+                <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+            </BlazorTable.Table>
+        </Column>
+    </Row>
+</Container>
+
+@using AuthJanitor.Integrity
+@code {
+    protected IEnumerable<IntegrityReport> IntegrityReportList { get; set; } = new List<IntegrityReport>();
+
+                                    protected override async Task OnInitializedAsync()
+                                    {
+                                        IntegrityReportList = Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<IntegrityReport>>(
+                                            await (await Http.GetAsync("api/system/integrityReports")).Content.ReadAsStringAsync());
+                                    }
+}

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.EventSinks
 {
-    public interface IEventSink
+    public interface IEventSink : IAuthJanitorExtensibilityPoint
     {
         Task LogEvent(LogLevel logLevel, string source, string eventMessage);
         Task LogEvent(AuthJanitorSystemEvents systemEvent, string source, string details);

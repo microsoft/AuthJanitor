@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.IdentityServices
 {
-    public interface IIdentityService
+    public interface IIdentityService : IAuthJanitorExtensibilityPoint
     {
         /// <summary>
         /// Return if there is currently a user logged in (with any valid AuthJanitor role)

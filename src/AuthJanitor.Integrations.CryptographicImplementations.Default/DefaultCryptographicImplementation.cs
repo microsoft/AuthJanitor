@@ -69,7 +69,6 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
                 crypto.GetBytes(data);
             }
 
-            var secureString = new SecureString();
             for (int i = 0; i < numChars; i++)
             {
                 int randomNumber = BitConverter.ToInt32(data, i * 4);
@@ -97,13 +96,23 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         public Task<string> Hash(byte[] inputBytes)
         {
             byte[] bytes = SHA256.Create().ComputeHash(inputBytes);
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                sb.Append(bytes[i].ToString("x2"));
-            }
+            return Task.FromResult(BitConverter.ToString(bytes).Replace("-", "").ToLower());
+        }
 
-            return Task.FromResult(sb.ToString());
+        /// <summary>
+        /// Generates a one-way hash of a given file.
+        /// 
+        /// This implementation uses SHA256.
+        /// </summary>
+        /// <param name="filePath">File to hash</param>
+        /// <returns>SHA256 hash of file content</returns>
+        public Task<string> HashFile(string filePath)
+        {
+            using (FileStream stream = File.OpenRead(filePath))
+            {
+                var bytes = SHA256.Create().ComputeHash(stream);
+                return Task.FromResult(BitConverter.ToString(bytes).Replace("-", "").ToLower());
+            }
         }
 
         /// <summary>
