@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "AZURE_FUNCTION_PROXY_DISABLE_LOCAL_CALL": true,
+    "STORAGE_WEB_URL": "http://localhost:16100",
+    "CLIENT_ID": "authjanitor-admin-api-app-client-id",
+    "CLIENT_SECRET": "authjanitor-admin-api-app-client-secret",
+    "TENANT_ID": "tenant-being-maintained-by-authjanitor"
+  }
+}
