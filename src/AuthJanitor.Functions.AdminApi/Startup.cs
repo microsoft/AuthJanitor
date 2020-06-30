@@ -15,8 +15,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using AuthJanitor.Services;
-
+using AuthJanitor.Services;
+
 [assembly: WebJobsStartup(typeof(AuthJanitor.Startup))]
 namespace AuthJanitor
 {
@@ -36,6 +36,8 @@ namespace AuthJanitor
             typeof(ILogger)
         };
 
+        public static ILogger REMOVE_ME_LOGGER;
+
         public void Configure(IWebJobsBuilder builder)
         {
             var logger = LoggerFactory.Create(builder =>
@@ -43,6 +45,7 @@ namespace AuthJanitor
                 builder.SetMinimumLevel(LogLevel.Debug)
                        .AddConsole();
             }).CreateLogger<Startup>();
+            REMOVE_ME_LOGGER = logger;
 
             builder.Services.AddOptions();
 
@@ -50,6 +53,12 @@ namespace AuthJanitor
 
             logger.LogDebug("Registering Azure AD Identity Service");
             builder.Services.AddAJAzureActiveDirectory<AzureADIdentityServiceConfiguration>(o =>
+            {
+                o.ClientId = Environment.GetEnvironmentVariable("CLIENT_ID", EnvironmentVariableTarget.Process);
+                o.ClientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET", EnvironmentVariableTarget.Process);
+                o.TenantId = Environment.GetEnvironmentVariable("TENANT_ID", EnvironmentVariableTarget.Process);
+            });
+            builder.Services.AddAJAzureActiveDirectoryManager<AzureADIdentityServiceConfiguration>(o =>
             {
                 o.ClientId = Environment.GetEnvironmentVariable("CLIENT_ID", EnvironmentVariableTarget.Process);
                 o.ClientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET", EnvironmentVariableTarget.Process);
@@ -76,6 +85,7 @@ namespace AuthJanitor
 
             builder.Services.AddTransient<DashboardService>();
             builder.Services.AddTransient<SystemService>();
+            builder.Services.AddTransient<IdentityManagementService>();
             builder.Services.AddTransient<ManagedSecretsService>();
             builder.Services.AddTransient<RekeyingTasksService>();
             builder.Services.AddTransient<ScheduleRekeyingTasksService>();

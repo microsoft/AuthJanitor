@@ -4,7 +4,9 @@ using AuthJanitor.IdentityServices;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
         private const string HTTP_HEADER_VALUE = "administrator";
 
         public const string AGENT_CREDENTIAL_USERNAME = "application.identity@local";
-        public const string DEFAULT_OBO_RESOURCE = "https://management.core.windows.net";
+        public const string DEFAULT_OBO_RESOURCE = "https://management.core.windows.net/";
 
         private const string ROLES_CLAIM = "roles";
         private const string ID_TOKEN_OBO_HEADER_NAME = "X-MS-TOKEN-AAD-ID-TOKEN";
@@ -37,15 +39,19 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
             Converters = { new StringToIntJsonConverter(false), new StringToLongJsonConverter(false) }
         };
 
+        private readonly ILogger<AzureADIdentityService> _logger;
+
         /// <summary>
         /// Implements an identity service which reads from the HttpContext to integrate with Azure Active Directory
         /// </summary>
         public AzureADIdentityService(
             IOptions<AzureADIdentityServiceConfiguration> configuration,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<AzureADIdentityService> logger)
         {
             Configuration = configuration.Value;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
 #if DEBUG
@@ -141,18 +147,26 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
                 { "client_id", Configuration.ClientId },
                 { "client_secret", Configuration.ClientSecret },
                 { "assertion", idToken },
+                //{ "scope", resource },
                 { "resource", resource },
                 { "requested_token_use", "on_behalf_of" }
             };
 
             var result = await new HttpClient().PostAsync("https://login.microsoftonline.com/" +
                 Configuration.TenantId +
+                //"/oauth2/v2.0/token",
                 "/oauth2/token",
                 new FormUrlEncodedContent(dict));
-            var tokenResponse = JsonSerializer.Deserialize<AccessTokenCredential>(
-                await result.Content.ReadAsStringAsync(), _serializerOptions);
 
-            return tokenResponse;
+            var resultContent = await result.Content.ReadAsStringAsync();
+            var token = JsonSerializer.Deserialize<AccessTokenCredential>(resultContent, _serializerOptions);
+
+            if (!result.IsSuccessStatusCode || token.IsInError)
+            {
+                _logger.LogError("Error exchanging token: {errorType} ({subErrorType}) -- Error code(s) {errorCodes}", token.ErrorType, token.SubErrorType, token.ErrorCodes);
+            }
+
+            return token;
         }
 
         private IEnumerable<string> GetClaimsInternal(string claimType) =>

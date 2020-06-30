@@ -1,5 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System.Collections.Generic;
+using System.Linq;
+
 namespace AuthJanitor.IdentityServices
 {
     public sealed class AuthJanitorRoles
@@ -10,13 +13,15 @@ namespace AuthJanitor.IdentityServices
         public static readonly string ServiceOperator = "serviceOperator";
         public static readonly string Auditor = "auditor";
 
-        public static readonly string[] ALL_ROLES = new string[]
+        public static readonly Dictionary<string, string> ROLE_NICENAMES = new Dictionary<string, string>()
         {
-            GlobalAdmin,
-            ResourceAdmin,
-            SecretAdmin,
-            ServiceOperator,
-            Auditor
+            { GlobalAdmin, "Global Administrator" },
+            { ResourceAdmin, "Resource Administrator" },
+            { SecretAdmin, "Secret Administrator" },
+            { ServiceOperator, "Service Operator" },
+            { Auditor, "Auditor" },
         };
+
+        public static readonly string[] ALL_ROLES = ROLE_NICENAMES.Keys.ToArray();
     }
 }

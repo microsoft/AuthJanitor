@@ -21,7 +21,8 @@ namespace AuthJanitor.UI.Shared
             { typeof(RekeyingTaskViewModel), "tasks" },
             { typeof(ResourceViewModel), "resources" },
             { typeof(LoadedProviderViewModel), "providers" },
-            { typeof(ProviderConfigurationViewModel), "providers" }
+            { typeof(ProviderConfigurationViewModel), "providers" },
+            { typeof(AuthJanitorAuthorizedUserViewModel), "access" }
         };
 
         public AuthJanitorHttpClient() : base()

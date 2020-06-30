@@ -1,0 +1,29 @@
+﻿<Container>
+    <Row>
+        <Field IsHorizontal="true" ColumnSize="ColumnSize.Is12">
+            <FieldLabel ColumnSize="ColumnSize.Is4">User Principal Name</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is8"><TextEdit @bind-Text="@Value.UPN" Placeholder="Secret name..." /></FieldBody>
+        </Field>
+    </Row>
+    <Row>
+        <Field IsHorizontal="true" ColumnSize="ColumnSize.Is12">
+            <FieldLabel ColumnSize="ColumnSize.Is4">Role</FieldLabel>
+            <FieldBody ColumnSize="ColumnSize.Is8">
+                <Select @bind-SelectedValue="@Value.RoleValue">
+                    @foreach (var option in AuthJanitor.IdentityServices.AuthJanitorRoles.ROLE_NICENAMES)
+                    {
+                        <SelectItem Value="@option.Key">@option.Value</SelectItem>
+                    }
+                </Select>
+            </FieldBody>
+        </Field>
+    </Row>
+</Container>
+
+@code {
+    [Parameter]
+    public AuthJanitorAuthorizedUserViewModel Value { get; set; }
+
+    [Parameter]
+    public EventCallback<AuthJanitorAuthorizedUserViewModel> ValueChanged { get; set; }
+}
