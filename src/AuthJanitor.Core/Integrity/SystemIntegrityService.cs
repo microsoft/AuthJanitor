@@ -85,6 +85,7 @@ namespace AuthJanitor.Integrity
                     return new IntegrityReport(a);
                 })
                 .Where(a => a != null)
+                .Where(r => r.IsAuthJanitorExtensionLibrary || r.IsAuthJanitorNamedLibrary)
                 .ToList();
 
             await Task.WhenAll(loadedAssemblies.Select(async asm =>

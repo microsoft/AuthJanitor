@@ -32,8 +32,7 @@ namespace AuthJanitor.Services
 
             try
             {
-                var reports = (await _systemIntegrityService.GetIntegrityReports())
-                    .Where(r => r.IsAuthJanitorExtensionLibrary || r.IsAuthJanitorNamedLibrary);
+                var reports = await _systemIntegrityService.GetIntegrityReports();
                 return new OkObjectResult(reports);
             }
             catch (Exception)
