@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Integrity;
 using AuthJanitor.UI.Shared.MetaServices;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,7 @@ namespace AuthJanitor.UI.Shared
         {
             serviceCollection.AddSingleton<EventDispatcherMetaService>();
             serviceCollection.AddSingleton<TaskExecutionMetaService>();
+            serviceCollection.AddSingleton<SystemIntegrityService>();
         }
     }
 }

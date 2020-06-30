@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.SecureStorage
 {
-    public interface ISecureStorage
+    public interface ISecureStorage : IAuthJanitorExtensibilityPoint
     {
         /// <summary>
         /// Persist sensitive content to secure storage

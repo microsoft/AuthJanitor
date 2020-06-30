@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.DataStores
 {
-    public interface IDataStore<TStoredModel> where TStoredModel : IAuthJanitorModel
+    public interface IDataStore<TStoredModel> : IAuthJanitorExtensibilityPoint
+        where TStoredModel : IAuthJanitorModel
     {
         /// <summary>
         /// Store an instance of a model which has a new ObjectId

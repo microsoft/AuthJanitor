@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrations.CryptographicImplementations
 {
-    public interface ICryptographicImplementation
+    public interface ICryptographicImplementation : IAuthJanitorExtensibilityPoint
     {
         /// <summary>
         /// Generate a new cryptographically random SecureString with a given length
@@ -34,6 +34,13 @@ namespace AuthJanitor.Integrations.CryptographicImplementations
         /// <param name="bytes">Input bytes</param>
         /// <returns>One-way hash of input bytes</returns>
         Task<string> Hash(byte[] bytes);
+
+        /// <summary>
+        /// Hash the contents of a given file
+        /// </summary>
+        /// <param name="filePath">File to hash</param>
+        /// <returns>One-way hash of file content</returns>
+        Task<string> HashFile(string filePath);
 
         /// <summary>
         /// Decrypt sensitive data
