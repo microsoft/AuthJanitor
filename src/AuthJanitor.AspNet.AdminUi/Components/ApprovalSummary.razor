@@ -1,0 +1,60 @@
+﻿<Container>
+    <Row>
+        @if (TotalRisks > 0)
+        {
+            <Heading Size="HeadingSize.Is5">
+                There are <strong>@TotalRisks</strong> identified risks, with a score of <strong>@TotalRiskScore</strong>.
+            </Heading>
+        }
+        else
+        {
+            <Heading Size="HeadingSize.Is5">
+                There are no identified risks for this Rekeying Task!
+            </Heading>
+        }
+    </Row>
+    @if (TotalRisks > 0)
+    {
+        <div class="row mt-2 pb-2 shadow-sm">
+            <div class="container-fluid">
+                <div class="row p-0 m-1 border-bottom">
+                    <div class="col col-1 my-auto"></div>
+                    <div class="col col-3 my-auto"><strong>Risk</strong></div>
+                    <div class="col col-8 my-auto"><strong>Remediation</strong></div>
+                </div>
+                @foreach (var risk in AllRisks)
+                {
+                    <div class="row">
+                        <div class="col col-1 my-auto">
+                            <h5>
+                                <span class="badge badge-warning">
+                                    <span><i class="fa fa-exclamation-circle text-white mr-1"></i></span>
+                                    @risk.Score
+                                </span>
+                            </h5>
+
+                        </div>
+                        <div class="col col-3 my-auto">
+                            <h6>@risk.Risk</h6>
+                        </div>
+                        <div class="col col-8 my-auto">
+                            <p>@risk.Recommendation</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</Container>
+
+@code {
+    [Parameter]
+    public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
+
+    public int TotalRisks => Task.ManagedSecret == null ? 0 :
+        Task.ManagedSecret.Resources.Sum(r => r.Risks.Count());
+    public int TotalRiskScore => Task.ManagedSecret == null ? 0 :
+        Task.ManagedSecret.Resources.Sum(r => r.RiskScore);
+    public List<RiskyConfigurationItem> AllRisks => Task.ManagedSecret == null ? new List<RiskyConfigurationItem>() :
+        Task.ManagedSecret.Resources.SelectMany(r => r.Risks).ToList();
+}

@@ -1,16 +1,22 @@
 ﻿@page "/accessManagement"
 
-<Container Fluid="true">
-    <Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
-        <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
-            <DisplayHeading Size="DisplayHeadingSize.Is4">Access Management</DisplayHeading>
+<Container Fluid="true" Style="position:relative;">
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="System"
+                                                PageGroup="Access Management">
+        <Column ColumnSize="ColumnSize.Is3" Margin="Margin.IsAuto.OnY" Padding="Padding.Is3.FromRight" Class="text-right">
+            <Button Clicked="@(() => { CreateModalShowing = true; })">
+                <Icon Name="@FontAwesomeIcons.Plus" Style="margin-right:-0.70em" />
+                <Icon Name="@FontAwesomeIcons.User" Margin="Margin.Is1.FromRight" />
+                Add New User
+            </Button>
         </Column>
-    </Row>
+    </AuthJanitor.UI.Components.BreadcrumbRow>
+
     <Row>
-        <Column ColumnSize="ColumnSize.Is12">
+        <Column Padding="Padding.Is0">
             <BlazorTable.Table TableItem="AuthJanitorAuthorizedUserViewModel"
-                               TableClass="table table-striped table-bordered"
-                               @bind-Items="@Users">
+                                TableClass="table table-striped table-bordered"
+                                @bind-Items="@Users">
 
                 <!-- Controls -->
                 <BlazorTable.Column TableItem="AuthJanitorAuthorizedUserViewModel"
@@ -58,16 +64,19 @@
             </BlazorTable.Table>
         </Column>
     </Row>
-    <Row>
-        <Column>
-            <Blazorise.Button Size="ButtonSize.Large" Color="Color.Primary" Clicked="@CreateNew">
-                <Icon Name="FontAwesomeIcons.Plus" Margin="Margin.Is2.FromRight" IconStyle="IconStyle.Solid" />
-                Add New Authorized User
-            </Blazorise.Button>
-        </Column>
-    </Row>
+
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Access Management"
+                                                    Icon="@FontAwesomeIcons.UserCheck">
+        <Paragraph>
+            The <strong>Access Management</strong> tool allows administrators with management access to the identity service being
+            leveraged to add, remove, and list users who have access to the AuthJanitor tool at various permissions levels.
+        </Paragraph>
+        <Paragraph>
+            A user may have multiple roles assigned to them, but when using <strong>Global Administrator</strong>, all system
+            rights are implicitly granted.
+        </Paragraph>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
-                
 
 <DataModal @bind-Visible="@CreateModalShowing"
             Title="Add New User"
@@ -85,8 +94,6 @@
                          ObjectName="@($"{SelectedValue.DisplayName} ({SelectedValue.UPN})")"
                          ResultClicked="@DeleteUserConfirmCallback" />
 
-@using AuthJanitor.UI.Editors
-@using AuthJanitor.UI.Modals
 @using Newtonsoft.Json
 @code {
     protected IEnumerable<AuthJanitorAuthorizedUserViewModel> Users { get; set; } = new List<AuthJanitorAuthorizedUserViewModel>();

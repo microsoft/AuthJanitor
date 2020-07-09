@@ -1,109 +1,115 @@
 ﻿@page "/rekeyingTasks"
 
-<Container Fluid="true">
-<Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
-    <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
-        <DisplayHeading Size="DisplayHeadingSize.Is4">Rekeying Tasks</DisplayHeading>
-    </Column>
-</Row>
-<Row>
-    <Column ColumnSize="ColumnSize.Is12">
-        <BlazorTable.Table TableItem="RekeyingTaskViewModel"
-                            TableClass="table table-striped table-bordered"
-                            @bind-Items="@Tasks">
+<Container Fluid="true" Style="position:relative;">
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
+                                             PageGroup="Rekeying Tasks" />
 
-            <!-- Controls/ID -->
-            <BlazorTable.Column TableItem="RekeyingTaskViewModel"
-                                Title="" Field="@(x => x.ObjectId)"
-                                Width="1%"
-                                Sortable="false" Filterable="false">
-                <Template>
-                    <Blazorise.Buttons Role="ButtonsRole.Toolbar">
-                        <Blazorise.Button Color="Color.Info"
-                                            Clicked="@(() => NavigationManager.NavigateTo($"/rekeyingTasks/{context.ObjectId}"))">
-                            <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
-                        </Blazorise.Button>
-                        <Blazorise.Button Color="Color.Success" Clicked="@(() => { SelectedValue = context; ApproveModalShowing = true; })">
-                            <Icon Name="FontAwesomeIcons.CheckSquare" Class="text-light" />
-                        </Blazorise.Button>
-                        <Blazorise.Button Color="Color.Danger" Clicked="@(() => { SelectedValue = context; DeleteModalShowing = true; })">
-                            <Icon Name="FontAwesomeIcons.Trash" Class="text-light" />
-                        </Blazorise.Button>
-                    </Blazorise.Buttons>
-                </Template>
-            </BlazorTable.Column>
+    <Row>
+        <Column Padding="Padding.Is0">
+            <BlazorTable.Table TableItem="RekeyingTaskViewModel"
+                               TableClass="table table-striped table-hover"
+                               @bind-Items="@Tasks">
 
-            <!-- Queued Date -->
-            <BlazorTable.Column TableItem="RekeyingTaskViewModel"
-                                Title="Queued" Field="@(x => x.Queued)"
-                                Sortable="true" Filterable="true" />
+                <!-- Controls/ID -->
+                <BlazorTable.Column TableItem="RekeyingTaskViewModel"
+                                    Title="" Field="@(x => x.ObjectId)"
+                                    Width="1%"
+                                    Sortable="false" Filterable="false">
+                    <Template>
+                        <Blazorise.Buttons Role="ButtonsRole.Toolbar">
+                            <Blazorise.Button Color="Color.Info"
+                                              Clicked="@(() => NavigationManager.NavigateTo($"/rekeyingTasks/{context.ObjectId}"))">
+                                <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
+                            </Blazorise.Button>
+                            <Blazorise.Button Color="Color.Success" Clicked="@(() => { SelectedValue = context; ApproveModalShowing = true; })">
+                                <Icon Name="FontAwesomeIcons.CheckSquare" Class="text-light" />
+                            </Blazorise.Button>
+                            <Blazorise.Button Color="Color.Danger" Clicked="@(() => { SelectedValue = context; DeleteModalShowing = true; })">
+                                <Icon Name="FontAwesomeIcons.Trash" Class="text-light" />
+                            </Blazorise.Button>
+                        </Blazorise.Buttons>
+                    </Template>
+                </BlazorTable.Column>
 
-            <!-- Expiry Date -->
-            <BlazorTable.Column TableItem="RekeyingTaskViewModel"
-                                Title="Expiry" Field="@(x => x.Expiry)"
-                                Sortable="true" Filterable="true" />
+                <!-- Queued Date -->
+                <BlazorTable.Column TableItem="RekeyingTaskViewModel"
+                                    Title="Queued" Field="@(x => x.Queued)"
+                                    Sortable="true" Filterable="true" />
 
-            <!-- Status -->
-            <BlazorTable.Column TableItem="RekeyingTaskViewModel"
-                                Title="Status" Field="@(x => x.RekeyingCompleted)">
-                <Template>
-                    @if (context.RekeyingCompleted)
-                    {
-                        <Badge Color="Color.Success">Complete</Badge>
-                    }
-                    else if (!string.IsNullOrEmpty(context.RekeyingErrorMessage))
-                    {
-                        var attempt = context.Attempts.OrderByDescending(a => a.AttemptStarted).First();
-                        <Alert Color="Color.Danger" IsDismisable="false" IsShow="true">
-                            <strong>Error Rekeying!</strong> (Last attempted @attempt.AttemptStarted by @attempt.UserDisplayName)
-                        </Alert>
-                    }
-                    else if (context.RekeyingInProgress)
-                    {
-                        <Badge Color="Color.Primary">In Progress</Badge>
-                    }
-                    else
-                    {
-                        <Badge Color="Color.Secondary">Scheduled</Badge>
-                    }
-                </Template>
-            </BlazorTable.Column>
+                <!-- Expiry Date -->
+                <BlazorTable.Column TableItem="RekeyingTaskViewModel"
+                                    Title="Expiry" Field="@(x => x.Expiry)"
+                                    Sortable="true" Filterable="true" />
 
-            <!-- Participating Resources -->
-            <BlazorTable.Column TableItem="RekeyingTaskViewModel" Title="Resources">
-                <Template>
-                    <ListGroup Margin="Margin.Is0.OnX.Is1.OnY" Padding="Padding.Is0.OnAll">
-                        @foreach (var resource in context.ManagedSecret.Resources)
+                <!-- Status -->
+                <BlazorTable.Column TableItem="RekeyingTaskViewModel"
+                                    Title="Status" Field="@(x => x.RekeyingCompleted)">
+                    <Template>
+                        @if (context.RekeyingCompleted)
                         {
-                            <ListGroupItem Padding="Padding.Is2.OnAll">
-                                <ResourceNameStyled Value="@resource" />
-                            </ListGroupItem>
+                            <Badge Color="Color.Success">Complete</Badge>
                         }
-                    </ListGroup>
-                </Template>
-            </BlazorTable.Column>
+                        else if (!string.IsNullOrEmpty(context.RekeyingErrorMessage))
+                        {
+                            var attempt = context.Attempts.OrderByDescending(a => a.AttemptStarted).First();
+                            <Alert Color="Color.Danger" IsDismisable="false" IsShow="true">
+                                <strong>Error Rekeying!</strong> (Last attempted @attempt.AttemptStarted by @attempt.UserDisplayName)
+                            </Alert>
+                        }
+                        else if (context.RekeyingInProgress)
+                        {
+                            <Badge Color="Color.Primary">In Progress</Badge>
+                        }
+                        else
+                        {
+                            <Badge Color="Color.Secondary">Scheduled</Badge>
+                        }
+                    </Template>
+                </BlazorTable.Column>
 
-            <!-- Pager -->
-            <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
-        </BlazorTable.Table>
+                <!-- Participating Resources -->
+                <BlazorTable.Column TableItem="RekeyingTaskViewModel" Title="Resources">
+                    <Template>
+                        <ListGroup Margin="Margin.Is0.OnX.Is1.OnY" Padding="Padding.Is0.OnAll">
+                            @foreach (var resource in context.ManagedSecret.Resources)
+                            {
+                                <ListGroupItem Padding="Padding.Is1.OnAll">
+                                    @resource.Name
+                                </ListGroupItem>
+                            }
+                        </ListGroup>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Pager -->
+                <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+            </BlazorTable.Table>
         </Column>
     </Row>
+
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
+                                                    Icon="@FontAwesomeIcons.Tasks">
+        <Paragraph>
+            <strong>Rekeying Tasks</strong> are created, either automatically by the system as a key or secret nears its expiry,
+            or manually by an administrator. A <strong>Rekeying Task</strong> is associated with a <em>single</em>
+            <strong>Secret</strong>. <strong>Rekeying Tasks</strong> can have multiple attempts by different administrators
+            or service accounts.
+        </Paragraph>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
 <DataModal @bind-Visible="@ApproveModalShowing"
-            Title="Approve Task"
-            YesButton="Approve"
-            NoButton="Cancel"
-            ResultClicked="@ApproveCallback">
+           Title="Approve Task"
+           YesButton="Approve"
+           NoButton="Cancel"
+           ResultClicked="@ApproveCallback">
     <ApprovalSummary Task="@SelectedValue" />
 </DataModal>
 <DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
-                            ObjectId="@SelectedValue.ObjectId"
-                            ObjectName="@SelectedValue.ObjectId.ToString()"
-                            ResultClicked="@DeleteConfirmCallback" />
+                         ObjectId="@SelectedValue.ObjectId"
+                         ObjectName="@SelectedValue.ObjectId.ToString()"
+                         ResultClicked="@DeleteConfirmCallback" />
 
-@using AuthJanitor.UI.Common.Resources
-@using AuthJanitor.UI.Common.Tasks
 @using AuthJanitor.UI.Modals
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
