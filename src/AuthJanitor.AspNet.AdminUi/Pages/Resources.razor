@@ -1,15 +1,21 @@
 ﻿@page "/resources"
 
-<Container Fluid="true">
-    <Row Class="bg-light border-bottom" Margin="Margin.Is3.FromBottom">
-        <Column ColumnSize="ColumnSize.Is12" Padding="Padding.Is3.OnX.Is2.FromTop">
-            <DisplayHeading Size="DisplayHeadingSize.Is4">Resources</DisplayHeading>
+<Container Fluid="true" Style="position:relative;">
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
+                                             PageGroup="Resources">
+        <Column ColumnSize="ColumnSize.Is3" Margin="Margin.IsAuto.OnY" Padding="Padding.Is3.FromRight" Class="text-right">
+            <Button Clicked="@(() => { CreateModalShowing = true; })">
+                <Icon Name="@FontAwesomeIcons.Plus" Style="margin-right:-0.70em" />
+                <Icon Name="@FontAwesomeIcons.Database" Margin="Margin.Is1.FromRight" />
+                Manage New Resource
+            </Button>
         </Column>
-    </Row>
+    </AuthJanitor.UI.Components.BreadcrumbRow>
+
     <Row>
-        <Column ColumnSize="ColumnSize.Is12">
+        <Column Padding="Padding.Is0">
             <BlazorTable.Table TableItem="ResourceViewModel"
-                               TableClass="table table-striped table-bordered"
+                               TableClass="table table-striped table-hover"
                                @bind-Items="@ManagedResources">
 
                 <!-- Controls/ID -->
@@ -48,34 +54,41 @@
                 <!-- Risk Score -->
                 <BlazorTable.Column TableItem="AuthJanitor.UI.Shared.ViewModels.ResourceViewModel"
                                     Title="Risk Score" Field="@(x => x.RiskScore)"
-                                    Sortable="true" Filterable="true" />
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <AuthJanitor.UI.Components.ColoredRiskScore Value="@context.RiskScore"
+                                                                    ShowRiskText="false" />
+                    </Template>
+                </BlazorTable.Column>
 
                 <!-- Pager -->
                 <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
             </BlazorTable.Table>
         </Column>
-        </Row>
-    <Row>
-        <Column>
-            <Blazorise.Button Size="ButtonSize.Large" Color="Color.Primary" Clicked="@CreateNew">
-                <Icon Name="FontAwesomeIcons.Plus" Margin="Margin.Is2.FromRight" IconStyle="IconStyle.Solid" />
-                Manage New Resource
-            </Blazorise.Button>
-        </Column>
     </Row>
+
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Resources"
+                                                    Icon="@FontAwesomeIcons.Database">
+        <p>
+            <strong>Resources</strong> describe the configuration required to access a given service or object for the purposes
+            of either delivering key/secret material or rekeying that object or service. A <strong>Resource</strong> is made up
+            of a <strong>Provider</strong> and a corresponding <strong>Provider Configuration</strong>, which is a structure
+            defined by the <strong>Provider</strong> library.
+        </p>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
 <DataModal @bind-Visible="@CreateModalShowing"
-            Title="Manage New Resource"
-            YesButton="Create"
-            NoButton="Cancel"
-            ResultClicked="@CreateCallback">
+           Title="Manage New Resource"
+           YesButton="Create"
+           NoButton="Cancel"
+           ResultClicked="@CreateCallback">
     <ResourceEditor @bind-Value="@SelectedValue" />
 </DataModal>
 <DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
-                            ObjectId="@SelectedValue.ObjectId"
-                            ObjectName="@SelectedValue.Name"
-                            ResultClicked="@DeleteConfirmCallback" />
+                         ObjectId="@SelectedValue.ObjectId"
+                         ObjectName="@SelectedValue.Name"
+                         ResultClicked="@DeleteConfirmCallback" />
 
 @using AuthJanitor.UI.Editors
 @using AuthJanitor.UI.Modals
@@ -84,6 +97,9 @@
 
     protected bool CreateModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }
+
+    [CascadingParameter]
+    public EventCallback btn_clicked { get; set; }
 
     [Parameter]
     public ResourceViewModel SelectedValue { get; set; } = new ResourceViewModel();

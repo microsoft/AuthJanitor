@@ -87,12 +87,11 @@
     <script src="_content/Blazorise.Charts/blazorise.charts.js"></script>
 
     <script>
-        window.initializeCarousel = () => {
-            $('#resourceCarousel').carousel()
-            //$('#resourceCarousel-prev').click(
-            //    () => $('#resourceCarousel').carousel('prev'));
-            //$('#resourceCarousel-next').click(
-            //    () => $('#resourceCarousel').carousel('next'));
+        function InitializeHelpSlideIn() {
+            $("[data-toggle='toggle']").click(function () {
+                var selector = $(this).data("target");
+                $(selector).toggleClass('in');
+            });
         }
     </script>
 </body>

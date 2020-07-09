@@ -1,0 +1,18 @@
+﻿<div id="helpContainer" class="help-container text-light border-right-0 border-info rounded-left shadow-lg">
+    <h1 class="display-4">
+        <i class="@Icon mr-2"></i>
+        @Title
+    </h1>
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Icon { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

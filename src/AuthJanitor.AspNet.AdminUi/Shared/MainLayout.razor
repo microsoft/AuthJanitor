@@ -1,112 +1,154 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="app-main">
-    <Bar Class="app-bar" ThemeContrast="ThemeContrast.Dark" Background="Background.Dark">
-        <BarBrand>
-            <img style="height: 5vh" src="css/logo.png" alt="AuthJanitor Logo" />
-        </BarBrand>
-        <BarToggler Float="Float.Right" />
-        <BarMenu>
-            <BarStart>
-                <BarItem>
-                    <BarLink To="/dashboard">
-                        <Icon Name="FontAwesomeIcons.TachometerAlt" Margin="Margin.Is1.FromRight" />
-                        Dashboard
-                    </BarLink>
-                </BarItem>
-                @if (Metrics.SignedInRoles.Contains(AuthJanitor.IdentityServices.AuthJanitorRoles.GlobalAdmin))
-                {
-                    <BarItem>
-                        <BarLink To="/accessManagement">
-                            <Icon Name="FontAwesomeIcons.UserEdit" Margin="Margin.Is1.FromRight" />
-                            Access Management
-                        </BarLink>
-                    </BarItem>
-                }
-                <BarItem>
-                    <BarLink To="/integrityReports">
-                        <Icon Name="FontAwesomeIcons.ClipboardCheck" Margin="Margin.Is1.FromRight" />
-                        Integrity Reports
-                    </BarLink>
-                </BarItem>
-                <BarItem>
-                    <BarLink To="/providers">
-                        <Icon Name="FontAwesomeIcons.Plug" Margin="Margin.Is1.FromRight" />
-                        Providers
-                    </BarLink>
-                </BarItem>
-                <BarItem>
-                    <BarLink To="/resources">
-                        <Icon Name="FontAwesomeIcons.Database" Margin="Margin.Is1.FromRight" />
-                        Resources
-                    </BarLink>
-                </BarItem>
-                <BarItem>
-                    <BarLink To="/managedSecrets">
-                        <Icon Name="FontAwesomeIcons.Key" Margin="Margin.Is1.FromRight" />
-                        Managed Secrets
-                    </BarLink>
-                </BarItem>
-                <BarItem>
-                    <BarLink To="/rekeyingTasks">
-                        <Icon Name="FontAwesomeIcons.Tasks" Margin="Margin.Is1.FromRight" />
-                        Rekeying Tasks
-                    </BarLink>
-                </BarItem>
-            </BarStart>
-            <BarEnd Padding="Padding.Is2.FromTop" Margin="Margin.Is2.FromTop" Class="border-top">
-                <BarItem>
-                    <Row>
-                        @{var erroredCollapse = Metrics.TasksInError == 0 ? "collapse" : "";};
-                        <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {erroredCollapse}")" title="Tasks in Error">
-                            <Icon Class="fa-2x" Name="FontAwesomeIcons.ExclamationTriangle" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
-                            <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
-                                @Metrics.TasksInError
-                            </Paragraph>
-                        </Column>
-                        @{var expiringSoonCollapse = Metrics.TotalExpiringSoon == 0 ? "collapse" : "";};
-                        <Column ColumnSize="ColumnSize.Is1" Class="@($"text-danger text-nowrap {expiringSoonCollapse}")" title="Expiring Soon">
-                            <Icon Class="fa-2x" Name="FontAwesomeIcons.HourglassHalf" Padding="Padding.Is1.FromTop" Margin="Margin.Is1.FromRight" Float="Float.Left" />
-                            <Paragraph Class="h2" Margin="Margin.Is0" Padding="Padding.Is0" Style="font-size:2em;">
-                                @Metrics.ExpiringSoon
-                            </Paragraph>
-                        </Column>
-                        <Column></Column>
-                        <Column ColumnSize="ColumnSize.IsAuto" Class="m-0 p-0">
-                            <div class="text-light p-0">
-                                <div class="float-left">
-                                    <div title="Roles: @Metrics.SignedInRoles">
-                                        @Metrics.SignedInName
-                                    </div>
-                                    <a class="text-light text-decoration-none" href="/.auth/logout" style="font-size: 0.6em">Log Out</a>
+    @* --- Main Navbar Area --- *@
+    <nav class="navbar navbar-expand-sm navbar-light bg-light border border-bottom shadow-sm">
+
+        @* --- Navbar Visibility Toggle --- *@
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        @* --- Branding --- *@
+        <a href="/" class="navbar-brand">AuthJanitor</a>
+
+        @* --- Navbar Area Content--- *@
+        <div class="navbar-collapse collapse justify-content-stretch" id="mainNavbar">
+
+            @* --- Navigation --- *@
+            <ul class="navbar-nav">
+                @* --- "Manage" Menu --- *@
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarManageDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-sitemap mr-3"></i>Manage
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-left" aria-labelledby="navbarManageDropdown">
+                        <a class="dropdown-item" href="/dashboard"><i class="fa fa-tachometer-alt mr-3"></i>Dashboard</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/resources"><i class="fa fa-database mr-3"></i>Resources</a>
+                        <a class="dropdown-item" href="/managedSecrets"><i class="fa fa-key mr-3"></i>Secrets</a>
+                        <a class="dropdown-item" href="/rekeyingTasks"><i class="fa fa-tasks mr-3"></i>Rekeying Tasks</a>
+                    </div>
+                </li>
+                @* --- "System" Menu --- *@
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarSystemDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-wrench mr-3"></i>System
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarSystemDropdown">
+                        <a class="dropdown-item" href="/accessManagement"><i class="fa fa-users mr-3"></i>Access Management</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/providers"><i class="fa fa-plug mr-3"></i>Providers</a>
+                        <a class="dropdown-item" href="/integrityReports"><i class="fa fa-clipboard-check mr-3"></i>Integrity Reports</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item disabled" href="/configuration"><i class="fa fa-cogs mr-3"></i>System Configuration</a>
+                    </div>
+                </li>
+            </ul>
+
+            @* --- Search Bar --- *@
+            <form class="mx-2 my-auto d-inline w-100">
+                @*<div class="input-group">
+                        <input type="text" class="form-control" placeholder="...">
+                        <span class="input-group-btn">
+                            <button class="btn" type="button"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>*@
+            </form>
+
+            @* --- User Preferences Menu (Avatar Icon) --- *@
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link p-0" id="navbarUserDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <img src="@GetGravatar()" style="height:2.5em;width:2.5em;" class="rounded-circle shadow-sm" />
+                        <div class="d-block d-sm-none mr-4 float-left">
+                            <div class="font-weight-bold">@Metrics.SignedInName</div>
+                            <div class="small">@Metrics.SignedInRoles</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarUserDropdown">
+                        <div class="px-4 py-2 mb-2 bg-secondary text-light d-none d-sm-block">
+                            <div class="row">
+                                <div class="col col-2 my-auto">
+                                    <i class="fa fa-user"></i>
                                 </div>
-                                <img src="@GetGravatar()" style="height: 2.7em;" class="img-fluid rounded ml-2" alt="Avatar Image" />
+                                <div class="col col-10">
+                                    <div class="font-weight-bold">@Metrics.SignedInName</div>
+                                    <div class="small">@Metrics.SignedInRoles</div>
+                                </div>
                             </div>
-                        </Column>
-                        <Column ColumnSize="ColumnSize.IsAuto">
-                            <div style="padding: 6px 3px 4px 7px; border: 2px solid #656565; border-radius: 5px;">
-                                <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank" title="Documentation">
-                                    <Icon Class="fa-2x" Name="FontAwesomeIcons.BookOpen" />
-                                </a>
-                                <a class="text-light text-decoration-none" href="https://github.com/microsoft/AuthJanitor" target="_blank" title="GitHub Repository">
-                                    <Icon Class="fa-2x" Name="FontAwesomeIcons.Github" />
-                                </a>
-                            </div>
-                        </Column>
-                    </Row>
-                </BarItem>
-            </BarEnd>
-        </BarMenu>
-    </Bar>
-    @*<div class="app-content">*@
+                        </div>
+                        <a class="dropdown-item disabled" href="#"><i class="fa fa-paint-roller mr-3"></i>UI Theme</a>
+                        <a class="dropdown-item disabled" href="#"><i class="fa fa-flag-checkered mr-3"></i>Notification Settings</a>
+                        <a class="dropdown-item disabled" href="#"><i class="fa fa-undo mr-3"></i>Reset UI Preferences</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="/.auth/logout"><i class="fa fa-sign-out-alt mr-3"></i>Log Out</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    @* --- Content Area --- *@
+    <div class="container-fluid p-0" style="position:relative;">
         @Body
-    @*</div>*@
+    </div>
+
+    @* --- Footer Area --- *@
+    <footer class="footer border border-top d-none d-sm-block">
+        <div class="container-fluid">
+            <div class="row my-auto">
+                <div class="col px-3 my-auto text-left text-muted small">Powered by <a href="https://www.authjanitor.com" class="text-muted" target="_blank">AuthJanitor</a></div>
+                <div class="col px-1 text-right">
+                    <div class="float-right pt-1 px-2 border-left">
+                        <a href="javascript:false;" data-toggle="toggle" role="button" data-target="#helpContainer" class="text-decoration-none px-1">
+                            <i class="fa fa-question-circle text-info"></i>
+                        </a>
+                        <a href="https://github.com/microsoft/AuthJanitor" target="_blank" class="text-decoration-none px-1">
+                            <i class="fab fa-github text-dark"></i>
+                        </a>
+                        <a href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank" class="text-decoration-none px-1">
+                            <i class="fa fa-book-open text-dark"></i>
+                        </a>
+                    </div>
+                    <div class="float-right pt-1 px-2 border-left">
+                        <a href="" @onclick="@(() => StateHasChanged())" @onclick:preventDefault title="Refresh Page Data">
+                            <i class="fa fa-sync-alt text-info"></i>
+                        </a>
+                    </div>
+                    <div class="float-right mr-2">
+                        @if (Metrics.TasksInError > 0)
+                        {
+            <a class="btn btn-sm btn-outline-danger mx-2" role="button" href="/rekeyingTasks">
+                Errors <span class="badge badge-danger">@Metrics.TasksInError</span>
+                <span class="sr-only">in rekeying tasks</span>
+            </a>}
+                        @if (Metrics.TotalPendingApproval > 0)
+                        {
+            <a class="btn btn-sm btn-outline-success mx-2" role="button" href="/rekeyingTasks">
+                Approvals <span class="badge badge-success">@Metrics.TotalPendingApproval</span>
+                <span class="sr-only">for pending rekeying tasks</span>
+            </a>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 </div>
 
 @using System.Security.Cryptography
 @using System.Text
-@code {
-    protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
+@inject IJSRuntime JSRuntime
+@code
+{ protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("InitializeHelpSlideIn");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,5 +173,4 @@
             hash.Append(bytes[i].ToString("x2"));
         }
         return hash.ToString();
-    }
-}
+    } }

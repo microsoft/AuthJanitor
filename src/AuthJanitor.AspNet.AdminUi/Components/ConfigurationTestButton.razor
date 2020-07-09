@@ -1,13 +1,14 @@
-﻿<Button Clicked="@ButtonClicked" Color="@ButtonColor" title="@LastMessage" Margin="Margin.Is1">
+﻿<button @onclick="@ButtonClicked" class="btn @ButtonColor" title="@LastMessage">
     <span class="fa-layers fa-fw mr-3">
-        <span class="@IsCollapsed">
+        <span class="collapse">
             <i class="fa fa-spinner fa-inverse fa-pulse fa-2x"></i>
         </span>
         <i class="@Icon" data-fa-transform="shrink-3 right-6"></i>
-    </span> @Text
-</Button>
+    </span>
+    <span class="d-none d-xl-inline">@Text</span>
+</button>
 
-@using System.Text.Json 
+@using System.Text.Json
 @code {
     [Parameter]
     public TestAsContexts Context { get; set; }
@@ -19,9 +20,9 @@
     public ProviderConfigurationViewModel ProviderConfiguration { get; set; }
 
     [Parameter]
-    public Color DefaultColor { get; set; } = Color.Secondary;
+    public string DefaultColor { get; set; } = "btn-secondary";
 
-    protected Color ButtonColor { get; set; }
+    protected string ButtonColor { get; set; }
     protected string IsCollapsed { get; set; } = "collapse";
     protected string LastMessage { get; set; } = string.Empty;
 
@@ -42,7 +43,7 @@
     protected async Task ButtonClicked()
     {
         IsCollapsed = string.Empty;
-        ButtonColor = Color.Warning;
+        ButtonColor = "btn-warning";
 
         StateHasChanged();
 
@@ -53,20 +54,20 @@
             if (result.IsSuccessStatusCode)
             {
                 LastMessage = "Success!";
-                ButtonColor = Color.Success;
+                ButtonColor = "btn-success";
             }
             else
             {
                 var messageStructure = JsonSerializer.Deserialize<Dictionary<string, string>>(
                     await result.Content.ReadAsStringAsync());
                 LastMessage = messageStructure["Message"];
-                ButtonColor = Color.Danger;
+                ButtonColor = "btn-danger";
             }
         }
         catch (Exception ex)
         {
             LastMessage = ex.Message;
-            ButtonColor = Color.Danger;
+            ButtonColor = "btn-danger";
         }
 
         IsCollapsed = "collapse";

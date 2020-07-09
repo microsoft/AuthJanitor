@@ -76,6 +76,10 @@
     "ui-dependency-framework": {
       "matchCondition": { "route": "/_framework/{*restOfPath}" },
       "backendUri": "%STORAGE_WEB_URL%/_framework/{restOfPath}"
+    },
+    "ui-dependency-js": {
+      "matchCondition": { "route": "/js/{*restOfPath}" },
+      "backendUri": "%STORAGE_WEB_URL%/js/{restOfPath}"
     }
   }
 }

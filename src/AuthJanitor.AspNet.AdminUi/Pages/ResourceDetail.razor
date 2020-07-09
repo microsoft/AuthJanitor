@@ -1,40 +1,98 @@
 ﻿@page "/resources/{ResourceId}"
 
-<Container Fluid="true">
-    <Row Class="bg-light border-bottom">
-        <Column ColumnSize="ColumnSize.Is2" Padding="Padding.Is2" Class="text-center">
-            <div style="max-width:5em;margin: 0 auto;">
-                @((MarkupString)_provider?.SvgImage)
-            </div>
-            <Paragraph Alignment="TextAlignment.Center"
-                        Margin="Margin.Is2.OnX.Is1.OnY"
-                        Padding="Padding.Is2"
-                        Class="small border-top border-bottom border-secondary">@Resource.ProviderDetail.Name</Paragraph>
-                        
-        </Column>
-        <Column ColumnSize="ColumnSize.Is10">
+<Container Fluid="true" Style="position:relative;">
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
+                                             PageGroup="Resources"
+                                             PageGroupLink="/resources"
+                                             OptionalObjectName="@Resource.Name" />
+
+    <Row Class="border-bottom">
+        <Column Padding="Padding.Is3" Class="bg-light">
             <DisplayHeading Size="DisplayHeadingSize.Is4">@Resource.Name</DisplayHeading>
-            <Paragraph>@Resource.Description</Paragraph>
+            <Paragraph Margin="Margin.Is2.OnY" Class="lead">@Resource.Description</Paragraph>
         </Column>
     </Row>
-    <Row Margin="Margin.Is2.OnY">
-        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is12">
-            <ProviderSettingsCard ProviderConfiguration="@Resource.ProviderConfiguration" 
-                                    ProviderType="@Resource.ProviderType"
-                                    ShowEditControls="false" />
+
+    <Row Class="border-bottom">
+        <Column Padding="Padding.Is2">
+            <Paragraph>@Resource.RuntimeDescription</Paragraph>
         </Column>
     </Row>
-    <Row Margin="Margin.Is2.OnY">
-        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
-            <RiskListCard Risks="@Resource.Risks" />
+
+    <Row Padding="Padding.Is3.OnY" Class="bg-light shadow-sm">
+        <Column ColumnSize="ColumnSize.Is4" Class="text-center">
+            <AuthJanitor.UI.Components.ConfigurationTestButton Context="TestAsContexts.AsUser"
+                                                               ProviderType="@Resource.ProviderType"
+                                                               ProviderConfiguration="@Resource.ProviderConfiguration" />
         </Column>
-        <Column Margin="Margin.Is1.OnY" ColumnSize="ColumnSize.Is6.OnDesktop.Is12">
-            <ActionDescriptionCard Description="@Resource.RuntimeDescription" />
+        <Column ColumnSize="ColumnSize.Is4" Class="text-center">
+            <AuthJanitor.UI.Components.ConfigurationTestButton Context="TestAsContexts.AsApp"
+                                                               ProviderType="@Resource.ProviderType"
+                                                               ProviderConfiguration="@Resource.ProviderConfiguration" />
+        </Column>
+        <Column ColumnSize="ColumnSize.Is4" Class="text-center">
+            <Button Color="Color.Danger" Disabled="true">
+                <Icon Name="FontAwesomeIcons.Trash" Margin="Margin.Is3.FromRight" />
+                Delete Resource
+            </Button>
         </Column>
     </Row>
+
+    @if (Resource.Risks.Any())
+    {
+        <Row Margin="Margin.Is2.FromTop" Padding="Padding.Is2.FromBottom" Class="shadow-sm">
+            <Container Fluid="true">
+                <Row Padding="Padding.Is0" Margin="Margin.Is1" Class="border-bottom">
+                    <Column ColumnSize="ColumnSize.Is1" Margin="Margin.IsAuto.OnY"></Column>
+                    <Column ColumnSize="ColumnSize.Is3" Margin="Margin.IsAuto.OnY"><strong>Risk</strong></Column>
+                    <Column ColumnSize="ColumnSize.Is8" Margin="Margin.IsAuto.OnY"><strong>Remediation</strong></Column>
+                </Row>
+
+                @foreach (var risk in Resource.Risks)
+                {
+                    <Row>
+                        <Column ColumnSize="ColumnSize.Is1" Margin="Margin.IsAuto.OnY">
+                            <Heading Size="HeadingSize.Is5">
+                                <Badge Color="Color.Warning">
+                                    <span><Icon Name="FontAwesomeIcons.ExclamationCircle" Class="text-white" Margin="Margin.Is1.FromRight" /></span>
+                                    @risk.Score
+                                </Badge>
+                            </Heading>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is3" Margin="Margin.IsAuto.OnY">
+                            <Heading Size="HeadingSize.Is6">
+                                @risk.Risk
+                            </Heading>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.Is8" Margin="Margin.IsAuto.OnY">
+                            <Paragraph>@risk.Recommendation</Paragraph>
+                        </Column>
+                    </Row>
+                }
+
+            </Container>
+        </Row>
+    }
+
+    <Row Padding="Padding.Is0.FromTop" Margin="Margin.Is0.FromTop">
+        <Column Padding="Padding.Is0.OnX">
+            <AuthJanitor.UI.Components.ConfigurationVisualizer ShowEditControls="false"
+                                                               Value="@Resource.ProviderConfiguration" />
+        </Column>
+    </Row>
+
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Resources"
+                                                    Icon="@FontAwesomeIcons.Database">
+        <Paragraph>
+            <strong>Resources</strong> describe the configuration required to access a given service or object for the purposes
+            of either delivering key/secret material or rekeying that object or service. A <strong>Resource</strong> is made up
+            of a <strong>Provider</strong> and a corresponding <strong>Provider Configuration</strong>, which is a structure
+            defined by the <strong>Provider</strong> library.
+        </Paragraph>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
+
 </Container>
 
-@using AuthJanitor.UI.Cards
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     [Parameter]
