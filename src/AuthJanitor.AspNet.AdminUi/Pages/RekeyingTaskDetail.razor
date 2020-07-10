@@ -137,6 +137,8 @@
         </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
@@ -148,7 +150,9 @@
     public TimeSpan DurationSoFar => DateTimeOffset.UtcNow - Secret.LastChanged.GetValueOrDefault();
     protected IEnumerable<LoadedProviderViewModel> _providers;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected async Task LoadData()
     {
         _providers = await Http.AJList<LoadedProviderViewModel>();
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));

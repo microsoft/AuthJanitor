@@ -126,11 +126,15 @@
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.Integrity
 @code {
     protected IEnumerable<IntegrityReport> IntegrityReportList { get; set; } = new List<IntegrityReport>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected async Task LoadData()
     {
         IntegrityReportList = Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<IntegrityReport>>(
             await (await Http.GetAsync("api/system/integrityReports")).Content.ReadAsStringAsync());

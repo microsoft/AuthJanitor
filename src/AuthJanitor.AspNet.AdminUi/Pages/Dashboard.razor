@@ -69,13 +69,14 @@ else
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.UI.Shared.ViewModels
 @code { protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
 
-    protected override async Task OnInitializedAsync()
-    {
-        Metrics = await Http.AJGet<DashboardMetricsViewModel>();
-    }
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected async Task LoadData() => Metrics = await Http.AJGet<DashboardMetricsViewModel>();
 
     protected Blazorise.Charts.ChartData<int> GetRiskDataSet()
     {

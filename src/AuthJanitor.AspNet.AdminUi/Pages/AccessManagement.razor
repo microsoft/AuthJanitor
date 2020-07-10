@@ -94,6 +94,8 @@
                          ObjectName="@($"{SelectedValue.DisplayName} ({SelectedValue.UPN})")"
                          ResultClicked="@DeleteUserConfirmCallback" />
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using Newtonsoft.Json
 @code {
     protected IEnumerable<AuthJanitorAuthorizedUserViewModel> Users { get; set; } = new List<AuthJanitorAuthorizedUserViewModel>();

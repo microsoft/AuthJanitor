@@ -69,11 +69,15 @@
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.UI.Shared.ViewModels;
 @code {
     protected IEnumerable<LoadedProviderViewModel> ProviderList { get; set; } = new List<LoadedProviderViewModel>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected async Task LoadData()
     {
         ProviderList = await Http.AJList<LoadedProviderViewModel>();
     }
