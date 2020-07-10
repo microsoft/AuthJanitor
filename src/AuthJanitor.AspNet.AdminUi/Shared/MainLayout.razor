@@ -99,17 +99,10 @@
 @code
 { protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("InitializeHelpSlideIn");
-        }
-    }
-
     protected override async Task OnInitializedAsync()
     {
         Metrics = await Http.AJGet<DashboardMetricsViewModel>();
+        await JSRuntime.InvokeVoidAsync("InitializeHelpSlideIn");
     }
 
     protected string GetGravatar()
