@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.CosmosDb
 {
     [Provider(Name = "CosmosDB Master Key",
-              IconClass = "fa fa-database",
               Description = "Regenerates a Master Key for an Azure CosmosDB instance",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

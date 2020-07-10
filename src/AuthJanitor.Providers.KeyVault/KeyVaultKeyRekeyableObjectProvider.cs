@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Key",
-              IconClass = "fa fa-key",
               Description = "Regenerates an Azure Key Vault Key with the same parameters as the previous version",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

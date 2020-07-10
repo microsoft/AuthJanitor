@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AppServices.Functions
 {
     [Provider(Name = "Functions App Key",
-              IconClass = "fa fa-key",
               Description = "Regenerates a Function Key for an Azure Functions application",
               Features = ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.FUNCTIONS_SVG)]

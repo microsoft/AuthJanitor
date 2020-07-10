@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Secret",
-              IconClass = "fa fa-low-vision",
               Description = "Manages the lifecycle of a Key Vault Secret where a Managed Secret's value is stored",
               Features = ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.KEY_VAULT_SVG)]

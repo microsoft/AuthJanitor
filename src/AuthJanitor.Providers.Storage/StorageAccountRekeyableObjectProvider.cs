@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.Storage
 {
     [Provider(Name = "Storage Account Key",
-              IconClass = "fas fa-file-alt",
               Description = "Regenerates a key of a specified type for an Azure Storage Account",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime | 
                          ProviderFeatureFlags.IsTestable |

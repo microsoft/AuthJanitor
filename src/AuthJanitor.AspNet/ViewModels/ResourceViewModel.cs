@@ -14,14 +14,8 @@ namespace AuthJanitor.UI.Shared.ViewModels
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public bool IsRekeyableObjectProvider { get; set; }
         public string ProviderType { get; set; }
-        public ProviderAttribute ProviderDetail { get; set; } = new ProviderAttribute()
-        {
-            Name = "No Provider Loaded",
-            Description = "No Provider Loaded",
-            IconClass = "fa fa-times"
-        };
+        public LoadedProviderViewModel Provider { get; set; }
         public string SerializedProviderConfiguration { get; set; }
         public IEnumerable<RiskyConfigurationItem> Risks { get; set; } = new List<RiskyConfigurationItem>();
         public string RuntimeDescription { get; set; }

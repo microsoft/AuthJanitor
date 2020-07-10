@@ -127,7 +127,8 @@
         }
 
         <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
-                                                        Icon="@FontAwesomeIcons.Tasks">
+                                                        Icon="@FontAwesomeIcons.Tasks"
+                                                        @bind-Visible="@ContextualHelpVisible">
             <Paragraph>
                 <strong>Rekeying Tasks</strong> are created, either automatically by the system as a key or secret nears its expiry,
                 or manually by an administrator. A <strong>Rekeying Task</strong> is associated with a <em>single</em>
@@ -137,12 +138,15 @@
         </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
     public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
+
+    protected bool ContextualHelpVisible { get; set; }
 
     [Parameter]
     public string RekeyingTaskId { get; set; }

@@ -48,7 +48,7 @@
 
                 <!-- Provider -->
                 <BlazorTable.Column TableItem="AuthJanitor.UI.Shared.ViewModels.ResourceViewModel"
-                                    Title="Provider" Field="@(x => x.ProviderDetail.Name)"
+                                    Title="Provider" Field="@(x => x.Provider.Details.Name)"
                                     Sortable="true" Filterable="true" />
 
                 <!-- Risk Score -->
@@ -68,7 +68,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Resources"
-                                                    Icon="@FontAwesomeIcons.Database">
+                                                    Icon="@FontAwesomeIcons.Database"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <p>
             <strong>Resources</strong> describe the configuration required to access a given service or object for the purposes
             of either delivering key/secret material or rekeying that object or service. A <strong>Resource</strong> is made up
@@ -90,7 +91,8 @@
                          ObjectName="@SelectedValue.Name"
                          ResultClicked="@DeleteConfirmCallback" />
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.UI.Editors
 @using AuthJanitor.UI.Modals
@@ -99,6 +101,7 @@
 
     protected bool CreateModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }
+    protected bool ContextualHelpVisible { get; set; }
 
     [Parameter]
     public ResourceViewModel SelectedValue { get; set; } = new ResourceViewModel();
@@ -106,7 +109,7 @@
     [Parameter]
     public EventCallback<ResourceViewModel> SelectedValueChanged { get; set; }
 
-    protected override Task OnInitializedAsync() => LoadData();
+    protected override async Task OnInitializedAsync() => await LoadData();
 
     protected async Task LoadData()
     {

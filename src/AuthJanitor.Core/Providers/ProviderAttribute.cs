@@ -24,11 +24,6 @@ namespace AuthJanitor.Providers
         public string Name { get; set; }
 
         /// <summary>
-        /// CSS class for Provider icons (FontAwesome 5)
-        /// </summary>
-        public string IconClass { get; set; }
-
-        /// <summary>
         /// Provider display description
         /// </summary>
         public string Description { get; set; }

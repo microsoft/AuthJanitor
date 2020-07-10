@@ -111,7 +111,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Integrity Reports"
-                                                    Icon="@FontAwesomeIcons.ClipboardCheck">
+                                                    Icon="@FontAwesomeIcons.ClipboardCheck"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <p>
             Since AuthJanitor runs your key/secret management infrastructure, it's important to know that AuthJanitor itself is
             secure. In order to accomplish this, several metrics are collected about all of the libraries loaded into the
@@ -126,11 +127,13 @@
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" 
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.Integrity
 @code {
     protected IEnumerable<IntegrityReport> IntegrityReportList { get; set; } = new List<IntegrityReport>();
+    protected bool ContextualHelpVisible { get; set; }
 
     protected override async Task OnInitializedAsync() => await LoadData();
 

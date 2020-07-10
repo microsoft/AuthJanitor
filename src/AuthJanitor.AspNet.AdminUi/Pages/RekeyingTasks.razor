@@ -52,7 +52,7 @@
                         else if (!string.IsNullOrEmpty(context.RekeyingErrorMessage))
                         {
                             var attempt = context.Attempts.OrderByDescending(a => a.AttemptStarted).First();
-                            <Alert Color="Color.Danger" IsDismisable="false" IsShow="true">
+                            <Alert Color="Color.Danger" Dismisable="false" Visible="true">
                                 <strong>Error Rekeying!</strong> (Last attempted @attempt.AttemptStarted by @attempt.UserDisplayName)
                             </Alert>
                         }
@@ -70,13 +70,16 @@
                 <!-- Participating Resources -->
                 <BlazorTable.Column TableItem="RekeyingTaskViewModel" Title="Resources">
                     <Template>
-                        <ListGroup Margin="Margin.Is0.OnX.Is1.OnY" Padding="Padding.Is0.OnAll">
+                        <ListGroup Margin="Margin.Is0.OnAll" Padding="Padding.Is0.OnAll">
                             @foreach (var resource in context.ManagedSecret.Resources)
                             {
-                                <ListGroupItem Padding="Padding.Is1.OnAll">
-                                    @resource.Name
-                                </ListGroupItem>
-                            }
+                                <ListGroupItem Padding="Padding.Is1.OnAll" Class="justify-content-between align-items-center d-flex">
+                                    <div>
+                                        <div style="width:1em;" class="mr-2 float-left">@((MarkupString)resource.Provider.SvgImage)</div>
+                                        @resource.Name
+                                    </div>
+                                    <ColoredRiskScore ShowRiskText="false" Value="@resource.RiskScore" />
+                                </ListGroupItem>}
                         </ListGroup>
                     </Template>
                 </BlazorTable.Column>
@@ -88,7 +91,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
-                                                    Icon="@FontAwesomeIcons.Tasks">
+                                                    Icon="@FontAwesomeIcons.Tasks"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <Paragraph>
             <strong>Rekeying Tasks</strong> are created, either automatically by the system as a key or secret nears its expiry,
             or manually by an administrator. A <strong>Rekeying Task</strong> is associated with a <em>single</em>
@@ -110,7 +114,8 @@
                          ObjectName="@SelectedValue.ObjectId.ToString()"
                          ResultClicked="@DeleteConfirmCallback" />
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.UI.Modals
 @using AuthJanitor.UI.Shared.ViewModels
@@ -119,6 +124,7 @@
 
     protected bool ApproveModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }
+    protected bool ContextualHelpVisible { get; set; }
 
     [Parameter]
     public RekeyingTaskViewModel SelectedValue { get; set; } = new RekeyingTaskViewModel();
@@ -126,7 +132,7 @@
     [Parameter]
     public EventCallback<RekeyingTaskViewModel> SelectedValueChanged { get; set; }
 
-    protected override Task OnInitializedAsync() => LoadData();
+    protected override async Task OnInitializedAsync() => await LoadData();
 
     protected async Task LoadData() => Tasks = await Http.AJList<RekeyingTaskViewModel>();
 

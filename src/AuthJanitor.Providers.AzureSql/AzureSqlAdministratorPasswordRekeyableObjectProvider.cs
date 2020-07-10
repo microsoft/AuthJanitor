@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AzureSql
 {
     [Provider(Name = "Azure SQL Server Administrator Password",
-          IconClass = "fas fa-database",
           Description = "Regenerates the administrator password of an Azure SQL Server",
           Features = ProviderFeatureFlags.IsTestable)]
     [ProviderImage(ProviderImages.SQL_SERVER_SVG)]
