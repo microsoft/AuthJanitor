@@ -93,6 +93,8 @@
 
 </Container>
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     [Parameter]
@@ -101,7 +103,9 @@
     public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
     protected LoadedProviderViewModel _provider;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    protected async Task LoadData()
     {
         Resource = await Http.AJGet<ResourceViewModel>(Guid.Parse(ResourceId));
         var providers = await Http.AJList<LoadedProviderViewModel>();

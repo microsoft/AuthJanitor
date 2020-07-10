@@ -24,7 +24,7 @@
                                     Width="1%"
                                     Sortable="false" Filterable="false">
                     <Template>
-                        <Blazorise.Buttons Role="ButtonsRole.Toolbar">
+                        <Blazorise.Buttons>
                             <Blazorise.Button Color="Color.Info"
                                               Clicked="@(() => NavigationManager.NavigateTo($"/resources/{context.ObjectId}"))">
                                 <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
@@ -90,6 +90,8 @@
                          ObjectName="@SelectedValue.Name"
                          ResultClicked="@DeleteConfirmCallback" />
 
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+
 @using AuthJanitor.UI.Editors
 @using AuthJanitor.UI.Modals
 @code {
@@ -97,9 +99,6 @@
 
     protected bool CreateModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }
-
-    [CascadingParameter]
-    public EventCallback btn_clicked { get; set; }
 
     [Parameter]
     public ResourceViewModel SelectedValue { get; set; } = new ResourceViewModel();

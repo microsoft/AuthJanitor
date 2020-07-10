@@ -16,7 +16,7 @@
                                     Width="1%"
                                     Sortable="false" Filterable="false">
                     <Template>
-                        <Blazorise.Buttons Role="ButtonsRole.Toolbar">
+                        <Blazorise.Buttons>
                             <Blazorise.Button Color="Color.Info"
                                               Clicked="@(() => NavigationManager.NavigateTo($"/rekeyingTasks/{context.ObjectId}"))">
                                 <Icon Name="FontAwesomeIcons.Eye" Class="text-light" />
@@ -109,6 +109,8 @@
                          ObjectId="@SelectedValue.ObjectId"
                          ObjectName="@SelectedValue.ObjectId.ToString()"
                          ResultClicked="@DeleteConfirmCallback" />
+
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
 
 @using AuthJanitor.UI.Modals
 @using AuthJanitor.UI.Shared.ViewModels

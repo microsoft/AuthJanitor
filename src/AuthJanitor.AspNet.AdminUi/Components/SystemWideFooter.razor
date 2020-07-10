@@ -1,0 +1,53 @@
+﻿<div style="height:2.1em;"></div>
+<footer class="footer border border-top d-none d-sm-block">
+    <div class="container-fluid">
+        <div class="row my-auto">
+            <div class="col px-3 my-auto text-left text-muted small">Powered by <a href="https://www.authjanitor.com" class="text-muted" target="_blank">AuthJanitor</a></div>
+            <div class="col px-1 text-right">
+                <div class="float-right pt-1 px-2 border-left">
+                    <a href="javascript:false;" data-toggle="toggle" role="button" data-target="#helpContainer" class="text-decoration-none px-1">
+                        <i class="fa fa-question-circle text-info"></i>
+                    </a>
+                    <a href="https://github.com/microsoft/AuthJanitor" target="_blank" class="text-decoration-none px-1">
+                        <i class="fab fa-github text-dark"></i>
+                    </a>
+                    <a href="https://github.com/microsoft/AuthJanitor/wiki" target="_blank" class="text-decoration-none px-1">
+                        <i class="fa fa-book-open text-dark"></i>
+                    </a>
+                </div>
+                <div class="float-right pt-1 px-2 border-left">
+                    <a href="" @onclick="@(() => RefreshDataClicked.InvokeAsync(null))" @onclick:preventDefault title="Refresh Page Data">
+                        <i class="fa fa-sync-alt text-info"></i>
+                    </a>
+                </div>
+                <div class="float-right mr-2">
+                    @if (Metrics.TasksInError > 0)
+                    {
+        <a class="btn btn-sm btn-outline-danger mx-2" role="button" href="/rekeyingTasks">
+            Errors <span class="badge badge-danger">@Metrics.TasksInError</span>
+            <span class="sr-only">in rekeying tasks</span>
+        </a>}
+                    @if (Metrics.TotalPendingApproval > 0)
+                    {
+        <a class="btn btn-sm btn-outline-success mx-2" role="button" href="/rekeyingTasks">
+            Approvals <span class="badge badge-success">@Metrics.TotalPendingApproval</span>
+            <span class="sr-only">for pending rekeying tasks</span>
+        </a>}
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+@code
+{
+    protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
+
+    [Parameter]
+    public EventCallback RefreshDataClicked { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Metrics = await Http.AJGet<DashboardMetricsViewModel>();
+    }
+}
