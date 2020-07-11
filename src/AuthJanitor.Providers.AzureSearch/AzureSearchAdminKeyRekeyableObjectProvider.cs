@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AzureSearch
 {
     [Provider(Name = "Azure Search Admin Key",
-              IconClass = "fas fa-search",
               Description = "Regenerates an Admin Key for an Azure Search service",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

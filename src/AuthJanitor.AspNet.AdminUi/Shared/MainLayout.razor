@@ -102,7 +102,6 @@
     protected override async Task OnInitializedAsync()
     {
         Metrics = await Http.AJGet<DashboardMetricsViewModel>();
-        await JSRuntime.InvokeVoidAsync("InitializeHelpSlideIn");
     }
 
     protected string GetGravatar()

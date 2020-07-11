@@ -7,7 +7,14 @@
                                              OptionalObjectName="@Resource.Name" />
 
     <Row Class="border-bottom">
-        <Column Padding="Padding.Is3" Class="bg-light">
+        @if (_provider != null)
+        {
+        <Column Class="bg-light" Margin="Margin.IsAuto.OnY" ColumnSize="ColumnSize.Is1">
+            <div class="providerImage my-2 mx-auto">@((MarkupString)_provider.SvgImage)</div>
+            <div class="d-none d-sm-block text-center border-top py-2 small">@_provider.Details.Name</div>
+        </Column>
+        }
+        <Column Padding="Padding.Is3" Class="bg-light" ColumnSize="ColumnSize.Is11">
             <DisplayHeading Size="DisplayHeadingSize.Is4">@Resource.Name</DisplayHeading>
             <Paragraph Margin="Margin.Is2.OnY" Class="lead">@Resource.Description</Paragraph>
         </Column>
@@ -82,7 +89,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Resources"
-                                                    Icon="@FontAwesomeIcons.Database">
+                                                    Icon="@FontAwesomeIcons.Database"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <Paragraph>
             <strong>Resources</strong> describe the configuration required to access a given service or object for the purposes
             of either delivering key/secret material or rekeying that object or service. A <strong>Resource</strong> is made up
@@ -93,12 +101,15 @@
 
 </Container>
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     [Parameter]
     public string ResourceId { get; set; }
+
+    protected bool ContextualHelpVisible { get; set; }
 
     public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
     protected LoadedProviderViewModel _provider;

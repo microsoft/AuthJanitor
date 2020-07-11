@@ -49,8 +49,8 @@ namespace AuthJanitor.UI.Shared.ViewModels
         public TimeSpan TimeRemaining => IsValid ? Expiry - DateTimeOffset.UtcNow : TimeSpan.Zero;
 
         [JsonIgnore]
-        public string ProviderSummary => $"{Resources.Count(r => !r.IsRekeyableObjectProvider)} ALCs, " +
-                                         $"{Resources.Count(r => r.IsRekeyableObjectProvider)} RKOs";
+        public string ProviderSummary => $"{Resources.Count(r => !r.Provider.IsRekeyableObjectProvider)} ALCs, " +
+                                         $"{Resources.Count(r => r.Provider.IsRekeyableObjectProvider)} RKOs";
 
         [JsonIgnore]
         public int ExpiryPercent => IsValid ?

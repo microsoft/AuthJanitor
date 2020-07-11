@@ -64,15 +64,19 @@ else
 </Row>}
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Dashboard"
-                                                    Icon="@FontAwesomeIcons.TachometerAlt">
+                                                    Icon="@FontAwesomeIcons.TachometerAlt"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <p>The AuthJanitor Dashboard shows a brief look at the most important parts of your key and secret management system.</p>
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible" />
 
 @using AuthJanitor.UI.Shared.ViewModels
 @code { protected DashboardMetricsViewModel Metrics { get; set; } = new DashboardMetricsViewModel();
+    
+    protected bool ContextualHelpVisible { get; set; }
 
     protected override async Task OnInitializedAsync() => await LoadData();
 

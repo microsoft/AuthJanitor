@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.ServiceBus
 {
     [Provider(Name = "Service Bus Key",
-              IconClass = "fa fa-key",
               Description = "Regenerates an Azure Service Bus Key",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

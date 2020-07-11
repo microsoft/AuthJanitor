@@ -58,7 +58,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Providers"
-                                                    Icon="@FontAwesomeIcons.Plug">
+                                                    Icon="@FontAwesomeIcons.Plug"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <Paragraph>
             A <strong>Provider</strong> is a software library for AuthJanitor which implements the logic necessary to either rekey
             a service or object, or consume a secret or key to facilitate the operation of an application.
@@ -69,11 +70,13 @@
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
 @using AuthJanitor.UI.Shared.ViewModels;
 @code {
     protected IEnumerable<LoadedProviderViewModel> ProviderList { get; set; } = new List<LoadedProviderViewModel>();
+    protected bool ContextualHelpVisible { get; set; }
 
     protected override async Task OnInitializedAsync() => await LoadData();
 

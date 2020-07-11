@@ -66,7 +66,8 @@
     </Row>
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Access Management"
-                                                    Icon="@FontAwesomeIcons.UserCheck">
+                                                    Icon="@FontAwesomeIcons.UserCheck"
+                                                    @bind-Visible="@ContextualHelpVisible">
         <Paragraph>
             The <strong>Access Management</strong> tool allows administrators with management access to the identity service being
             leveraged to add, remove, and list users who have access to the AuthJanitor tool at various permissions levels.
@@ -94,7 +95,8 @@
                          ObjectName="@($"{SelectedValue.DisplayName} ({SelectedValue.UPN})")"
                          ResultClicked="@DeleteUserConfirmCallback" />
 
-<SystemWideFooter RefreshDataClicked="@(() => LoadData())" />
+<SystemWideFooter RefreshDataClicked="@(() => LoadData())"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible" />
 
 @using Newtonsoft.Json
 @code {
@@ -103,6 +105,7 @@
     protected bool CreateModalShowing { get; set; }
     protected bool DeleteRoleModalShowing { get; set; }
     protected bool DeleteUserModalShowing { get; set; }
+    protected bool ContextualHelpVisible { get; set; }
 
     [Parameter]
     public AuthJanitorAuthorizedUserViewModel SelectedValue { get; set; } = new AuthJanitorAuthorizedUserViewModel();
@@ -110,7 +113,7 @@
     [Parameter]
     public EventCallback<AuthJanitorAuthorizedUserViewModel> SelectedValueChanged { get; set; }
 
-    protected override Task OnInitializedAsync() => LoadData();
+    protected override async Task OnInitializedAsync() => await LoadData();
 
     protected async Task LoadData()
     {

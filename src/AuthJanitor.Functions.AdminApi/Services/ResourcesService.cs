@@ -62,7 +62,6 @@ namespace AuthJanitor.Services
             {
                 Name = resource.Name,
                 Description = resource.Description,
-                IsRekeyableObjectProvider = provider.IsRekeyableObjectProvider,
                 ProviderType = provider.ProviderTypeName,
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };
@@ -135,7 +134,6 @@ namespace AuthJanitor.Services
                 ObjectId = resourceId,
                 Name = resource.Name,
                 Description = resource.Description,
-                IsRekeyableObjectProvider = resource.IsRekeyableObjectProvider,
                 ProviderType = resource.ProviderType,
                 ProviderConfiguration = resource.SerializedProviderConfiguration
             };

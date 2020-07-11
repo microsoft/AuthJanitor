@@ -1,4 +1,4 @@
-﻿<div id="helpContainer" class="help-container text-light border-right-0 border-info rounded-left shadow-lg">
+﻿<div id="helpContainer" class="help-container text-light border-right-0 border-info rounded-left shadow-lg @(Visible ? "in" : "")">
     <h1 class="display-4">
         <i class="@Icon mr-2"></i>
         @Title
@@ -12,6 +12,12 @@
 
     [Parameter]
     public string Icon { get; set; }
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
 
     [Parameter]
     public RenderFragment ChildContent { get; set; }

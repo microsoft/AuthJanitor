@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.Redis
 {
     [Provider(Name = "Redis Cache Key",
-              IconClass = "fa fa-database",
               Description = "Regenerates a Master Key for a Redis Cache instance",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

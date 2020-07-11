@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AppServices.WebApps
 {
     [Provider(Name = "WebApp - AppSettings",
-              IconClass = "fa fa-globe",
               Description = "Manages the lifecycle of an Azure Web App which reads a Managed Secret from its Application Settings",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable)]

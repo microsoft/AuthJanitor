@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AzureMaps
 {
     [Provider(Name = "Azure Maps Key",
-              IconClass = "fa fa-map",
               Description = "Regenerates a key for an Azure Maps instance",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

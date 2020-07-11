@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.EventHub
 {
     [Provider(Name = "Event Hub Key",
-              IconClass = "fa fa-key",
               Description = "Regenerates an Azure Event Hub Key",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable |

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.AppServices.WebApps
 {
     [Provider(Name = "WebApp - Connection String",
-              IconClass = "fa fa-globe",
               Description = "Manages the lifecycle of an Azure Web App which reads from a Connection String",
               Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
                          ProviderFeatureFlags.IsTestable)]

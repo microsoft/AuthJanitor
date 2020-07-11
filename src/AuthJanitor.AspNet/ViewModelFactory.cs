@@ -167,9 +167,8 @@ namespace AuthJanitor.UI.Shared
                 ObjectId = resource.ObjectId,
                 Name = resource.Name,
                 Description = resource.Description,
-                IsRekeyableObjectProvider = resource.IsRekeyableObjectProvider,
                 ProviderType = resource.ProviderType,
-                ProviderDetail = providerManagerService.GetProviderMetadata(resource.ProviderType).Details,
+                Provider = GetViewModel(serviceProvider, providerManagerService.GetProviderMetadata(resource.ProviderType)),
                 SerializedProviderConfiguration = resource.ProviderConfiguration,
                 RuntimeDescription = provider.GetDescription(),
                 Risks = provider.GetRisks()
