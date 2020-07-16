@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
@@ -13,9 +14,10 @@ namespace AuthJanitor.Providers.AppServices.Functions
 {
     [Provider(Name = "Functions App Key",
               Description = "Regenerates a Function Key for an Azure Functions application",
-              Features = ProviderFeatureFlags.IsTestable)]
-    [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
-    public class FunctionKeyRekeyableObjectProvider : AzureRekeyableObjectProvider<FunctionKeyConfiguration, IFunctionApp>
+              SvgImage = ProviderImages.FUNCTIONS_SVG)]
+    public class FunctionKeyRekeyableObjectProvider : 
+        AzureRekeyableObjectProvider<FunctionKeyConfiguration, IFunctionApp>,
+        ICanRunSanityTests
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ILogger _logger;
@@ -28,7 +30,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             _cryptographicImplementation = cryptographicImplementation;
         }
 
-        public override async Task Test()
+        public async Task Test()
         {
             var functionsApp = await GetResourceAsync();
             if (functionsApp == null)
@@ -65,10 +67,6 @@ namespace AuthJanitor.Providers.AppServices.Functions
             $"Regenerates a Functions key for an Azure " +
             $"Functions application called {Configuration.ResourceName} (Resource Group " +
             $"'{Configuration.ResourceGroup}').";
-
-        public override Task<RegeneratedSecret> GetSecretToUseDuringRekeying() => Task.FromResult<RegeneratedSecret>(null);
-
-        public override Task OnConsumingApplicationSwapped() => Task.FromResult(0);
 
         protected override ISupportsGettingByResourceGroup<IFunctionApp> GetResourceCollection(IAzure azure) => azure.AppServices.FunctionApps;
 

@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.KeyVault
@@ -19,5 +20,8 @@ namespace AuthJanitor.Providers.KeyVault
         [DisplayName("Key Name")]
         [Description("Key Name to manage")]
         public string KeyName { get; set; }
+
+        public override int GenerateResourceIdentifierHashCode() =>
+            HashCode.Combine(VaultName);
     }
 }

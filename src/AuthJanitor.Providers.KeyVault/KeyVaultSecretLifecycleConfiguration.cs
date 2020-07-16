@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.KeyVault
@@ -26,5 +27,8 @@ namespace AuthJanitor.Providers.KeyVault
         [DisplayName("Commit Connection String")]
         [Description("Commit a Connection String instead of a Key to this AppSetting, when available")]
         public bool CommitAsConnectionString { get; set; }
+
+        public override int GenerateResourceIdentifierHashCode() =>
+            HashCode.Combine(VaultName);
     }
 }

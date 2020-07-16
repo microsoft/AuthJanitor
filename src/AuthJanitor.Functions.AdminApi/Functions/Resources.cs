@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,9 +28,10 @@ namespace AuthJanitor.Functions
 
         [FunctionName("Resources-Create")]
         public async Task<IActionResult> Create(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] ResourceViewModel resource,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources")] string resourceJson, /*ResourceViewModel resource,*/
             HttpRequest req, CancellationToken cancellationToken)
         {
+            var resource = JsonConvert.DeserializeObject<ResourceViewModel>(resourceJson);
             return await _service.Create(resource, req, cancellationToken);
         }
 
@@ -57,10 +59,11 @@ namespace AuthJanitor.Functions
 
         [FunctionName("Resources-Update")]
         public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId}")] ResourceViewModel resource,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "resources/{resourceId}")] string resourceJson, //ResourceViewModel resource,
             HttpRequest req,
             string resourceId, CancellationToken cancellationToken)
         {
+            var resource = JsonConvert.DeserializeObject<ResourceViewModel>(resourceJson);
             return await _service.Update(resource, req, Guid.Parse(resourceId), cancellationToken);
         }
     }

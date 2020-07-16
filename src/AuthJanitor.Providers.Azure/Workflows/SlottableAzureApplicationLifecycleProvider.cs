@@ -1,19 +1,25 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.Azure.Workflows
 {
-    public abstract class SlottableAzureApplicationLifecycleProvider<TConfiguration, TResource> : AzureApplicationLifecycleProvider<TConfiguration, TResource>
+    public abstract class SlottableAzureApplicationLifecycleProvider<TConfiguration, TResource> : 
+        AzureApplicationLifecycleProvider<TConfiguration, TResource>,
+        ICanRunSanityTests,
+        ICanDistributeTemporarySecretValues,
+        ICanPerformUnifiedCommitForTemporarySecretValues,
+        ICanPerformUnifiedCommit
         where TConfiguration : SlottableAzureAuthJanitorProviderConfiguration
     {
-        private const string PRODUCTION_SLOT_NAME = "production";
+        protected const string PRODUCTION_SLOT_NAME = "production";
         private readonly ILogger _logger;
         protected SlottableAzureApplicationLifecycleProvider(ILogger logger) => _logger = logger;
 
-        public override async Task Test()
+        public async Task Test()
         {
             var resource = await GetResourceAsync();
             if (Configuration.SourceSlot != PRODUCTION_SLOT_NAME)
@@ -24,36 +30,47 @@ namespace AuthJanitor.Providers.Azure.Workflows
                 await TestSlotAsync(resource, Configuration.DestinationSlot);
         }
 
-        public override async Task AfterRekeying()
+        public async Task DistributeTemporarySecretValues(List<RegeneratedSecret> secretValues)
         {
-            _logger.LogInformation("Swapping to '{SlotName}'", Configuration.TemporarySlot);
-            await SwapSlotAsync(await GetResourceAsync(), Configuration.TemporarySlot);
-            _logger.LogInformation("Swap complete!");
+            var resource = await GetResourceAsync();
+            await ApplyUpdate(resource, Configuration.TemporarySlot, secretValues);
         }
 
-        public override async Task BeforeRekeying(List<RegeneratedSecret> temporaryUseSecrets)
+        public async Task UnifiedCommitForTemporarySecretValues()
         {
-            await ApplySecretSwap(temporaryUseSecrets);
-            _logger.LogInformation("BeforeRekeying completed!");
+            _logger.LogInformation("Swapping from {SourceSlot} to {DestinationSlot}",
+                Configuration.TemporarySlot,
+                Configuration.SourceSlot);
+            var resource = await GetResourceAsync();
+            if (Configuration.SourceSlot == PRODUCTION_SLOT_NAME)
+                await SwapSlotAsync(resource, Configuration.TemporarySlot);
+            else
+                await SwapSlotAsync(resource, Configuration.TemporarySlot, Configuration.SourceSlot);
         }
 
-        public override async Task CommitNewSecrets(List<RegeneratedSecret> newSecrets)
+        public override async Task DistributeLongTermSecretValues(List<RegeneratedSecret> secretValues)
         {
-            await ApplySecretSwap(newSecrets);
-            _logger.LogInformation("CommitNewSecrets completed!");
+            var resource = await GetResourceAsync();
+            await ApplyUpdate(resource, Configuration.TemporarySlot, secretValues);
+        }
+
+        public async Task UnifiedCommit()
+        {
+            _logger.LogInformation("Swapping from {SourceSlot} to {DestinationSlot}",
+                Configuration.TemporarySlot,
+                Configuration.DestinationSlot);
+            var resource = await GetResourceAsync();
+            if (Configuration.DestinationSlot == PRODUCTION_SLOT_NAME)
+                await SwapSlotAsync(resource, Configuration.TemporarySlot);
+            else
+                await SwapSlotAsync(resource, Configuration.TemporarySlot, Configuration.DestinationSlot);
         }
 
         protected abstract Task ApplyUpdate(TResource resource, string slotName, List<RegeneratedSecret> secrets);
-        protected abstract Task SwapSlotAsync(TResource resource, string slotName);
+        // applies to slot
+        protected abstract Task SwapSlotAsync(TResource resource, string sourceSlotName, string destinationSlotName);
+        // applies to prod
+        protected abstract Task SwapSlotAsync(TResource resource, string sourceSlotName);
         protected abstract Task TestSlotAsync(TResource resource, string slotName);
-        
-        private async Task ApplySecretSwap(List<RegeneratedSecret> secrets)
-        {
-            var resource = await GetResourceAsync();
-            await ApplyUpdate(resource, Configuration.TemporarySlot, secrets);
-
-            _logger.LogInformation("Swapping to '{SlotName}'", Configuration.TemporarySlot);
-            await SwapSlotAsync(resource, Configuration.TemporarySlot);
-        }
     }
 }

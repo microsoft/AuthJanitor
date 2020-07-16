@@ -121,7 +121,15 @@ namespace AuthJanitor.UI.Shared.MetaServices
             rekeyingAttemptLog.UserDisplayName = credential.Username;
             rekeyingAttemptLog.UserEmail = credential.Username;
             if (task.ConfirmationType.UsesOBOTokens())
-                rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
+            {
+                if (!string.IsNullOrEmpty(task.PersistedCredentialUser))
+                    rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
+                else
+                {
+                    rekeyingAttemptLog.UserDisplayName = _identityService.UserName;
+                    rekeyingAttemptLog.UserEmail = _identityService.UserEmail;
+                }
+            }
 
             // Retrieve targets
             var secret = await _managedSecrets.GetOne(task.ManagedSecretId, cancellationToken);

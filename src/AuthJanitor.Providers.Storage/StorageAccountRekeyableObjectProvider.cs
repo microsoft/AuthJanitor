@@ -16,10 +16,7 @@ namespace AuthJanitor.Providers.Storage
 {
     [Provider(Name = "Storage Account Key",
               Description = "Regenerates a key of a specified type for an Azure Storage Account",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime | 
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.STORAGE_ACCOUNT_SVG)]
+              SvgImage = ProviderImages.STORAGE_ACCOUNT_SVG)]
     public class StorageAccountRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<StorageAccountKeyConfiguration, IStorageAccount, IReadOnlyList<StorageAccountKey>, StorageAccountKeyConfiguration.StorageKeyTypes, string>
     {
         private const string KEY1 = "key1";

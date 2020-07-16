@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.AzureAD
@@ -19,5 +20,8 @@ namespace AuthJanitor.Providers.AzureAD
         [DisplayName("Auto-Refresh?")]
         [Description("Allow AuthJanitor to automatically refresh the Access Token when it expires?")]
         public bool AutomaticallyRefresh { get; set; }
+
+        public override int GenerateResourceIdentifierHashCode() =>
+            HashCode.Combine(Scopes);
     }
 }

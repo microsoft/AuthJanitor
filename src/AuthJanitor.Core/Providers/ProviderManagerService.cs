@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -13,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
 {
-
     public class ProviderManagerService
     {
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
@@ -40,8 +40,7 @@ namespace AuthJanitor.Providers
                     ProviderTypeName = type.AssemblyQualifiedName,
                     ProviderType = type,
                     ProviderConfigurationType = type.BaseType.GetGenericArguments()[0],
-                    Details = type.GetCustomAttribute<ProviderAttribute>(),
-                    SvgImage = type.GetCustomAttribute<ProviderImageAttribute>()?.SvgImage
+                    Details = type.GetCustomAttribute<ProviderAttribute>()
                 })
                 .ToList()
                 .AsReadOnly();
@@ -97,41 +96,34 @@ namespace AuthJanitor.Providers
             IEnumerable<IAuthJanitorProvider> providers)
         {
             logger.LogInformation("########## BEGIN REKEYING WORKFLOW ##########");
-            var rkoProviders = providers.OfType<IRekeyableObjectProvider>().ToList();
-            var alcProviders = providers.OfType<IApplicationLifecycleProvider>().ToList();
-
-            // NOTE: avoid costs of generating list of providers if information logging not turned on
-            if (logger.IsEnabled(LogLevel.Information))
-            {
-                logger.LogInformation("RKO: {ProviderTypeNames}", string.Join(", ", rkoProviders.Select(p => p.GetType().Name)));
-                logger.LogInformation("ALC: {ProviderTypeNames}", string.Join(", ", alcProviders.Select(p => p.GetType().Name)));
-            }
 
             // -----
 
-            logger.LogInformation("### Performing Provider Tests.");
+            logger.LogInformation("### Performing provider tests...");
 
-            await PerformProviderActions(
-                logger, 
-                providers,
+            await PerformActionsInParallel(
+                logger,
+                providers.OfType<ICanRunSanityTests>(),
                 p => p.Test(),
                 "Error running sanity test on provider '{ProviderName}'",
                 "Error running one or more sanity tests!");
 
-            logger.LogInformation("### Retrieving/generating temporary secrets.");
+            // -----
+
+            logger.LogInformation("### Retrieving/generating temporary secrets...");
 
             var temporarySecrets = new List<RegeneratedSecret>();
-            await PerformProviderActions(
+            await PerformActionsInParallel(
                 logger,
-                rkoProviders,
-                p => p.GetSecretToUseDuringRekeying()
-                        .ContinueWith(t =>
-                        {
-                            if (t.Result != null)
-                            {
-                                temporarySecrets.Add(t.Result);
-                            }
-                        }),
+                providers.OfType<ICanGenerateTemporarySecretValue>(),
+                p => p.GenerateTemporarySecretValue()
+                      .ContinueWith(t =>
+                      {
+                          if (t.Result != null)
+                          {
+                              temporarySecrets.Add(t.Result);
+                          }
+                      }),
                 "Error getting temporary secret from provider '{ProviderName}'",
                 "Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
 
@@ -139,21 +131,36 @@ namespace AuthJanitor.Providers
 
             // ---
 
-            logger.LogInformation("### Preparing {ProviderCount} Application Lifecycle Providers for rekeying...", alcProviders.Count);
-            await PerformProviderActions(
+            logger.LogInformation("### Distributing temporary secrets...");
+
+            await PerformActionsInParallelGroups(
                 logger,
-                alcProviders,
-                p => p.BeforeRekeying(temporarySecrets),
-                "Error preparing ALC provider '{ProviderName}'",
-                "Error preparing one or more Application Lifecycle Providers for rekeying!");
+                providers.OfType<ICanDistributeTemporarySecretValues>()
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                p => p.DistributeTemporarySecretValues(temporarySecrets),
+                "Error distributing secrets to ALC provider '{ProviderName}'",
+                "Error distributing secrets!");
 
             // -----
 
-            logger.LogInformation("### Rekeying {ProviderCount} Rekeyable Object Providers...", rkoProviders.Count);
-            var newSecrets = new List<RegeneratedSecret>();
-            await PerformProviderActions(
+            logger.LogInformation("### Performing commits for temporary secrets...");
+
+            await PerformActionsInParallelGroups(
                 logger,
-                rkoProviders,
+                providers.OfType<ICanPerformUnifiedCommitForTemporarySecretValues>()
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                p => p.UnifiedCommitForTemporarySecretValues(),
+                "Error committing temporary secrets for ALC provider '{ProviderName}'",
+                "Error committing temporary secrets!");
+
+            // -----
+
+            logger.LogInformation("### Rekeying objects and services...");
+
+            var newSecrets = new List<RegeneratedSecret>();
+            await PerformActionsInParallel(
+                logger,
+                providers.OfType<IRekeyableObjectProvider>(),
                 p => p.Rekey(validPeriod)
                         .ContinueWith(t => 
                         { 
@@ -169,43 +176,93 @@ namespace AuthJanitor.Providers
 
             // -----
 
-            logger.LogInformation("### Committing {SecretCount} regenerated secrets to {ProviderCount} Application Lifecycle Providers...",
-                newSecrets.Count,
-                alcProviders.Count);
+            logger.LogInformation("### Distributing regenerated secrets...");
 
-            await PerformProviderActions(
+            await PerformActionsInParallelGroups(
                 logger,
-                alcProviders,
-                p => p.CommitNewSecrets(newSecrets),
+                providers.OfType<IApplicationLifecycleProvider>()
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                p => p.DistributeLongTermSecretValues(newSecrets),
                 "Error committing to provider '{ProviderName}'",
                 "Error committing regenerated secrets!");
 
             // -----
 
-            logger.LogInformation("### Completing post-rekey operations on Application Lifecycle Providers...");
+            logger.LogInformation("### Performing commits...");
 
-            await PerformProviderActions(
+            await PerformActionsInParallelGroups(
                 logger,
-                alcProviders,
-                p => p.AfterRekeying(),
-                "Error running post-rekey operations on provider '{ProviderName}'",
-                "Error running post-rekey operations on one or more Application Lifecycle Providers!");
-            
+                providers.OfType<ICanPerformUnifiedCommit>()
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                p => p.UnifiedCommit(),
+                "Error committing secrets for ALC provider '{ProviderName}'",
+                "Error committing secrets!");
+
             // -----
 
-            logger.LogInformation("### Completing finalizing operations on Rekeyable Object Providers...");
+            logger.LogInformation("### Running cleanup operations...");
 
-            await PerformProviderActions(
+            await PerformActionsInParallelGroups(
                 logger,
-                rkoProviders,
-                p => p.OnConsumingApplicationSwapped(),
-                "Error running after-swap operations on provider '{ProviderName}'",
-                "Error running after-swap operations on one or more Rekeyable Object Providers!");
+                providers.OfType<ICanCleanup>()
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                p => p.Cleanup(),
+                "Error cleaning up provider '{ProviderName}'",
+                "Error cleaning up!");
 
             logger.LogInformation("########## END REKEYING WORKFLOW ##########");
         }
 
-        private static async Task PerformProviderActions<TProviderType>(
+        private static async Task PerformActionsInSerial<TProviderType>(
+            ILogger logger, 
+            IEnumerable<TProviderType> providers, 
+            Func<TProviderType, Task> providerAction, 
+            string individualFailureErrorLogMessageTemplate)
+            where TProviderType : IAuthJanitorProvider
+        {
+            foreach (var provider in providers)
+            {
+                try
+                {
+                    await providerAction(provider);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, provider.GetType().Name);
+
+                    throw;
+                }
+            }
+        }
+
+        private static async Task PerformActionsInParallelGroups<TProviderType>(
+            ILogger logger, 
+            IEnumerable<IGrouping<int, TProviderType>> providers, 
+            Func<TProviderType, Task> providerAction, 
+            string individualFailureErrorLogMessageTemplate, 
+            string anyFailureExceptionMessage)
+            where TProviderType : IAuthJanitorProvider
+        {
+            var providerActions = providers.Select(async p =>
+            {
+                await PerformActionsInSerial(
+                    logger,
+                    p,
+                    providerAction,
+                    individualFailureErrorLogMessageTemplate);
+            });
+
+            try
+            {
+                await Task.WhenAll(providerActions);
+            }
+            catch (Exception exception)
+            {
+                throw new Exception(anyFailureExceptionMessage, exception);
+            }
+        }
+
+        private static async Task PerformActionsInParallel<TProviderType>(
             ILogger logger, 
             IEnumerable<TProviderType> providers, 
             Func<TProviderType, Task> providerAction, 

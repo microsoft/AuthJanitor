@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System;
 using System.ComponentModel;
 
 namespace AuthJanitor.Providers.KeyVault
@@ -28,5 +29,8 @@ namespace AuthJanitor.Providers.KeyVault
         [DisplayName("Secret Length")]
         [Description("Length of secret to generate")]
         public int SecretLength { get; set; } = DEFAULT_SECRET_LENGTH;
+
+        public override int GenerateResourceIdentifierHashCode() =>
+            HashCode.Combine(VaultName);
     }
 }

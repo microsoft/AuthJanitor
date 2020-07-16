@@ -38,11 +38,6 @@ namespace AuthJanitor.Providers
         public ProviderAttribute Details { get; set; }
 
         /// <summary>
-        /// Provider SVG logo image
-        /// </summary>
-        public string SvgImage { get; set; }
-
-        /// <summary>
         /// NET Assembly where the Provider was loaded from
         /// </summary>
         public AssemblyName AssemblyName { get; set; }

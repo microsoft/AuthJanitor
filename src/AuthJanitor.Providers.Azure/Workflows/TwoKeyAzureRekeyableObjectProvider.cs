@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,11 @@ using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.Azure.Workflows
 {
-    public abstract class TwoKeyAzureRekeyableObjectProvider<TConfiguration, TResource, TKeyring, TKeyType, TSdkKeyType> : AzureRekeyableObjectProvider<TConfiguration, TResource>
+    public abstract class TwoKeyAzureRekeyableObjectProvider<TConfiguration, TResource, TKeyring, TKeyType, TSdkKeyType> : 
+        AzureRekeyableObjectProvider<TConfiguration, TResource>,
+        ICanRunSanityTests,
+        ICanGenerateTemporarySecretValue,
+        ICanCleanup
         where TConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<TKeyType>
         where TKeyType : struct, Enum
     {
@@ -24,7 +29,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         protected abstract RegeneratedSecret CreateSecretFromKeyring(TKeyring keyring, TKeyType keyType);
 
-        public override async Task Test()
+        public async Task Test()
         {
             var resource = await GetResourceAsync();
             if (resource == null) throw new Exception("Could not retrieve resource");
@@ -40,7 +45,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
             await Task.WhenAll(currentKeyringTask, otherKeyringTask);
         }
 
-        public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
+        public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
             _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherPairedKey(Configuration.KeyType));
             var resource = await GetResourceAsync();
@@ -67,7 +72,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
             return regeneratedSecret;
         }
 
-        public override async Task OnConsumingApplicationSwapped()
+        public async Task Cleanup()
         {
             if (!Configuration.SkipScramblingOtherKey)
             {

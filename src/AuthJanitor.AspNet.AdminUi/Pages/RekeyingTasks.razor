@@ -75,7 +75,7 @@
                             {
                                 <ListGroupItem Padding="Padding.Is1.OnAll" Class="justify-content-between align-items-center d-flex">
                                     <div>
-                                        <div style="width:1em;" class="mr-2 float-left">@((MarkupString)resource.Provider.SvgImage)</div>
+                                        <div style="width:1em;" class="mr-2 float-left">@((MarkupString)resource.Provider.Details.SvgImage)</div>
                                         @resource.Name
                                     </div>
                                     <ColoredRiskScore ShowRiskText="false" Value="@resource.RiskScore" />
@@ -136,10 +136,13 @@
 
     protected async Task LoadData() => Tasks = await Http.AJList<RekeyingTaskViewModel>();
 
-    protected async Task ApproveCallback()
+    protected async Task ApproveCallback(bool result)
     {
-        await Http.PostAsync($"/api/tasks/{SelectedValue.ObjectId}/approve", new StringContent(string.Empty));
-        await LoadData();
+        if (result)
+        {
+            await Http.PostAsync($"/api/tasks/{SelectedValue.ObjectId}/approve", new StringContent(string.Empty));
+            await LoadData();
+        }
         ApproveModalShowing = false;
     }
 

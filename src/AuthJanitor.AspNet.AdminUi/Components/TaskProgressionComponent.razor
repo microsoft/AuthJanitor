@@ -1,0 +1,80 @@
+﻿<Icon Name="FontAwesomeIcons.Flask" Class="@TestPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.Database" Class="@GenerateTemporaryPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeTemporaryPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.Save" Class="@CommitTemporaryPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.Database" Class="@GenerateLongTermPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeLongTermPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.Save" Class="@CommitLongTermPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.Broom" Class="@CleanupPhaseColor" />
+
+<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+<Icon Name="FontAwesomeIcons.FlagCheckered" Class="@CompletePhaseColor" />
+
+@code {
+    [Parameter]
+    public RekeyingAttemptLogger Attempt { get; set; }
+
+    // TODO: Everything here is a hack to parse the log for indicators
+    // Need to move provider actions into their own objects to track this better
+    private const string TEST_PHASE_INDICATOR = "### Performing provider tests...";
+
+    private const string GENERATE_TEMPORARY_PHASE_INDICATOR = "### Retrieving/generating temporary secrets...";
+    private const string DISTRIBUTE_TEMPORARY_PHASE_INDICATOR = "### Distributing temporary secrets...";
+    private const string COMMIT_TEMPORARY_PHASE_INDICATOR = "### Performing commits for temporary secrets...";
+
+    private const string GENERATE_LONG_TERM_PHASE_INDICATOR = "### Rekeying objects and services...";
+    private const string DISTRIBUTE_LONG_TERM_PHASE_INDICATOR = "### Distributing regenerated secrets...";
+    private const string COMMIT_LONG_TERM_PHASE_INDICATOR = "### Performing commits...";
+    private const string CLEANUP_PHASE_INDICATOR = "### Running cleanup operations...";
+    private const string END_PROCESS_INDICATOR = "########## END REKEYING WORKFLOW ##########";
+
+    private const string PHASE_NOT_STARTED_COLOR = "fa-3x text-secondary";
+    private const string PHASE_IN_PROGRESS_COLOR = "fa-3x text-warning";
+    private const string PHASE_COMPLETE_COLOR = "fa-3x text-success";
+    private const string PHASE_ERROR_COLOR = "fa-3x text-danger";
+
+    public string TestPhaseColor => GetColorFromLogLines(TEST_PHASE_INDICATOR, GENERATE_TEMPORARY_PHASE_INDICATOR);
+
+    public string GenerateTemporaryPhaseColor => GetColorFromLogLines(GENERATE_TEMPORARY_PHASE_INDICATOR, DISTRIBUTE_TEMPORARY_PHASE_INDICATOR);
+    public string DistributeTemporaryPhaseColor => GetColorFromLogLines(DISTRIBUTE_TEMPORARY_PHASE_INDICATOR, COMMIT_TEMPORARY_PHASE_INDICATOR);
+    public string CommitTemporaryPhaseColor => GetColorFromLogLines(COMMIT_TEMPORARY_PHASE_INDICATOR, GENERATE_LONG_TERM_PHASE_INDICATOR);
+
+    public string GenerateLongTermPhaseColor => GetColorFromLogLines(GENERATE_LONG_TERM_PHASE_INDICATOR, DISTRIBUTE_LONG_TERM_PHASE_INDICATOR);
+    public string DistributeLongTermPhaseColor => GetColorFromLogLines(DISTRIBUTE_LONG_TERM_PHASE_INDICATOR, COMMIT_LONG_TERM_PHASE_INDICATOR);
+    public string CommitLongTermPhaseColor => GetColorFromLogLines(COMMIT_LONG_TERM_PHASE_INDICATOR, CLEANUP_PHASE_INDICATOR);
+
+    public string CleanupPhaseColor => GetColorFromLogLines(CLEANUP_PHASE_INDICATOR, END_PROCESS_INDICATOR);
+    public string CompletePhaseColor => GetColorFromLogLines(END_PROCESS_INDICATOR);
+
+    protected string GetColorFromLogLines(string leftBookend, string rightBookend = null)
+    {
+        if (Attempt == null) return PHASE_NOT_STARTED_COLOR;
+        if (Attempt.LogString == null) return PHASE_COMPLETE_COLOR;
+
+        if (Attempt.LogString.Contains(leftBookend))
+        {
+            if (string.IsNullOrEmpty(rightBookend))
+                return PHASE_COMPLETE_COLOR;
+            if (Attempt.LogString.Contains(rightBookend))
+                return PHASE_COMPLETE_COLOR;
+            if (!string.IsNullOrEmpty(Attempt.OuterException))
+                return PHASE_ERROR_COLOR;
+            return PHASE_IN_PROGRESS_COLOR;
+        }
+        return PHASE_NOT_STARTED_COLOR;
+    }
+}

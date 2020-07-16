@@ -8,7 +8,6 @@ namespace AuthJanitor.Providers.Azure.Workflows
     {
         public const string DEFAULT_ORIGINAL_SLOT = "production";
         public const string DEFAULT_TEMPORARY_SLOT = "aj-temporary";
-        public const string DEFAULT_DESTINATION_SLOT = DEFAULT_ORIGINAL_SLOT;
 
         /// <summary>
         /// Source Slot (original application)
@@ -25,10 +24,10 @@ namespace AuthJanitor.Providers.Azure.Workflows
         public string TemporarySlot { get; set; } = DEFAULT_TEMPORARY_SLOT;
 
         /// <summary>
-        /// Destination Slot (updated application). By default this is the same as the Source Slot.
+        /// Destination Slot (where the app ends up)
         /// </summary>
         [DisplayName("Destination Application Slot")]
-        [Description("Slot to swap to by the end of the secret rotation process.")]
-        public string DestinationSlot { get; set; } = DEFAULT_DESTINATION_SLOT;
+        [Description("Slot to copy the final settings to")]
+        public string DestinationSlot { get; set; } = DEFAULT_ORIGINAL_SLOT;
     }
 }

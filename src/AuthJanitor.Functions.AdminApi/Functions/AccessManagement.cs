@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Functions
@@ -24,9 +25,11 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("AccessManagement-Add")]
-        public async Task<IActionResult> Add([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "access")] AuthJanitorAuthorizedUser newAuthorizedUserRole)
+        public async Task<IActionResult> Add([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "access")] string userJson) //AuthJanitorAuthorizedUser newAuthorizedUserRole)
         {
             if (!_identityService.CurrentUserHasRole(AuthJanitorRoles.GlobalAdmin)) return new UnauthorizedResult();
+
+            var newAuthorizedUserRole = JsonConvert.DeserializeObject<AuthJanitorAuthorizedUser>(userJson);
 
             return await _managementService.AddAuthorizedUser(newAuthorizedUserRole.UPN, newAuthorizedUserRole.RoleValue);
         }

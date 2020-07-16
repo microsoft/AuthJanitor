@@ -10,7 +10,7 @@
         @if (_provider != null)
         {
         <Column Class="bg-light" Margin="Margin.IsAuto.OnY" ColumnSize="ColumnSize.Is1">
-            <div class="providerImage my-2 mx-auto">@((MarkupString)_provider.SvgImage)</div>
+            <div class="providerImage my-2 mx-auto">@((MarkupString)_provider.Details.SvgImage)</div>
             <div class="d-none d-sm-block text-center border-top py-2 small">@_provider.Details.Name</div>
         </Column>
         }

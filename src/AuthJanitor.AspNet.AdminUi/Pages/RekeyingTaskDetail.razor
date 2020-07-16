@@ -1,89 +1,71 @@
 ﻿@page "/rekeyingTasks/{RekeyingTaskId}"
 
 <Container Fluid="true" Style="position:relative;">
-        <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
-                                                 PageGroup="Rekeying Tasks"
-                                                 PageGroupLink="/rekeyingTasks"
-                                                 OptionalObjectName="@Task.ManagedSecret.Name" />
-        <Row Margin="Margin.Is2.OnY">
-            <Column Class="text-center">
-                <Icon Name="FontAwesomeIcons.Flask" Class="fa-3x text-success" />
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
+                                             PageGroup="Rekeying Tasks"
+                                             PageGroupLink="/rekeyingTasks"
+                                             OptionalObjectName="@Task.ManagedSecret.Name" />
+    <Row Margin="Margin.Is2.OnY">
+        <Column Class="text-center">
+            <TaskProgressionComponent Attempt="@Attempt" />
+        </Column>
+    </Row>
+    <Row Padding="Padding.Is2.FromBottom" Class="border-bottom">
+        <Column Class="text-center">
+            <DisplayHeading Size="DisplayHeadingSize.Is4">
+                @Task.ManagedSecret.Name
+                <a href="@($"/managedSecrets/{Task.ManagedSecret.ObjectId}")" class="h5">
+                    <Icon Name="FontAwesomeIcons.Link" />
+                </a>
+            </DisplayHeading>
+        </Column>
+    </Row>
 
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-success" />
-                <Icon Name="FontAwesomeIcons.Database" Class="fa-3x text-success" />
+    <Row Class="border-bottom">
+        <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left bg-light">
+            <Heading Size="HeadingSize.Is5" Margin="Margin.IsAuto.OnY">Last Changed</Heading>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left">
+            <Paragraph Margin="Margin.IsAuto.OnY">@Task.ManagedSecret.LastChanged</Paragraph>
+        </Column>
 
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-success" />
-                <Icon Name="FontAwesomeIcons.Cogs" Class="fa-3x text-success" />
+        <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left bg-light">
+            <Heading Size="HeadingSize.Is5" Margin="Margin.IsAuto.OnY">Expires</Heading>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left">
+            <Paragraph Margin="Margin.IsAuto.OnY">@Task.Expiry</Paragraph>
+        </Column>
+    </Row>
 
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-success" />
-                <Icon Name="FontAwesomeIcons.EllipsisH" Class="fa-3x text-success" />
+    <Row Class="border-bottom">
+        <Column Padding="Padding.Is0">
+            <AuthJanitor.UI.Components.ColoredProgressBar Value="@Task.ManagedSecret.ExpiryPercent" />
+        </Column>
+    </Row>
 
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-primary" />
-                <Icon Name="FontAwesomeIcons.Database" Class="fa-3x text-primary" />
+    <Row Padding="Padding.Is3.OnY" Class="shadow-sm bg-light">
+        <Column ColumnSize="ColumnSize.Is6" Class="text-center">
+            <Button Color="Color.Success" Disabled="true">
+                <Icon Name="FontAwesomeIcons.Check" Margin="Margin.Is3.FromRight" />
+                Approve Rekeying Task
+            </Button>
+        </Column>
+        <Column ColumnSize="ColumnSize.Is6" Class="text-center">
+            <Button Color="Color.Danger" Disabled="true">
+                <Icon Name="FontAwesomeIcons.Trash" Margin="Margin.Is3.FromRight" />
+                Delete Rekeying Task
+            </Button>
+        </Column>
+    </Row>
 
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-secondary" />
-                <Icon Name="FontAwesomeIcons.Cogs" Class="fa-3x text-secondary" />
-
-                <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-secondary" />
-                <Icon Name="FontAwesomeIcons.FlagCheckered" Class="fa-3x text-secondary" />
-            </Column>
-        </Row>
-        <Row Padding="Padding.Is2.FromBottom" Class="border-bottom">
-            <Column Class="text-center">
-                <DisplayHeading Size="DisplayHeadingSize.Is4">
-                    @Task.ManagedSecret.Name
-                    <a href="@($"/managedSecrets/{Task.ManagedSecret.ObjectId}")" class="h5">
-                        <Icon Name="FontAwesomeIcons.Link" />
-                    </a>
-                </DisplayHeading>
-            </Column>
-        </Row>
-
-        <Row Class="border-bottom">
-            <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left bg-light">
-                <Heading Size="HeadingSize.Is5" Margin="Margin.IsAuto.OnY">Last Changed</Heading>
-            </Column>
-            <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left">
-                <Paragraph Margin="Margin.IsAuto.OnY">@Task.ManagedSecret.LastChanged</Paragraph>
-            </Column>
-
-            <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left bg-light">
-                <Heading Size="HeadingSize.Is5" Margin="Margin.IsAuto.OnY">Expires</Heading>
-            </Column>
-            <Column ColumnSize="ColumnSize.Is6.Is3.OnWidescreen" Padding="Padding.Is2" Class="border-left">
-                <Paragraph Margin="Margin.IsAuto.OnY">@Task.Expiry</Paragraph>
-            </Column>
-        </Row>
-
-        <Row Class="border-bottom">
-            <Column Padding="Padding.Is0">
-                <AuthJanitor.UI.Components.ColoredProgressBar Value="@Task.ManagedSecret.ExpiryPercent" />
-            </Column>
-        </Row>
-
-        <Row Padding="Padding.Is3.OnY" Class="shadow-sm bg-light">
-            <Column ColumnSize="ColumnSize.Is6" Class="text-center">
-                <Button Color="Color.Success" Disabled="true">
-                    <Icon Name="FontAwesomeIcons.Check" Margin="Margin.Is3.FromRight" />
-                    Approve Rekeying Task
-                </Button>
-            </Column>
-            <Column ColumnSize="ColumnSize.Is6" Class="text-center">
-                <Button Color="Color.Danger" Disabled="true">
-                    <Icon Name="FontAwesomeIcons.Trash" Margin="Margin.Is3.FromRight" />
-                    Delete Rekeying Task
-                </Button>
-            </Column>
-        </Row>
-
-        @if (Task.Attempts.Any())
-        {
-            <Row Margin="Margin.Is3.FromTop">
-                <Column ColumnSize="ColumnSize.Is12">
-                    <Tabs SelectedTab="@SelectedAttemptTab" SelectedTabChanged="@OnSelectedTabChanged">
-                        <Items>
-                            @foreach (var attempt in Task.Attempts)
-                            {
+    @if (Task.Attempts.Any())
+    {
+        <Row Margin="Margin.Is3.FromTop">
+            <Column ColumnSize="ColumnSize.Is12">
+                <Tabs SelectedTab="@SelectedAttemptTab" SelectedTabChanged="@OnSelectedTabChanged">
+                    <Items>
+                        @foreach (var attempt in Task.Attempts)
+                        {
                             <Tab Name="@attempt.AttemptStarted.ToString()">
                                 @if (attempt.IsSuccessfulAttempt && attempt.AttemptFinished != default)
                                 {
@@ -100,11 +82,11 @@
                                 @attempt.UserDisplayName<br />
                                 <small>@attempt.AttemptStarted.ToString()</small>
                             </Tab>
-                            }
-                        </Items>
-                        <Content>
-                            @foreach (var attempt in Task.Attempts)
-                            {
+                        }
+                    </Items>
+                    <Content>
+                        @foreach (var attempt in Task.Attempts)
+                        {
                             <TabPanel Name="@attempt.AttemptStarted.ToString()">
                                 <pre><code>@attempt.LogString</code></pre>
                                 @if (!attempt.IsSuccessfulAttempt)
@@ -119,34 +101,36 @@
                                     </div>
                                 }
                             </TabPanel>
-                            }
-                            </Content>
-                    </Tabs>
-                </Column>
-            </Row>
-        }
+                        }
+                    </Content>
+                </Tabs>
+            </Column>
+        </Row>
+    }
 
-        <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
-                                                        Icon="@FontAwesomeIcons.Tasks"
-                                                        @bind-Visible="@ContextualHelpVisible">
-            <Paragraph>
-                <strong>Rekeying Tasks</strong> are created, either automatically by the system as a key or secret nears its expiry,
-                or manually by an administrator. A <strong>Rekeying Task</strong> is associated with a <em>single</em>
-                <strong>Secret</strong>. <strong>Rekeying Tasks</strong> can have multiple attempts by different administrators
-                or service accounts.
-            </Paragraph>
-        </AuthJanitor.UI.Components.HelpSlideInComponent>
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
+                                                    Icon="@FontAwesomeIcons.Tasks"
+                                                    @bind-Visible="@ContextualHelpVisible">
+        <Paragraph>
+            <strong>Rekeying Tasks</strong> are created, either automatically by the system as a key or secret nears its expiry,
+            or manually by an administrator. A <strong>Rekeying Task</strong> is associated with a <em>single</em>
+            <strong>Secret</strong>. <strong>Rekeying Tasks</strong> can have multiple attempts by different administrators
+            or service accounts.
+        </Paragraph>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
 <SystemWideFooter RefreshDataClicked="@(() => LoadData())"
-                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible" />
 
 @using AuthJanitor.UI.Shared.ViewModels
 @code {
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
     public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
 
-    protected bool ContextualHelpVisible { get; set; }
+    public bool ContextualHelpVisible { get; set; }
+
+    public RekeyingAttemptLogger Attempt { get; set; }
 
     [Parameter]
     public string RekeyingTaskId { get; set; }
@@ -161,18 +145,23 @@
         _providers = await Http.AJList<LoadedProviderViewModel>();
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));
         if (Task.Attempts.Any())
-            SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
-
-        await System.Threading.Tasks.Task.WhenAll(Task.ManagedSecret.Resources.Select(async resource =>
         {
-            resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(resource.ProviderType);
-            resource.ProviderConfiguration.SerializedConfiguration = resource.SerializedProviderConfiguration;
-        }));
+            SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
+            Attempt = Task.Attempts.OrderByDescending(a => a.AttemptFinished).FirstOrDefault();
+        }
+
+        //await System.Threading.Tasks.Task.WhenAll(Task.ManagedSecret.Resources.Select(async resource =>
+        //{
+        //    resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(resource.ProviderType);
+        //    resource.ProviderConfiguration.SerializedConfiguration = resource.SerializedProviderConfiguration;
+        //}));
     }
 
     string SelectedAttemptTab;
     private void OnSelectedTabChanged(string name)
     {
         SelectedAttemptTab = name;
+        Attempt = Task.Attempts.FirstOrDefault(a => a.AttemptStarted.ToString() == name);
+        StateHasChanged();
     }
 }

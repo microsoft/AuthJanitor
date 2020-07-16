@@ -22,12 +22,6 @@ namespace AuthJanitor.Providers
         AccessTokenCredential Credential { get; set; }
 
         /// <summary>
-        /// Test if the current credentials can execute an Extension 
-        /// </summary>
-        /// <returns></returns>
-        Task Test();
-
-        /// <summary>
         /// Get a text description of the action which is taken by the Extension
         /// </summary>
         /// <returns></returns>
@@ -50,6 +44,8 @@ namespace AuthJanitor.Providers
         /// Get the Provider's metadata
         /// </summary>
         ProviderAttribute ProviderMetadata => GetType().GetCustomAttribute<ProviderAttribute>();
+
+        int GenerateResourceIdentifierHashCode();
     }
 
     /// <summary>
@@ -78,15 +74,6 @@ namespace AuthJanitor.Providers
         public AccessTokenCredential Credential { get; set; }
 
         /// <summary>
-        /// Test if the current credentials can execute an Extension 
-        /// </summary>
-        /// <returns></returns>
-        public virtual Task Test()
-        {
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
         /// Get a text description of the action which is taken by the Provider
         /// </summary>
         /// <returns></returns>
@@ -104,5 +91,7 @@ namespace AuthJanitor.Providers
         /// </summary>
         /// <returns></returns>
         public virtual IList<RiskyConfigurationItem> GetRisks() => new List<RiskyConfigurationItem>();
+
+        public int GenerateResourceIdentifierHashCode() => Configuration.GenerateResourceIdentifierHashCode();
     }
 }

@@ -13,10 +13,7 @@ namespace AuthJanitor.Providers.CosmosDb
 {
     [Provider(Name = "CosmosDB Master Key",
               Description = "Regenerates a Master Key for an Azure CosmosDB instance",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.COSMOS_DB_SVG)]
+              SvgImage = ProviderImages.COSMOS_DB_SVG)]
     public class CosmosDbRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<CosmosDbKeyConfiguration, ICosmosDBAccount, IDatabaseAccountListKeysResult, CosmosDbKeyConfiguration.CosmosDbKeyKinds, string>
     {
         private const string PRIMARY_READONLY_KEY = "primaryReadOnly";

@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using AuthJanitor.IdentityServices;
+using AuthJanitor.Providers.Capabilities;
 
 namespace AuthJanitor.UI.Shared
 {
@@ -95,8 +96,30 @@ namespace AuthJanitor.UI.Shared
                     IsRekeyableObjectProvider = provider.IsRekeyableObjectProvider,
                     OriginatingFile = Path.GetFileName(provider.OriginatingFile),
                     ProviderTypeName = provider.ProviderTypeName,
-                    SvgImage = provider.SvgImage
+                    Capabilities = GetProviderCapabilities(provider.ProviderType)
                 };
+
+        private static IEnumerable<ProviderCapabilities> GetProviderCapabilities(Type providerType)
+        {
+            var capabilities = new List<ProviderCapabilities>();
+            if (typeof(ICanEnumerateResourceCandidates).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanEnumerateResourceCandidates);
+            if (typeof(ICanRunSanityTests).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanRunSanityTests);
+            if (typeof(ICanCleanup).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanCleanup);
+            if (typeof(ICanDistributeTemporarySecretValues).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanDistributeTemporarySecrets);
+            if (typeof(ICanGenerateTemporarySecretValue).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanGenerateTemporarySecrets);
+            if (typeof(ICanPerformUnifiedCommit).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanPerformUnifiedCommits);
+            if (typeof(ICanPerformUnifiedCommitForTemporarySecretValues).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanPerformUnifiedCommitForTemporarySecret);
+            if (typeof(ICanCleanup).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanCleanup);
+            return capabilities;
+        }
 
         private static ManagedSecretViewModel GetViewModel(IServiceProvider serviceProvider, ManagedSecret secret, CancellationToken cancellationToken)
         {

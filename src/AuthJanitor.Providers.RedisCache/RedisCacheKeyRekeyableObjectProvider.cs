@@ -14,10 +14,7 @@ namespace AuthJanitor.Providers.Redis
 {
     [Provider(Name = "Redis Cache Key",
               Description = "Regenerates a Master Key for a Redis Cache instance",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.REDIS_SVG)]
+              SvgImage = ProviderImages.REDIS_SVG)]
     public class RedisCacheKeyRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<RedisCacheKeyConfiguration, IRedisCache, IRedisAccessKeys, RedisCacheKeyConfiguration.RedisKeyTypes, RedisKeyType>
     {
         protected override string Service => "Redis Cache";

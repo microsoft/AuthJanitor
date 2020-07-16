@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
+using AuthJanitor.Providers.Capabilities;
 using Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
@@ -14,11 +15,11 @@ namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Secret",
               Description = "Regenerates a Key Vault Secret with a given length",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
-    public class KeyVaultSecretRekeyableObjectProvider : RekeyableObjectProvider<KeyVaultSecretConfiguration>
+              SvgImage = ProviderImages.KEY_VAULT_SVG)]
+    public class KeyVaultSecretRekeyableObjectProvider : 
+        RekeyableObjectProvider<KeyVaultSecretConfiguration>,
+        ICanRunSanityTests,
+        ICanGenerateTemporarySecretValue
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ILogger _logger;
@@ -31,13 +32,13 @@ namespace AuthJanitor.Providers.KeyVault
             _cryptographicImplementation = cryptographicImplementation;
         }
 
-        public override async Task Test()
+        public async Task Test()
         {
             var secret = await GetSecretClient().GetSecretAsync(Configuration.SecretName);
             if (secret == null) throw new Exception("Could not access Key Vault Secret");
         }
 
-        public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
+        public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
             _logger.LogInformation("Getting temporary secret based on current version...");
             var client = GetSecretClient();

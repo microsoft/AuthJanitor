@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Newtonsoft.Json;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,8 +27,10 @@ namespace AuthJanitor.Functions
         }
 
         [FunctionName("ManagedSecrets-Create")]
-        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] ManagedSecretViewModel inputSecret, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets")] string secretJson, //ManagedSecretViewModel inputSecret, 
+            CancellationToken cancellationToken)
         {
+            var inputSecret = JsonConvert.DeserializeObject<ManagedSecretViewModel>(secretJson);
             return await _service.Create(inputSecret, cancellationToken);
         }
 
@@ -53,9 +56,10 @@ namespace AuthJanitor.Functions
 
         [FunctionName("ManagedSecrets-Update")]
         public async Task<IActionResult> Update(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId}")] ManagedSecretViewModel inputSecret,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "managedSecrets/{secretId}")] string secretJson, //ManagedSecretViewModel inputSecret,
             string secretId, CancellationToken cancellationToken)
         {
+            var inputSecret = JsonConvert.DeserializeObject<ManagedSecretViewModel>(secretJson);
             return await _service.Update(inputSecret, Guid.Parse(secretId), cancellationToken);
         }
     }
