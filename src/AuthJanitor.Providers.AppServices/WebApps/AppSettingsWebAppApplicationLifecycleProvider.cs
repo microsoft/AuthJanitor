@@ -12,10 +12,9 @@ namespace AuthJanitor.Providers.AppServices.WebApps
 {
     [Provider(Name = "WebApp - AppSettings",
               Description = "Manages the lifecycle of an Azure Web App which reads a Managed Secret from its Application Settings",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable)]
-    [ProviderImage(ProviderImages.WEBAPPS_SVG)]
-    public class AppSettingsWebAppApplicationLifecycleProvider : SlottableAzureApplicationLifecycleProvider<AppSettingConfiguration, IWebApp>
+              SvgImage = ProviderImages.WEBAPPS_SVG)]
+    public class AppSettingsWebAppApplicationLifecycleProvider : 
+        SlottableAzureApplicationLifecycleProvider<AppSettingConfiguration, IWebApp>
     {
         private readonly ILogger _logger;
 
@@ -40,7 +39,12 @@ namespace AuthJanitor.Providers.AppServices.WebApps
             await updateBase.ApplyAsync();
         }
 
-        protected override Task SwapSlotAsync(IWebApp resource, string slotName) => resource.SwapAsync(slotName);
+        protected override async Task SwapSlotAsync(IWebApp resource, string sourceSlotName) =>
+            await resource.SwapAsync(sourceSlotName);
+
+        protected override async Task SwapSlotAsync(IWebApp resource, string sourceSlotName, string destinationSlotName) =>
+            await (await resource.DeploymentSlots.GetByNameAsync(destinationSlotName))
+                .SwapAsync(sourceSlotName);
 
         protected override ISupportsGettingByResourceGroup<IWebApp> GetResourceCollection(IAzure azure) => azure.AppServices.WebApps;
 
@@ -55,6 +59,6 @@ namespace AuthJanitor.Providers.AppServices.WebApps
             $"Web Application called {Configuration.ResourceName} (Resource Group " +
             $"'{Configuration.ResourceGroup}'). During the rekeying, the Functions App will " +
             $"be moved from slot '{Configuration.SourceSlot}' to slot '{Configuration.TemporarySlot}' " +
-            $"temporarily, and then to slot '{Configuration.DestinationSlot}'.";
+            $"temporarily, and then back.";
     }
 }

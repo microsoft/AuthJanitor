@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
+using AuthJanitor.Providers.Capabilities;
 using Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
@@ -13,9 +14,10 @@ namespace AuthJanitor.Providers.KeyVault
 {
     [Provider(Name = "Key Vault Secret",
               Description = "Manages the lifecycle of a Key Vault Secret where a Managed Secret's value is stored",
-              Features = ProviderFeatureFlags.IsTestable)]
-    [ProviderImage(ProviderImages.KEY_VAULT_SVG)]
-    public class KeyVaultSecretApplicationLifecycleProvider : ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>
+              SvgImage = ProviderImages.KEY_VAULT_SVG)]
+    public class KeyVaultSecretApplicationLifecycleProvider : 
+        ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>,
+        ICanRunSanityTests
     {
         private readonly ILogger _logger;
 
@@ -24,20 +26,17 @@ namespace AuthJanitor.Providers.KeyVault
             _logger = logger;
         }
 
-        public override async Task Test()
+        public async Task Test()
         {
             var secret = await GetSecretClient().GetSecretAsync(Configuration.SecretName);
             if (secret == null) throw new Exception("Could not access Key Vault Secret");
         }
-
-        /// <summary>
-        /// Call to commit the newly generated secret
-        /// </summary>
-        public override async Task CommitNewSecrets(List<RegeneratedSecret> newSecrets)
+        
+        public override async Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues)
         {
             _logger.LogInformation("Committing new secrets to Key Vault secret {SecretName}", Configuration.SecretName);
             var client = GetSecretClient();
-            foreach (RegeneratedSecret secret in newSecrets)
+            foreach (RegeneratedSecret secret in newSecretValues)
             {
                 _logger.LogInformation("Getting current secret version from secret name {SecretName}", Configuration.SecretName);
                 Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);

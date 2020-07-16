@@ -15,10 +15,7 @@ namespace AuthJanitor.Providers.EventHub
 {
     [Provider(Name = "Event Hub Key",
               Description = "Regenerates an Azure Event Hub Key",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.EVENT_HUB_SVG)]
+              SvgImage = ProviderImages.EVENT_HUB_SVG)]
     public class EventHubRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<EventHubKeyConfiguration, IEventHubNamespace, IEventHubAuthorizationKey, EventHubKeyConfiguration.EventHubKeyTypes, KeyType>
     {
         public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger) : base(logger) { }

@@ -13,9 +13,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 {
     [Provider(Name = "Functions App - Connection String",
               Description = "Manages the lifecycle of an Azure Functions app which reads from a Connection String",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable)]
-    [ProviderImage(ProviderImages.FUNCTIONS_SVG)]
+              SvgImage = ProviderImages.FUNCTIONS_SVG)]
     public class ConnectionStringFunctionsApplicationLifecycleProvider : SlottableAzureApplicationLifecycleProvider<ConnectionStringConfiguration, IFunctionApp>
     {
         private readonly ILogger _logger;
@@ -40,7 +38,12 @@ namespace AuthJanitor.Providers.AppServices.Functions
             await updateBase.ApplyAsync();
         }
 
-        protected override Task SwapSlotAsync(IFunctionApp resource, string slotName) => resource.SwapAsync(slotName);
+        protected override async Task SwapSlotAsync(IFunctionApp resource, string sourceSlotName) =>
+            await resource.SwapAsync(sourceSlotName);
+
+        protected override async Task SwapSlotAsync(IFunctionApp resource, string sourceSlotName, string destinationSlotName) =>
+            await (await resource.DeploymentSlots.GetByNameAsync(destinationSlotName))
+                .SwapAsync(sourceSlotName);
 
         protected override ISupportsGettingByResourceGroup<IFunctionApp> GetResourceCollection(IAzure azure) => azure.AppServices.FunctionApps;
 
@@ -56,6 +59,6 @@ namespace AuthJanitor.Providers.AppServices.Functions
             $"Functions application called {Configuration.ResourceName} (Resource Group " +
             $"'{Configuration.ResourceGroup}'). During the rekeying, the Functions App will " +
             $"be moved from slot '{Configuration.SourceSlot}' to slot '{Configuration.TemporarySlot}' " +
-            $"temporarily, and then to slot '{Configuration.DestinationSlot}'.";
+            $"temporarily, and then back.";
     }
 }

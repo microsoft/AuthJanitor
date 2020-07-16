@@ -12,9 +12,9 @@ namespace AuthJanitor.Providers.AzureAD
 {
     [Provider(Name = "Access Token",
               Description = "Acquires an Access Token from Azure AD with a given set of scopes",
-              Features = ProviderFeatureFlags.None)]
-    [ProviderImage(ProviderImages.AZURE_AD_SVG)]
-    public class AccessTokenRekeyableObjectProvider : RekeyableObjectProvider<AccessTokenConfiguration>
+              SvgImage = ProviderImages.AZURE_AD_SVG)]
+    public class AccessTokenRekeyableObjectProvider : 
+        RekeyableObjectProvider<AccessTokenConfiguration>
     {
         private readonly ILogger _logger;
 

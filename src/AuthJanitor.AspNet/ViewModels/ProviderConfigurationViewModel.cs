@@ -45,7 +45,6 @@ namespace AuthJanitor.UI.Shared.ViewModels
                 var deserialized = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(value);
                 foreach (var item in ConfigurationItems)
                 {
-                    System.Console.WriteLine($"{item.Name} => {deserialized[item.Name]} ({item.InputType})");
                     if (deserialized.ContainsKey(item.Name))
                     {
                         switch (item.InputType)

@@ -10,7 +10,7 @@
         @if (_provider != null)
         {
         <Column Class="bg-light" Margin="Margin.IsAuto.OnY" ColumnSize="ColumnSize.Is1">
-            <div class="providerImage my-2 mx-auto">@((MarkupString)_provider.SvgImage)</div>
+            <div class="providerImage my-2 mx-auto">@((MarkupString)_provider.Details.SvgImage)</div>
             <div class="d-none d-sm-block text-center border-top py-2 small">@_provider.Details.Name</div>
         </Column>
         }
@@ -38,7 +38,7 @@
                                                                ProviderConfiguration="@Resource.ProviderConfiguration" />
         </Column>
         <Column ColumnSize="ColumnSize.Is4" Class="text-center">
-            <Button Color="Color.Danger" Disabled="true">
+            <Button Color="Color.Danger" Clicked="@(() => { DeleteModalShowing = true; })">
                 <Icon Name="FontAwesomeIcons.Trash" Margin="Margin.Is3.FromRight" />
                 Delete Resource
             </Button>
@@ -101,6 +101,11 @@
 
 </Container>
 
+<DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
+                         ObjectId="@Resource.ObjectId"
+                         ObjectName="@Resource.Name"
+                         ResultClicked="@DeleteConfirmCallback" />
+
 <SystemWideFooter RefreshDataClicked="@(() => LoadData())"
                   @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
 
@@ -109,6 +114,7 @@
     [Parameter]
     public string ResourceId { get; set; }
 
+    protected bool DeleteModalShowing { get; set; }
     protected bool ContextualHelpVisible { get; set; }
 
     public ResourceViewModel Resource { get; set; } = new ResourceViewModel();
@@ -123,5 +129,15 @@
         _provider = providers.First(p => p.ProviderTypeName == Resource.ProviderType);
         Resource.ProviderConfiguration = await Http.AJGet<ProviderConfigurationViewModel>(Resource.ProviderType);
         Resource.ProviderConfiguration.SerializedConfiguration = Resource.SerializedProviderConfiguration;
+    }
+
+    protected async Task DeleteConfirmCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.AJDelete<ResourceViewModel>(Resource.ObjectId);
+            await LoadData();
+        }
+        DeleteModalShowing = false;
     }
 }

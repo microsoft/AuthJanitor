@@ -14,10 +14,7 @@ namespace AuthJanitor.Providers.AzureSearch
 {
     [Provider(Name = "Azure Search Admin Key",
               Description = "Regenerates an Admin Key for an Azure Search service",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.AZURE_SEARCH_SVG)]
+              SvgImage = ProviderImages.AZURE_SEARCH_SVG)]
     public class AzureSearchAdminKeyRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<AzureSearchAdminKeyConfiguration, ISearchService, IAdminKeys, AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds, AdminKeyKind>
     {
         public AzureSearchAdminKeyRekeyableObjectProvider(ILogger<AzureSearchAdminKeyRekeyableObjectProvider> logger) : base(logger) { }

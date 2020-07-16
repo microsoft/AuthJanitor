@@ -14,6 +14,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
+using AuthJanitor.Providers.Capabilities;
 
 namespace AuthJanitor.Services
 {
@@ -112,18 +113,23 @@ namespace AuthJanitor.Services
                 return new NotFoundResult();
             }
 
-            try
+            if (typeof(ICanRunSanityTests).IsAssignableFrom(provider.ProviderType))
             {
-                var instance = _providerManager.GetProviderInstance(provider.ProviderTypeName, providerConfiguration);
-                if (instance == null)
-                    return new BadRequestErrorMessageResult("Provider configuration is invalid!");
-                instance.Credential = credential;
-                await instance.Test();
+                try
+                {
+                    var instance = _providerManager.GetProviderInstance(provider.ProviderTypeName, providerConfiguration);
+                    if (instance == null)
+                        return new BadRequestErrorMessageResult("Provider configuration is invalid!");
+                    instance.Credential = credential;
+                    await (instance as ICanRunSanityTests).Test();
+                }
+                catch (Exception ex)
+                {
+                    return new BadRequestErrorMessageResult(ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                return new BadRequestErrorMessageResult(ex.Message);
-            }
+            else
+                return new BadRequestErrorMessageResult("Provider does not support testing!");
 
             return new OkResult();
         }

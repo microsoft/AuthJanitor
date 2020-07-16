@@ -16,7 +16,7 @@
                                     Sortable="true" Filterable="true">
                     <Template>
                         <span class="float-left mr-2" style="width:1em;">
-                            @((MarkupString)context.SvgImage)
+                            @((MarkupString)context.Details.SvgImage)
                         </span>
                         @context.Details.Name
                     </Template>
@@ -30,24 +30,9 @@
                                     Sortable="true" Filterable="true" />
 
                 <BlazorTable.Column TableItem="LoadedProviderViewModel"
-                                    Title="Features" Field="@(x => x.Details.Features)">
+                                    Title="Features" Field="@(x => x.Details)">
                     <Template>
-                        <Icon Name="FontAwesomeIcons.Flask"
-                              Class="@(context.Details.Features.HasFlag(ProviderFeatureFlags.IsTestable) ? "text-success" : "text-dark")"
-                              title="@("Provider " + (context.Details.Features.HasFlag(ProviderFeatureFlags.IsTestable) ? "Supports" : "Does Not Support") + " Pre-Testing")"
-                              Margin="Margin.Is2" />
-                        <Icon Name="FontAwesomeIcons.SyncAlt"
-                              Class="@(context.Details.Features.HasFlag(ProviderFeatureFlags.CanRotateWithoutDowntime) ? "text-success" : "text-dark")"
-                              title="@("Provider " + (context.Details.Features.HasFlag(ProviderFeatureFlags.CanRotateWithoutDowntime) ? "Can" : "Cannot") + " Rotate Without Downtime")"
-                              Margin="Margin.Is2" />
-                        <Icon Name="FontAwesomeIcons.LayerGroup"
-                              Class="@(context.Details.Features.HasFlag(ProviderFeatureFlags.HasCandidateSelection) ? "text-success" : "text-dark")"
-                              title="@("Provider " + (context.Details.Features.HasFlag(ProviderFeatureFlags.HasCandidateSelection) ? "Supports" : "Does Not Support") + " Candidate Selection")"
-                              Margin="Margin.Is2" />
-                        <Icon Name="FontAwesomeIcons.Key"
-                              Class="@(context.Details.Features.HasFlag(ProviderFeatureFlags.SupportsSecondaryKey) ? "text-success" : "text-dark")"
-                              title="@("Provider " + (context.Details.Features.HasFlag(ProviderFeatureFlags.SupportsSecondaryKey) ? "Supports" : "Does Not Support") + " Use of a Secondary Key")"
-                              Margin="Margin.Is2" />
+                        <ProviderCapabilitiesComponent Provider="@context" />
                     </Template>
                 </BlazorTable.Column>
 
@@ -77,7 +62,7 @@
 @code {
     protected IEnumerable<LoadedProviderViewModel> ProviderList { get; set; } = new List<LoadedProviderViewModel>();
     protected bool ContextualHelpVisible { get; set; }
-
+    
     protected override async Task OnInitializedAsync() => await LoadData();
 
     protected async Task LoadData()

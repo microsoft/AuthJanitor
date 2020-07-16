@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace AuthJanitor.UI.Shared.MetaServices
 {
@@ -121,12 +123,22 @@ namespace AuthJanitor.UI.Shared.MetaServices
             rekeyingAttemptLog.UserDisplayName = credential.Username;
             rekeyingAttemptLog.UserEmail = credential.Username;
             if (task.ConfirmationType.UsesOBOTokens())
-                rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
+            {
+                if (!string.IsNullOrEmpty(task.PersistedCredentialUser))
+                    rekeyingAttemptLog.UserDisplayName = task.PersistedCredentialUser;
+                else
+                {
+                    rekeyingAttemptLog.UserDisplayName = _identityService.UserName;
+                    rekeyingAttemptLog.UserEmail = _identityService.UserEmail;
+                }
+            }
 
             // Retrieve targets
             var secret = await _managedSecrets.GetOne(task.ManagedSecretId, cancellationToken);
             rekeyingAttemptLog.LogInformation("Beginning rekeying of secret ID {SecretId}", task.ManagedSecretId);
             var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId), cancellationToken);
+
+            await _rekeyingTasks.Update(task, cancellationToken);
 
             // Execute rekeying workflow
             try
@@ -142,6 +154,7 @@ namespace AuthJanitor.UI.Shared.MetaServices
             }
             catch (Exception ex)
             {
+                rekeyingAttemptLog.IsComplete = true;
                 await EmbedException(task, ex, cancellationToken, "Error executing rekeying workflow!");
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
             }
@@ -196,7 +209,8 @@ namespace AuthJanitor.UI.Shared.MetaServices
         {
             var myAttempt = task.Attempts.OrderByDescending(a => a.AttemptStarted).First();
             if (text != default) myAttempt.LogCritical(ex, text);
-            myAttempt.OuterException = $"{ex.Message}{Environment.NewLine}{ex.StackTrace}";
+            myAttempt.OuterException = Regex.Replace(JsonConvert.SerializeObject(ex, Formatting.Indented), "Bearer [A-Za-z0-9\\-\\._~\\+\\/]+=*", "<<REDACTED BEARER TOKEN>>");
+            //myAttempt.OuterException = $"{ex.Message}{Environment.NewLine}{ex.StackTrace}";
             task.RekeyingInProgress = false;
             task.RekeyingFailed = true;
             await _rekeyingTasks.Update(task, cancellationToken);

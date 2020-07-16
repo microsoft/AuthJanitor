@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.Maps;
 using Microsoft.Azure.Management.Maps.Models;
 using Microsoft.Extensions.Logging;
@@ -13,11 +14,11 @@ namespace AuthJanitor.Providers.AzureMaps
 {
     [Provider(Name = "Azure Maps Key",
               Description = "Regenerates a key for an Azure Maps instance",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.AZURE_MAPS_SVG)]
-    public class AzureMapsRekeyableObjectProvider : RekeyableObjectProvider<AzureMapsConfiguration>
+              SvgImage = ProviderImages.AZURE_MAPS_SVG)]
+    public class AzureMapsRekeyableObjectProvider : 
+        RekeyableObjectProvider<AzureMapsConfiguration>,
+        ICanRunSanityTests,
+        ICanGenerateTemporarySecretValue
     {
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
@@ -29,7 +30,7 @@ namespace AuthJanitor.Providers.AzureMaps
             _logger = logger;
         }
 
-        public override async Task Test()
+        public async Task Test()
         {
             var keys = await ManagementClient.Accounts.ListKeysAsync(
                 Configuration.ResourceGroup,
@@ -37,7 +38,7 @@ namespace AuthJanitor.Providers.AzureMaps
             if (keys == null) throw new Exception("Could not access Azure Maps keys");
         }
 
-        public override async Task<RegeneratedSecret> GetSecretToUseDuringRekeying()
+        public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
             _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType);
             var keys = await ManagementClient.Accounts.ListKeysAsync(
@@ -68,7 +69,7 @@ namespace AuthJanitor.Providers.AzureMaps
             };
         }
 
-        public override async Task OnConsumingApplicationSwapped()
+        public async Task Cleanup()
         {
             if (!Configuration.SkipScramblingOtherKey)
             {

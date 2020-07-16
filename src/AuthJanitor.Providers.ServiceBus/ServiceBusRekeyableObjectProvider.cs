@@ -14,10 +14,7 @@ namespace AuthJanitor.Providers.ServiceBus
 {
     [Provider(Name = "Service Bus Key",
               Description = "Regenerates an Azure Service Bus Key",
-              Features = ProviderFeatureFlags.CanRotateWithoutDowntime |
-                         ProviderFeatureFlags.IsTestable |
-                         ProviderFeatureFlags.SupportsSecondaryKey)]
-    [ProviderImage(ProviderImages.SERVICE_BUS_SVG)]
+              SvgImage = ProviderImages.SERVICE_BUS_SVG)]
     public class ServiceBusRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<ServiceBusKeyConfiguration, IServiceBusNamespace, IAuthorizationKeys, ServiceBusKeyConfiguration.ServiceBusKeyTypes, Policykey>
     {
         public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger) : base(logger) { }

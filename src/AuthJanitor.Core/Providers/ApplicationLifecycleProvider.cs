@@ -11,20 +11,9 @@ namespace AuthJanitor.Providers
     public interface IApplicationLifecycleProvider : IAuthJanitorProvider
     {
         /// <summary>
-        /// Call to prepare the application for a new secret, passing in a secret
-        /// which will be valid while the Rekeying is taking place (for zero-downtime)
-        /// </summary>
-        Task BeforeRekeying(List<RegeneratedSecret> temporaryUseSecrets);
-
-        /// <summary>
         /// Call to commit the newly generated secret(s)
         /// </summary>
-        Task CommitNewSecrets(List<RegeneratedSecret> newSecrets);
-
-        /// <summary>
-        /// Call after all new keys have been committed
-        /// </summary>
-        Task AfterRekeying();
+        Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues);
     }
 
     /// <summary>
@@ -34,25 +23,8 @@ namespace AuthJanitor.Providers
         where TProviderConfiguration : AuthJanitorProviderConfiguration
     {
         /// <summary>
-        /// Call to prepare the application for a new secret, passing in a secret
-        /// which will be valid while the Rekeying is taking place (for zero-downtime)
-        /// </summary>
-        public virtual Task BeforeRekeying(List<RegeneratedSecret> temporaryUseSecrets)
-        {
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
         /// Call to commit the newly generated secret(s)
         /// </summary>
-        public abstract Task CommitNewSecrets(List<RegeneratedSecret> newSecrets);
-
-        /// <summary>
-        /// Call after all new keys have been committed
-        /// </summary>
-        public virtual Task AfterRekeying()
-        {
-            return Task.FromResult(true);
-        }
+        public abstract Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues);
     }
 }
