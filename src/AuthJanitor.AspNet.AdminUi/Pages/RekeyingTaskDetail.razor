@@ -6,7 +6,7 @@
                                              PageGroupLink="/rekeyingTasks"
                                              OptionalObjectName="@Task.ManagedSecret.Name" />
     <Row Margin="Margin.Is2.OnY">
-        <Column Class="text-center">
+        <Column Class="text-center d-flex align-items-center justify-content-center">
             <TaskProgressionComponent Attempt="@Attempt" />
         </Column>
     </Row>
@@ -45,13 +45,13 @@
 
     <Row Padding="Padding.Is3.OnY" Class="shadow-sm bg-light">
         <Column ColumnSize="ColumnSize.Is6" Class="text-center">
-            <Button Color="Color.Success" Disabled="true">
+            <Button Color="Color.Success" Clicked="@(() => { ApproveModalShowing = true; })">
                 <Icon Name="FontAwesomeIcons.Check" Margin="Margin.Is3.FromRight" />
                 Approve Rekeying Task
             </Button>
         </Column>
         <Column ColumnSize="ColumnSize.Is6" Class="text-center">
-            <Button Color="Color.Danger" Disabled="true">
+            <Button Color="Color.Danger" Clicked="@(() => { DeleteModalShowing = true; })">
                 <Icon Name="FontAwesomeIcons.Trash" Margin="Margin.Is3.FromRight" />
                 Delete Rekeying Task
             </Button>
@@ -60,52 +60,52 @@
 
     @if (Task.Attempts.Any())
     {
-        <Row Margin="Margin.Is3.FromTop">
-            <Column ColumnSize="ColumnSize.Is12">
-                <Tabs SelectedTab="@SelectedAttemptTab" SelectedTabChanged="@OnSelectedTabChanged">
-                    <Items>
-                        @foreach (var attempt in Task.Attempts)
+    <Row Margin="Margin.Is3.FromTop">
+        <Column ColumnSize="ColumnSize.Is12">
+            <Tabs SelectedTab="@SelectedAttemptTab" SelectedTabChanged="@OnSelectedTabChanged">
+                <Items>
+                    @foreach (var attempt in Task.Attempts)
                         {
-                            <Tab Name="@attempt.AttemptStarted.ToString()">
-                                @if (attempt.IsSuccessfulAttempt && attempt.AttemptFinished != default)
+                    <Tab Name="@attempt.AttemptStarted.ToString()">
+                        @if (attempt.IsComplete && attempt.IsSuccessfulAttempt)
                                 {
-                                    <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
+                        <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                                else if (attempt.AttemptFinished != default)
+                                else if (attempt.IsComplete && !attempt.IsSuccessfulAttempt)
                                 {
-                                    <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
+                        <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
                                 else
                                 {
-                                    <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
+                        <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                                @attempt.UserDisplayName<br />
-                                <small>@attempt.AttemptStarted.ToString()</small>
-                            </Tab>
+                        @attempt.UserDisplayName<br />
+                        <small>@attempt.AttemptStarted.ToString()</small>
+                    </Tab>
                         }
-                    </Items>
-                    <Content>
-                        @foreach (var attempt in Task.Attempts)
+                </Items>
+                <Content>
+                    @foreach (var attempt in Task.Attempts)
                         {
-                            <TabPanel Name="@attempt.AttemptStarted.ToString()">
-                                <pre><code>@attempt.LogString</code></pre>
-                                @if (!attempt.IsSuccessfulAttempt)
+                    <TabPanel Name="@attempt.AttemptStarted.ToString()">
+                        <pre><code>@attempt.LogString</code></pre>
+                        @if (!attempt.IsSuccessfulAttempt)
                                 {
-                                    <div class="alert alert-danger" role="alert">
-                                        <h4 class="text-danger">
-                                            Exception thrown!
-                                        </h4>
-                                        <p>
-                                            <pre><code>@attempt.OuterException</code></pre>
-                                        </p>
-                                    </div>
+                        <div class="alert alert-danger" role="alert">
+                            <h4 class="text-danger">
+                                Exception thrown!
+                            </h4>
+                            <p>
+                                <pre><code>@attempt.OuterException</code></pre>
+                            </p>
+                        </div>
                                 }
-                            </TabPanel>
+                    </TabPanel>
                         }
-                    </Content>
-                </Tabs>
-            </Column>
-        </Row>
+                </Content>
+            </Tabs>
+        </Column>
+    </Row>
     }
 
     <AuthJanitor.UI.Components.HelpSlideInComponent Title="Rekeying Tasks"
@@ -120,6 +120,18 @@
     </AuthJanitor.UI.Components.HelpSlideInComponent>
 </Container>
 
+<DataModal @bind-Visible="@ApproveModalShowing"
+           Title="Approve Task"
+           YesButton="Approve"
+           NoButton="Cancel"
+           ResultClicked="@ApproveCallback">
+    <ApprovalSummary Task="@Task" />
+</DataModal>
+<DeleteConfirmationModal @bind-Visible="@DeleteModalShowing"
+                         ObjectId="@Task.ObjectId"
+                         ObjectName="@Task.ObjectId.ToString()"
+                         ResultClicked="@DeleteConfirmCallback" />
+
 <SystemWideFooter RefreshDataClicked="@(() => LoadData())"
                   @bind-ContextualHelpVisible="@ContextualHelpVisible" />
 
@@ -128,6 +140,8 @@
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
     public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
 
+    protected bool ApproveModalShowing { get; set; }
+    protected bool DeleteModalShowing { get; set; }
     public bool ContextualHelpVisible { get; set; }
 
     public RekeyingAttemptLogger Attempt { get; set; }
@@ -138,7 +152,10 @@
     public TimeSpan DurationSoFar => DateTimeOffset.UtcNow - Secret.LastChanged.GetValueOrDefault();
     protected IEnumerable<LoadedProviderViewModel> _providers;
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
 
     protected async Task LoadData()
     {
@@ -163,5 +180,25 @@
         SelectedAttemptTab = name;
         Attempt = Task.Attempts.FirstOrDefault(a => a.AttemptStarted.ToString() == name);
         StateHasChanged();
+    }
+
+    protected async Task ApproveCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.PostAsync($"/api/tasks/{Task.ObjectId}/approve", new StringContent(string.Empty));
+            await LoadData();
+        }
+        ApproveModalShowing = false;
+    }
+
+    protected async Task DeleteConfirmCallback(bool result)
+    {
+        if (result)
+        {
+            await Http.AJDelete<RekeyingTaskViewModel>(Task.ObjectId);
+            NavigationManager.NavigateTo("/rekeyingTasks");
+        }
+        DeleteModalShowing = false;
     }
 }

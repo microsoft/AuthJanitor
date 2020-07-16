@@ -10,6 +10,7 @@ namespace AuthJanitor.Providers
     public class RekeyingAttemptLogger : ILogger
     {
         public bool IsSuccessfulAttempt => string.IsNullOrEmpty(OuterException);
+        public bool IsComplete { get; set; }
         public string OuterException { get; set; }
 
         public DateTimeOffset AttemptStarted { get; set; }

@@ -16,6 +16,7 @@ namespace AuthJanitor.Providers
 {
     public class ProviderManagerService
     {
+        private const int DELAY_BETWEEN_ACTIONS_MS = 1000;
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
         {
             WriteIndented = false,
@@ -129,7 +130,7 @@ namespace AuthJanitor.Providers
 
             logger.LogInformation("{SecretCount} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
 
-            // ---
+            // -----
 
             logger.LogInformation("### Distributing temporary secrets...");
 
@@ -145,10 +146,11 @@ namespace AuthJanitor.Providers
 
             logger.LogInformation("### Performing commits for temporary secrets...");
 
-            await PerformActionsInParallelGroups(
+            await PerformActionsInParallel(
                 logger,
                 providers.OfType<ICanPerformUnifiedCommitForTemporarySecretValues>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode())
+                         .Select(g => g.First()),
                 p => p.UnifiedCommitForTemporarySecretValues(),
                 "Error committing temporary secrets for ALC provider '{ProviderName}'",
                 "Error committing temporary secrets!");
@@ -185,15 +187,16 @@ namespace AuthJanitor.Providers
                 p => p.DistributeLongTermSecretValues(newSecrets),
                 "Error committing to provider '{ProviderName}'",
                 "Error committing regenerated secrets!");
-
+            
             // -----
 
             logger.LogInformation("### Performing commits...");
 
-            await PerformActionsInParallelGroups(
+            await PerformActionsInParallel(
                 logger,
                 providers.OfType<ICanPerformUnifiedCommit>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
+                         .GroupBy(p => p.GenerateResourceIdentifierHashCode())
+                         .Select(g => g.First()),
                 p => p.UnifiedCommit(),
                 "Error committing secrets for ALC provider '{ProviderName}'",
                 "Error committing secrets!");
@@ -211,6 +214,8 @@ namespace AuthJanitor.Providers
                 "Error cleaning up!");
 
             logger.LogInformation("########## END REKEYING WORKFLOW ##########");
+
+            logger.IsComplete = true;
         }
 
         private static async Task PerformActionsInSerial<TProviderType>(
@@ -224,7 +229,9 @@ namespace AuthJanitor.Providers
             {
                 try
                 {
+                    logger.LogInformation("Running action in serial on {0}", provider.GetType().Name);
                     await providerAction(provider);
+                    await Task.Delay(DELAY_BETWEEN_ACTIONS_MS / 2);
                 }
                 catch (Exception exception)
                 {
@@ -260,6 +267,12 @@ namespace AuthJanitor.Providers
             {
                 throw new Exception(anyFailureExceptionMessage, exception);
             }
+
+            if (providers.Any())
+            {
+                logger.LogInformation("Sleeping for {SleepTime}", DELAY_BETWEEN_ACTIONS_MS);
+                await Task.Delay(DELAY_BETWEEN_ACTIONS_MS);
+            }
         }
 
         private static async Task PerformActionsInParallel<TProviderType>(
@@ -274,6 +287,7 @@ namespace AuthJanitor.Providers
             {
                 try
                 {
+                    logger.LogInformation("Running action in parallel on {0}", p.GetType().Name);
                     await providerAction(p);
                 }
                 catch (Exception exception)
@@ -291,6 +305,12 @@ namespace AuthJanitor.Providers
             catch (Exception exception)
             {
                 throw new Exception(anyFailureExceptionMessage, exception);
+            }
+
+            if (providers.Any())
+            {
+                logger.LogInformation("Sleeping for {SleepTime}", DELAY_BETWEEN_ACTIONS_MS);
+                await Task.Delay(DELAY_BETWEEN_ACTIONS_MS);
             }
         }
     }

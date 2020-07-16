@@ -3,7 +3,6 @@
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure.Workflows;
 using Microsoft.Azure.Management.AppService.Fluent;
-using Microsoft.Azure.Management.ContainerRegistry.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;

@@ -38,14 +38,11 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         public async Task UnifiedCommitForTemporarySecretValues()
         {
-            _logger.LogInformation("Swapping from {SourceSlot} to {DestinationSlot}",
+            _logger.LogInformation("Swapping settings from {TemporarySlot} to {SourceSlot}",
                 Configuration.TemporarySlot,
                 Configuration.SourceSlot);
             var resource = await GetResourceAsync();
-            if (Configuration.SourceSlot == PRODUCTION_SLOT_NAME)
-                await SwapSlotAsync(resource, Configuration.TemporarySlot);
-            else
-                await SwapSlotAsync(resource, Configuration.TemporarySlot, Configuration.SourceSlot);
+            await SwapSlotAsync(resource, Configuration.TemporarySlot);
         }
 
         public override async Task DistributeLongTermSecretValues(List<RegeneratedSecret> secretValues)
@@ -60,10 +57,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
                 Configuration.TemporarySlot,
                 Configuration.DestinationSlot);
             var resource = await GetResourceAsync();
-            if (Configuration.DestinationSlot == PRODUCTION_SLOT_NAME)
-                await SwapSlotAsync(resource, Configuration.TemporarySlot);
-            else
-                await SwapSlotAsync(resource, Configuration.TemporarySlot, Configuration.DestinationSlot);
+            await SwapSlotAsync(resource, Configuration.TemporarySlot);
         }
 
         protected abstract Task ApplyUpdate(TResource resource, string slotName, List<RegeneratedSecret> secrets);

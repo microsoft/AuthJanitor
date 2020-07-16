@@ -42,7 +42,20 @@ namespace AuthJanitor.Providers.Storage
 
         protected override Task<IReadOnlyList<StorageAccountKey>> RetrieveCurrentKeyring(IStorageAccount resource, string keyType) => resource.GetKeysAsync();
 
-        protected override Task<IReadOnlyList<StorageAccountKey>> RotateKeyringValue(IStorageAccount resource, string keyType) => resource.RegenerateKeyAsync(keyType);
+        protected override async Task<IReadOnlyList<StorageAccountKey>> RotateKeyringValue(IStorageAccount resource, string keyType)
+        {
+            var result = await resource.RegenerateKeyAsync(keyType);
+            var expectedNewKey = result.FirstOrDefault(k => k.KeyName == keyType);
+            var end = DateTime.Now.AddMinutes(2);
+            while (DateTime.Now < end)
+            {
+                var keyring = await RetrieveCurrentKeyring(resource, keyType);
+                var key = keyring.FirstOrDefault(k => k.KeyName == keyType);
+                if (key == null) continue;
+                if (key.Value == expectedNewKey.Value) return result;
+            }
+            throw new Exception("Storage key was reported as rotated, but didn't resync within 2 minutes!");
+        }
 
         protected override string Translate(StorageAccountKeyConfiguration.StorageKeyTypes keyType) => keyType switch
         {

@@ -1,22 +1,31 @@
 ﻿<Icon Name="FontAwesomeIcons.Flask" Class="@TestPhaseColor" />
 
 <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.Database" Class="@GenerateTemporaryPhaseColor" />
+
+<div class="px-3 pt-2 pb-0 bg-light d-inline-block border border-secondary">
+    <Icon Name="FontAwesomeIcons.Database" Class="@GenerateTemporaryPhaseColor" />
+
+    <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+    <Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeTemporaryPhaseColor" />
+
+    <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+    <Icon Name="FontAwesomeIcons.Save" Class="@CommitTemporaryPhaseColor" />
+
+    <small class="d-block mt-0 mb-1 text-gray-800">Temporary Secrets</small>
+</div>
 
 <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeTemporaryPhaseColor" />
+<div class="px-3 pt-2 pb-0 bg-light d-inline-block border border-secondary">
+    <Icon Name="FontAwesomeIcons.Database" Class="@GenerateLongTermPhaseColor" />
 
-<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.Save" Class="@CommitTemporaryPhaseColor" />
+    <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+    <Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeLongTermPhaseColor" />
 
-<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.Database" Class="@GenerateLongTermPhaseColor" />
+    <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
+    <Icon Name="FontAwesomeIcons.Save" Class="@CommitLongTermPhaseColor" />
 
-<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.CloudUploadAlt" Class="@DistributeLongTermPhaseColor" />
-
-<Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
-<Icon Name="FontAwesomeIcons.Save" Class="@CommitLongTermPhaseColor" />
+    <small class="d-block mt-0 mb-1 text-gray-800">Long-Term Secrets</small>
+</div>
 
 <Icon Name="FontAwesomeIcons.ArrowRight" Margin="Margin.Is2.FromBottom.Is2.OnX" Class="text-dark" />
 <Icon Name="FontAwesomeIcons.Broom" Class="@CleanupPhaseColor" />
@@ -63,7 +72,7 @@
     protected string GetColorFromLogLines(string leftBookend, string rightBookend = null)
     {
         if (Attempt == null) return PHASE_NOT_STARTED_COLOR;
-        if (Attempt.LogString == null) return PHASE_COMPLETE_COLOR;
+        if (Attempt.LogString == null) return PHASE_NOT_STARTED_COLOR;
 
         if (Attempt.LogString.Contains(leftBookend))
         {
