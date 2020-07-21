@@ -43,12 +43,45 @@ namespace AuthJanitor.Integrations.CryptographicImplementations
         Task<string> HashFile(string filePath);
 
         /// <summary>
+        /// Sign data with a key and get the signature
+        /// </summary>
+        /// <param name="key">Signing key</param>
+        /// <param name="dataToSign">Data to sign</param>
+        /// <returns>Base64-encoded signature</returns>
+        Task<string> Sign(byte[] key, string dataToSign);
+
+        /// <summary>
+        /// Verify data with a given signature and key
+        /// </summary>
+        /// <param name="key">Signing key</param>
+        /// <param name="dataToVerify">Data to verify</param>
+        /// <param name="signature">Base64-encoded signature</param>
+        /// <returns><c>TRUE</c> if the signature is valid</returns>
+        Task<bool> Verify(byte[] key, string dataToVerify, string signature);
+
+        /// <summary>
+        /// Decrypt sensitive data
+        /// </summary>
+        /// <param name="key">Encryption key</param>
+        /// <param name="cipherText">Encrypted ciphertext</param>
+        /// <returns>Decrypted text</returns>
+        Task<string> Decrypt(byte[] key, string cipherText);
+
+        /// <summary>
         /// Decrypt sensitive data
         /// </summary>
         /// <param name="salt">Encryption salt</param>
         /// <param name="cipherText">Encrypted ciphertext</param>
         /// <returns>Decrypted text</returns>
         Task<string> Decrypt(string salt, string cipherText);
+
+        /// <summary>
+        /// Encrypt sensitive data
+        /// </summary>
+        /// <param name="key">Encryption key</param>
+        /// <param name="plainText">Text to encrypt</param>
+        /// <returns>Encrypted ciphertext</returns>
+        Task<string> Encrypt(byte[] key, string plainText);
 
         /// <summary>
         /// Encrypt sensitive data

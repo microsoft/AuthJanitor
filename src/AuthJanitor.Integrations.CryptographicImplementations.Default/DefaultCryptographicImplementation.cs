@@ -116,6 +116,70 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         }
 
         /// <summary>
+        /// Sign data with a key and get the signature.
+        /// 
+        /// This implementation uses RSA.Create(), SHA512, and PKCS#1.
+        /// </summary>
+        /// <param name="key">Signing key</param>
+        /// <param name="dataToSign">Data to sign</param>
+        /// <returns>Base64-encoded signature</returns>
+        public Task<string> Sign(byte[] key, string dataToSign)
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportRSAPrivateKey(key, out _);
+                return Task.FromResult(Convert.ToBase64String(
+                    rsa.SignData(
+                        Encoding.Unicode.GetBytes(dataToSign),
+                        HashAlgorithmName.SHA512,
+                        RSASignaturePadding.Pkcs1)));
+            }
+        }
+
+        /// <summary>
+        /// Verify data with a given signature and key
+        /// 
+        /// This implementation uses RSA.Create(), SHA512, and PKCS#1.
+        /// </summary>
+        /// <param name="key">Signing key</param>
+        /// <param name="dataToVerify">Data to verify</param>
+        /// <param name="signature">Base64-encoded signature</param>
+        /// <returns><c>TRUE</c> if the signature is valid</returns>
+        public Task<bool> Verify(byte[] key, string dataToVerify, string signature)
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportRSAPublicKey(key, out _);
+                return Task.FromResult(
+                    rsa.VerifyData(
+                        Encoding.Unicode.GetBytes(dataToVerify),
+                        Convert.FromBase64String(signature),
+                        HashAlgorithmName.SHA512,
+                        RSASignaturePadding.Pkcs1));
+            }
+        }
+
+        /// <summary>
+        /// Decrypts a given cipherText with a provided key.
+        /// 
+        /// This implementation uses RSA.Create() and OAEP/SHA512.
+        /// </summary>
+        /// <param name="key">Encryption key</param>
+        /// <param name="cipherText">Ciphertext (base64)</param>
+        /// <returns>Decrypted string</returns>
+        public Task<string> Decrypt(byte[] key, string cipherText)
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportRSAPrivateKey(key, out _);
+                return Task.FromResult(Encoding.Unicode.GetString(
+                    rsa.Decrypt(
+                        Convert.FromBase64String(cipherText),
+                        RSAEncryptionPadding.OaepSHA512)));
+            }
+        }
+
+        /// <summary>
         /// Decrypts a given cipherText with a provided salt.
         /// 
         /// This implementation uses Aes.Create() and Rfc2898DeriveBytes.
@@ -143,6 +207,26 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
                 {
                     throw e;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Encrypts a given cipherText with a provided key.
+        /// 
+        /// This implementation uses RSA.Create() and OAEP/SHA512.
+        /// </summary>
+        /// <param name="key">Encryption key</param>
+        /// <param name="plainText">Text to encrypt</param>
+        /// <returns>Encrypted ciphertext</returns>
+        public Task<string> Encrypt(byte[] key, string plainText)
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportRSAPublicKey(key, out _);
+                return Task.FromResult(Convert.ToBase64String(
+                    rsa.Encrypt(
+                        Encoding.Unicode.GetBytes(plainText),
+                        RSAEncryptionPadding.OaepSHA512)));
             }
         }
 
