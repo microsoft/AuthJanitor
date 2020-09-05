@@ -16,6 +16,7 @@ namespace AuthJanitor.Providers
 {
     public class ProviderManagerService
     {
+        private const int MAX_RETRIES = 5;
         private const int DELAY_BETWEEN_ACTIONS_MS = 1000;
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
         {
@@ -230,7 +231,7 @@ namespace AuthJanitor.Providers
                 try
                 {
                     logger.LogInformation("Running action in serial on {0}", provider.GetType().Name);
-                    await providerAction(provider);
+                    await PerformAction(logger, provider, providerAction);
                     await Task.Delay(DELAY_BETWEEN_ACTIONS_MS / 2);
                 }
                 catch (Exception exception)
@@ -250,11 +251,11 @@ namespace AuthJanitor.Providers
             string anyFailureExceptionMessage)
             where TProviderType : IAuthJanitorProvider
         {
-            var providerActions = providers.Select(async p =>
+            var providerActions = providers.Select(async provider =>
             {
                 await PerformActionsInSerial(
                     logger,
-                    p,
+                    provider,
                     providerAction,
                     individualFailureErrorLogMessageTemplate);
             });
@@ -276,23 +277,23 @@ namespace AuthJanitor.Providers
         }
 
         private static async Task PerformActionsInParallel<TProviderType>(
-            ILogger logger, 
-            IEnumerable<TProviderType> providers, 
-            Func<TProviderType, Task> providerAction, 
-            string individualFailureErrorLogMessageTemplate, 
+            ILogger logger,
+            IEnumerable<TProviderType> providers,
+            Func<TProviderType, Task> providerAction,
+            string individualFailureErrorLogMessageTemplate,
             string anyFailureExceptionMessage)
             where TProviderType : IAuthJanitorProvider
         {
-            var providerActions = providers.Select(async p =>
+            var providerActions = providers.Select(async provider =>
             {
                 try
                 {
-                    logger.LogInformation("Running action in parallel on {0}", p.GetType().Name);
-                    await providerAction(p);
+                    logger.LogInformation("Running action in parallel on {0}", provider.GetType().Name);
+                    await PerformAction(logger, provider, providerAction);
                 }
                 catch (Exception exception)
                 {
-                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, p.GetType().Name);
+                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, provider.GetType().Name);
 
                     throw;
                 }
@@ -311,6 +312,27 @@ namespace AuthJanitor.Providers
             {
                 logger.LogInformation("Sleeping for {SleepTime}", DELAY_BETWEEN_ACTIONS_MS);
                 await Task.Delay(DELAY_BETWEEN_ACTIONS_MS);
+            }
+        }
+
+        private static async Task PerformAction<TProviderType>(ILogger logger, TProviderType provider, Func<TProviderType, Task> providerAction)
+        {
+            for (var i = 0; i < MAX_RETRIES; i++)
+            {
+                try
+                {
+                    logger.LogInformation("Attempting action ({AttemptNumber}/{MaxAttempts})", i + 1, MAX_RETRIES);
+                    await providerAction(provider);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Attempt failed! Exception was: {Exception}", ex);
+                    // TODO: Providers need to be able to specify what Exceptions are ignored
+                    //       For example, catching an invalid credential exception shouldn't do a retry
+                    if (i == MAX_RETRIES - 1)
+                        throw ex; // rethrow if at end of retries
+                }
             }
         }
     }
