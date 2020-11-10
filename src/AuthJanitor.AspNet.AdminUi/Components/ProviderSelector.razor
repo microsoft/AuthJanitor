@@ -2,13 +2,13 @@
     @if (Providers != null && Providers.Any())
     {
         <SelectGroup Label="Application Lifecycle Providers">
-            @foreach (var provider in Providers.Where(p => !p.IsRekeyableObjectProvider))
+            @foreach (var provider in Providers.Where(p => p.Capabilities.Contains(ProviderCapabilities.CanDistributeLongTermSecrets)))
             {
                 <SelectItem Value="@provider.ProviderTypeName">@provider.Details.Name</SelectItem>
             }
         </SelectGroup>
         <SelectGroup Label="Rekeyable Object Providers">
-            @foreach (var provider in Providers.Where(p => p.IsRekeyableObjectProvider))
+            @foreach (var provider in Providers.Where(p => p.Capabilities.Contains(ProviderCapabilities.CanRekey)))
             {
                 <SelectItem Value="@provider.ProviderTypeName">@provider.Details.Name</SelectItem>
             }
