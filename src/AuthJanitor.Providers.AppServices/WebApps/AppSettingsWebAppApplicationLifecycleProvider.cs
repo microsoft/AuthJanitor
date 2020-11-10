@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Azure.Workflows;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AppServices.WebApps
@@ -14,7 +18,8 @@ namespace AuthJanitor.Providers.AppServices.WebApps
               Description = "Manages the lifecycle of an Azure Web App which reads a Managed Secret from its Application Settings",
               SvgImage = ProviderImages.WEBAPPS_SVG)]
     public class AppSettingsWebAppApplicationLifecycleProvider : 
-        SlottableAzureApplicationLifecycleProvider<AppSettingConfiguration, IWebApp>
+        SlottableAzureApplicationLifecycleProvider<AppSettingConfiguration, IWebApp>,
+        ICanEnumerateResourceCandidates
     {
         private readonly ILogger _logger;
 
@@ -60,5 +65,28 @@ namespace AuthJanitor.Providers.AppServices.WebApps
             $"'{Configuration.ResourceGroup}'). During the rekeying, the Functions App will " +
             $"be moved from slot '{Configuration.SourceSlot}' to slot '{Configuration.TemporarySlot}' " +
             $"temporarily, and then back.";
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IPagedCollection<IWebApp> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).AppServices.WebApps.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).AppServices.WebApps.ListAsync();
+
+            return (await Task.WhenAll(items.Select(async i =>
+            {
+                return (await i.GetAppSettingsAsync()).Select(c =>
+                new AppSettingConfiguration()
+                {
+                    ResourceName = i.Name,
+                    ResourceGroup = i.ResourceGroupName,
+                    // TODO: CommitAsConnectionString?
+                    SettingName = c.Key
+                } as AuthJanitorProviderConfiguration);
+            }))).SelectMany(f => f).ToList();
+        }
     }
 }

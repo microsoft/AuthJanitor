@@ -8,6 +8,7 @@ using Microsoft.Azure.Management.Maps.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AzureMaps
@@ -19,7 +20,8 @@ namespace AuthJanitor.Providers.AzureMaps
         AuthJanitorProvider<AzureMapsConfiguration>,
         ICanRekey,
         ICanRunSanityTests,
-        ICanGenerateTemporarySecretValue
+        ICanGenerateTemporarySecretValue,
+        ICanEnumerateResourceCandidates
     {
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
@@ -115,6 +117,24 @@ namespace AuthJanitor.Providers.AzureMaps
             SECONDARY_KEY => accountKeys.SecondaryKey,
             _ => throw new NotImplementedException()
         };
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IEnumerable<MapsAccount> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await ManagementClient.Accounts.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await ManagementClient.Accounts.ListBySubscriptionAsync();
+
+            return items.Select(i =>
+                new AzureMapsConfiguration()
+                {
+                    ResourceName = i.Name,
+                    KeyType = AzureMapsConfiguration.AzureMapsKeyType.Primary
+                } as AuthJanitorProviderConfiguration).ToList();
+        }
 
         private string GetKeyType => Configuration.KeyType switch
         {

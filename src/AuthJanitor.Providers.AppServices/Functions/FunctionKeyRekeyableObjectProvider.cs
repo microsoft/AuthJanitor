@@ -5,9 +5,12 @@ using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AppServices.Functions
@@ -18,7 +21,8 @@ namespace AuthJanitor.Providers.AppServices.Functions
     public class FunctionKeyRekeyableObjectProvider : 
         AzureAuthJanitorProvider<FunctionKeyConfiguration, IFunctionApp>,
         ICanRekey,
-        ICanRunSanityTests
+        ICanRunSanityTests,
+        ICanEnumerateResourceCandidates
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ILogger _logger;
@@ -70,6 +74,37 @@ namespace AuthJanitor.Providers.AppServices.Functions
             $"'{Configuration.ResourceGroup}').";
 
         protected override ISupportsGettingByResourceGroup<IFunctionApp> GetResourceCollection(IAzure azure) => azure.AppServices.FunctionApps;
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+            
+            IPagedCollection<IFunctionApp> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).AppServices.FunctionApps.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).AppServices.FunctionApps.ListAsync();
+
+            return (await Task.WhenAll<List<AuthJanitorProviderConfiguration>>(items.Select(async i =>
+            {
+                var items = new List<AuthJanitorProviderConfiguration>();
+                foreach (var func in await i.ListFunctionsAsync())
+                {
+                    foreach (var key in await i.ListFunctionKeysAsync(func.Name))
+                    {
+                        items.Add(new FunctionKeyConfiguration()
+                        {
+                            ResourceName = i.Name,
+                            ResourceGroup = i.ResourceGroupName,
+                            FunctionName = func.Name,
+                            FunctionKeyName = key.Key,
+                            KeyLength = key.Value.Length > 10 ? key.Value.Length : 32
+                        });
+                    }
+                }
+                return items;
+            }))).SelectMany(f => f).ToList();
+        }
 
         // TODO: Zero-downtime rotation here with similar slotting?
         //During the rekeying, the Functions App will " +

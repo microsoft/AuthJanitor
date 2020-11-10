@@ -4,12 +4,15 @@ using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
+using Microsoft.Azure.Management.Search.Fluent;
 using Microsoft.Azure.Management.Sql.Fluent;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.AzureSql
@@ -20,7 +23,8 @@ namespace AuthJanitor.Providers.AzureSql
     public class AzureSqlAdministratorPasswordRekeyableObjectProvider : 
         AzureAuthJanitorProvider<AzureSqlAdministratorPasswordConfiguration, ISqlServer>,
         ICanRekey,
-        ICanRunSanityTests
+        ICanRunSanityTests,
+        ICanEnumerateResourceCandidates
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ILogger _logger;
@@ -115,5 +119,28 @@ namespace AuthJanitor.Providers.AzureSql
             $"There is no interim key available while this is taking place, so some downtime may occur.";
 
         protected override ISupportsGettingByResourceGroup<ISqlServer> GetResourceCollection(IAzure azure) => azure.SqlServers;
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IPagedCollection<ISqlServer> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).SqlServers.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).SqlServers.ListAsync();
+
+            return (await Task.WhenAll(items.Select(async i =>
+            {
+                return (await i.Databases.ListAsync()).Select(db =>
+                    new AzureSqlAdministratorPasswordConfiguration()
+                    {
+                        ResourceGroup = i.ResourceGroupName,
+                        ResourceName = i.Name,
+                        DatabaseName = db.Name,
+                        PasswordLength = 32
+                    } as AuthJanitorProviderConfiguration);
+            }))).SelectMany(f => f).ToList();
+        }
     }
 }

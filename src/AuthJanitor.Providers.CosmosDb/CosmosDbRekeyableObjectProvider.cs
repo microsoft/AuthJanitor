@@ -1,12 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Azure.Workflows;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.CosmosDB.Fluent;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers.CosmosDb
@@ -14,7 +19,8 @@ namespace AuthJanitor.Providers.CosmosDb
     [Provider(Name = "CosmosDB Master Key",
               Description = "Regenerates a Master Key for an Azure CosmosDB instance",
               SvgImage = ProviderImages.COSMOS_DB_SVG)]
-    public class CosmosDbRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<CosmosDbKeyConfiguration, ICosmosDBAccount, IDatabaseAccountListKeysResult, CosmosDbKeyConfiguration.CosmosDbKeyKinds, string>
+    public class CosmosDbRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<CosmosDbKeyConfiguration, ICosmosDBAccount, IDatabaseAccountListKeysResult, CosmosDbKeyConfiguration.CosmosDbKeyKinds, string>,
+        ICanEnumerateResourceCandidates
     {
         private const string PRIMARY_READONLY_KEY = "primaryReadOnly";
         private const string SECONDARY_READONLY_KEY = "secondaryReadOnly";
@@ -24,6 +30,25 @@ namespace AuthJanitor.Providers.CosmosDb
         public CosmosDbRekeyableObjectProvider(ILogger<CosmosDbRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "CosmosDB";
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IPagedCollection<ICosmosDBAccount> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).CosmosDBAccounts.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).CosmosDBAccounts.ListAsync();
+
+            return items.Select(i =>
+                new CosmosDbKeyConfiguration()
+                {
+                    ResourceGroup = i.ResourceGroupName,
+                    ResourceName = i.Name,
+                    KeyType = CosmosDbKeyConfiguration.CosmosDbKeyKinds.Primary,
+                } as AuthJanitorProviderConfiguration).ToList();
+        }
 
         protected override RegeneratedSecret CreateSecretFromKeyring(IDatabaseAccountListKeysResult keyring, CosmosDbKeyConfiguration.CosmosDbKeyKinds keyType) =>
             new RegeneratedSecret()

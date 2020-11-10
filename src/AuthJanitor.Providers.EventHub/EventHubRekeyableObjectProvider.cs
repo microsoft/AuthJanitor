@@ -1,13 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Azure.Workflows;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.Eventhub.Fluent;
 using Microsoft.Azure.Management.EventHub.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
+using Microsoft.Azure.Management.Sql.Fluent;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,12 +21,41 @@ namespace AuthJanitor.Providers.EventHub
     [Provider(Name = "Event Hub Key",
               Description = "Regenerates an Azure Event Hub Key",
               SvgImage = ProviderImages.EVENT_HUB_SVG)]
-    public class EventHubRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<EventHubKeyConfiguration, IEventHubNamespace, IEventHubAuthorizationKey, EventHubKeyConfiguration.EventHubKeyTypes, KeyType>
+    public class EventHubRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<EventHubKeyConfiguration, IEventHubNamespace, IEventHubAuthorizationKey, EventHubKeyConfiguration.EventHubKeyTypes, KeyType>,
+        ICanEnumerateResourceCandidates
     {
         public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Event Hub";
-        
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IPagedCollection<IEventHubNamespace> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).EventHubNamespaces.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).EventHubNamespaces.ListAsync();
+
+            return (await Task.WhenAll(items.Select(async i =>
+            {
+                var eventHubs = await (await GetAzureAsync()).EventHubs.ListByNamespaceAsync(i.ResourceGroupName, i.Name);
+                return (await Task.WhenAll(eventHubs.Select(async eh =>
+                {
+                    var rules = await eh.ListAuthorizationRulesAsync();
+                    return rules.Select(rule =>
+                        new EventHubKeyConfiguration()
+                        {
+                            ResourceGroup = i.ResourceGroupName,
+                            ResourceName = eh.Name,
+                            NamespaceName = eh.NamespaceName,
+                            AuthorizationRuleName = rule.Name
+                        } as AuthJanitorProviderConfiguration);
+                }))).SelectMany(f => f);
+            }))).SelectMany(f => f).ToList();
+        }
+
         protected override RegeneratedSecret CreateSecretFromKeyring(IEventHubAuthorizationKey keyring, EventHubKeyConfiguration.EventHubKeyTypes keyType) =>
             new RegeneratedSecret()
             {
