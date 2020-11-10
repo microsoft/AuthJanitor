@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.Azure.Workflows
 {
     public abstract class SlottableAzureApplicationLifecycleProvider<TConfiguration, TResource> : 
-        AzureApplicationLifecycleProvider<TConfiguration, TResource>,
+        AzureAuthJanitorProvider<TConfiguration, TResource>,
         ICanRunSanityTests,
         ICanDistributeTemporarySecretValues,
+        ICanDistributeLongTermSecretValues,
         ICanPerformUnifiedCommitForTemporarySecretValues,
         ICanPerformUnifiedCommit
         where TConfiguration : SlottableAzureAuthJanitorProviderConfiguration
@@ -45,7 +46,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
             await SwapSlotAsync(resource, Configuration.TemporarySlot);
         }
 
-        public override async Task DistributeLongTermSecretValues(List<RegeneratedSecret> secretValues)
+        public async Task DistributeLongTermSecretValues(List<RegeneratedSecret> secretValues)
         {
             var resource = await GetResourceAsync();
             await ApplyUpdate(resource, Configuration.TemporarySlot, secretValues);

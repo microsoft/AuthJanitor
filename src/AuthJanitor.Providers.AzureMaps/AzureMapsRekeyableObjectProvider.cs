@@ -16,7 +16,8 @@ namespace AuthJanitor.Providers.AzureMaps
               Description = "Regenerates a key for an Azure Maps instance",
               SvgImage = ProviderImages.AZURE_MAPS_SVG)]
     public class AzureMapsRekeyableObjectProvider : 
-        RekeyableObjectProvider<AzureMapsConfiguration>,
+        AuthJanitorProvider<AzureMapsConfiguration>,
+        ICanRekey,
         ICanRunSanityTests,
         ICanGenerateTemporarySecretValue
     {
@@ -53,7 +54,7 @@ namespace AuthJanitor.Providers.AzureMaps
             };
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Regenerating Azure Maps key type '{KeyType}'", GetKeyType);
             var keys = await ManagementClient.Accounts.RegenerateKeysAsync(

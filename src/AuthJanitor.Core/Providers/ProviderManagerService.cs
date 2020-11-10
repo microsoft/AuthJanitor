@@ -163,7 +163,7 @@ namespace AuthJanitor.Providers
             var newSecrets = new List<RegeneratedSecret>();
             await PerformActionsInParallel(
                 logger,
-                providers.OfType<IRekeyableObjectProvider>(),
+                providers.OfType<ICanRekey>(),
                 p => p.Rekey(validPeriod)
                         .ContinueWith(t => 
                         { 
@@ -183,7 +183,7 @@ namespace AuthJanitor.Providers
 
             await PerformActionsInParallelGroups(
                 logger,
-                providers.OfType<IApplicationLifecycleProvider>()
+                providers.OfType<ICanDistributeLongTermSecretValues>()
                          .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
                 p => p.DistributeLongTermSecretValues(newSecrets),
                 "Error committing to provider '{ProviderName}'",

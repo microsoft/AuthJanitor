@@ -93,7 +93,6 @@ namespace AuthJanitor.UI.Shared
                 {
                     AssemblyVersion = provider.AssemblyName.Version.ToString(),
                     Details = provider.Details,
-                    IsRekeyableObjectProvider = provider.IsRekeyableObjectProvider,
                     OriginatingFile = Path.GetFileName(provider.OriginatingFile),
                     ProviderTypeName = provider.ProviderTypeName,
                     Capabilities = GetProviderCapabilities(provider.ProviderType)
@@ -118,6 +117,10 @@ namespace AuthJanitor.UI.Shared
                 capabilities.Add(ProviderCapabilities.CanPerformUnifiedCommitForTemporarySecret);
             if (typeof(ICanCleanup).IsAssignableFrom(providerType))
                 capabilities.Add(ProviderCapabilities.CanCleanup);
+            if (typeof(ICanRekey).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanRekey);
+            if (typeof(ICanDistributeLongTermSecretValues).IsAssignableFrom(providerType))
+                capabilities.Add(ProviderCapabilities.CanDistributeLongTermSecrets);
             return capabilities;
         }
 

@@ -28,11 +28,6 @@ namespace AuthJanitor.Providers
         public Type ProviderConfigurationType { get; set; }
 
         /// <summary>
-        /// If the Provider is a RekeyableObjectProvider
-        /// </summary>
-        public bool IsRekeyableObjectProvider => typeof(IRekeyableObjectProvider).IsAssignableFrom(ProviderType);
-
-        /// <summary>
         /// Metadata about the Provider
         /// </summary>
         public ProviderAttribute Details { get; set; }

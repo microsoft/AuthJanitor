@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
+using AuthJanitor.Providers.Capabilities;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 using System;
@@ -14,7 +15,8 @@ namespace AuthJanitor.Providers.AzureAD
               Description = "Acquires an Access Token from Azure AD with a given set of scopes",
               SvgImage = ProviderImages.AZURE_AD_SVG)]
     public class AccessTokenRekeyableObjectProvider : 
-        RekeyableObjectProvider<AccessTokenConfiguration>
+        AuthJanitorProvider<AccessTokenConfiguration>,
+        ICanRekey
     {
         private readonly ILogger _logger;
 
@@ -23,7 +25,7 @@ namespace AuthJanitor.Providers.AzureAD
             _logger = logger;
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             // TODO: If we use admin-approved, we need to bubble scopes up to the original token request
             // ..... or re-request the Bearer token on approval, which might be ugly.

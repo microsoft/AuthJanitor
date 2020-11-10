@@ -16,7 +16,8 @@ namespace AuthJanitor.Providers.AppServices.Functions
               Description = "Regenerates a Function Key for an Azure Functions application",
               SvgImage = ProviderImages.FUNCTIONS_SVG)]
     public class FunctionKeyRekeyableObjectProvider : 
-        AzureRekeyableObjectProvider<FunctionKeyConfiguration, IFunctionApp>,
+        AzureAuthJanitorProvider<FunctionKeyConfiguration, IFunctionApp>,
+        ICanRekey,
         ICanRunSanityTests
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
@@ -40,7 +41,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
                 throw new Exception($"Cannot list Function Keys for Function '{Configuration.FunctionName}'");
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Generating a new secret of length {SecretKeyLength}", Configuration.KeyLength);
             RegeneratedSecret newKey = new RegeneratedSecret()

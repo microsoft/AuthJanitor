@@ -17,7 +17,8 @@ namespace AuthJanitor.Providers.KeyVault
               Description = "Regenerates a Key Vault Secret with a given length",
               SvgImage = ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretRekeyableObjectProvider : 
-        RekeyableObjectProvider<KeyVaultSecretConfiguration>,
+        AuthJanitorProvider<KeyVaultSecretConfiguration>,
+        ICanRekey,
         ICanRunSanityTests,
         ICanGenerateTemporarySecretValue
     {
@@ -52,7 +53,7 @@ namespace AuthJanitor.Providers.KeyVault
             };
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Getting current Secret details from Secret name '{SecretName}'", Configuration.SecretName);
             var client = GetSecretClient();

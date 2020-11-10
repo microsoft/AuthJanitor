@@ -17,7 +17,8 @@ namespace AuthJanitor.Providers.KeyVault
               Description = "Regenerates an Azure Key Vault Key with the same parameters as the previous version",
               SvgImage = ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultKeyRekeyableObjectProvider : 
-        RekeyableObjectProvider<KeyVaultKeyConfiguration>,
+        AuthJanitorProvider<KeyVaultKeyConfiguration>,
+        ICanRekey,
         ICanRunSanityTests,
         ICanGenerateTemporarySecretValue
     {
@@ -48,7 +49,7 @@ namespace AuthJanitor.Providers.KeyVault
             };
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Regenerating Key Vault key {KeyName}", Configuration.KeyName);
             var client = GetKeyClient();
