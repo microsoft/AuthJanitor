@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Azure.Workflows;
+using AuthJanitor.Providers.Capabilities;
 using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Azure.Management.Storage.Fluent;
 using Microsoft.Azure.Management.Storage.Fluent.Models;
@@ -17,7 +20,8 @@ namespace AuthJanitor.Providers.Storage
     [Provider(Name = "Storage Account Key",
               Description = "Regenerates a key of a specified type for an Azure Storage Account",
               SvgImage = ProviderImages.STORAGE_ACCOUNT_SVG)]
-    public class StorageAccountRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<StorageAccountKeyConfiguration, IStorageAccount, IReadOnlyList<StorageAccountKey>, StorageAccountKeyConfiguration.StorageKeyTypes, string>
+    public class StorageAccountRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<StorageAccountKeyConfiguration, IStorageAccount, IReadOnlyList<StorageAccountKey>, StorageAccountKeyConfiguration.StorageKeyTypes, string>,
+        ICanEnumerateResourceCandidates
     {
         private const string KEY1 = "key1";
         private const string KEY2 = "key2";
@@ -27,6 +31,24 @@ namespace AuthJanitor.Providers.Storage
         public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Storage";
+
+        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        {
+            var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
+
+            IPagedCollection<IStorageAccount> items;
+            if (!string.IsNullOrEmpty(azureConfig.ResourceGroup))
+                items = await (await GetAzureAsync()).StorageAccounts.ListByResourceGroupAsync(azureConfig.ResourceGroup);
+            else
+                items = await (await GetAzureAsync()).StorageAccounts.ListAsync();
+
+            return items.Select(i =>
+                new StorageAccountKeyConfiguration()
+                {
+                    ResourceGroup = i.ResourceGroupName,
+                    ResourceName = i.Name
+                } as AuthJanitorProviderConfiguration).ToList();
+        }
 
         protected override RegeneratedSecret CreateSecretFromKeyring(IReadOnlyList<StorageAccountKey> keyring, StorageAccountKeyConfiguration.StorageKeyTypes keyType)
         {
