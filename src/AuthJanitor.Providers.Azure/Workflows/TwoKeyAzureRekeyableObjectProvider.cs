@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 namespace AuthJanitor.Providers.Azure.Workflows
 {
     public abstract class TwoKeyAzureRekeyableObjectProvider<TConfiguration, TResource, TKeyring, TKeyType, TSdkKeyType> : 
-        AzureRekeyableObjectProvider<TConfiguration, TResource>,
+        AzureAuthJanitorProvider<TConfiguration, TResource>,
         ICanRunSanityTests,
         ICanGenerateTemporarySecretValue,
+        ICanRekey,
         ICanCleanup
         where TConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<TKeyType>
         where TKeyType : struct, Enum
@@ -58,7 +59,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
             return regeneratedSecret;
         }
 
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Regenerating key type {KeyType}", Configuration.KeyType);
             var resource = await GetResourceAsync();

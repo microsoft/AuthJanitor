@@ -26,10 +26,6 @@ namespace AuthJanitor
         {
             typeof(IAuthJanitorProvider),
             typeof(AuthJanitorProvider<>),
-            typeof(IApplicationLifecycleProvider),
-            typeof(ApplicationLifecycleProvider<>),
-            typeof(IRekeyableObjectProvider),
-            typeof(RekeyableObjectProvider<>),
             typeof(IServiceCollection),
             typeof(ILogger)
         };

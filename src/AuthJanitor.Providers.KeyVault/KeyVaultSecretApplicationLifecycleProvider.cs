@@ -16,7 +16,8 @@ namespace AuthJanitor.Providers.KeyVault
               Description = "Manages the lifecycle of a Key Vault Secret where a Managed Secret's value is stored",
               SvgImage = ProviderImages.KEY_VAULT_SVG)]
     public class KeyVaultSecretApplicationLifecycleProvider : 
-        ApplicationLifecycleProvider<KeyVaultSecretLifecycleConfiguration>,
+        AuthJanitorProvider<KeyVaultSecretLifecycleConfiguration>,
+        ICanDistributeLongTermSecretValues,
         ICanRunSanityTests
     {
         private readonly ILogger _logger;
@@ -32,7 +33,7 @@ namespace AuthJanitor.Providers.KeyVault
             if (secret == null) throw new Exception("Could not access Key Vault Secret");
         }
         
-        public override async Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues)
+        public async Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues)
         {
             _logger.LogInformation("Committing new secrets to Key Vault secret {SecretName}", Configuration.SecretName);
             var client = GetSecretClient();

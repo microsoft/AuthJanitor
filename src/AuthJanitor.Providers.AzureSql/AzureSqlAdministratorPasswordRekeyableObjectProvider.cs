@@ -18,7 +18,8 @@ namespace AuthJanitor.Providers.AzureSql
           Description = "Regenerates the administrator password of an Azure SQL Server",
           SvgImage = ProviderImages.SQL_SERVER_SVG)]
     public class AzureSqlAdministratorPasswordRekeyableObjectProvider : 
-        AzureRekeyableObjectProvider<AzureSqlAdministratorPasswordConfiguration, ISqlServer>,
+        AzureAuthJanitorProvider<AzureSqlAdministratorPasswordConfiguration, ISqlServer>,
+        ICanRekey,
         ICanRunSanityTests
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
@@ -39,7 +40,7 @@ namespace AuthJanitor.Providers.AzureSql
                 throw new Exception($"Cannot locate Azure Sql server called '{Configuration.ResourceName}' in group '{Configuration.ResourceGroup}'");
         }
         
-        public override async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
+        public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
             _logger.LogInformation("Generating new password of length {PasswordLength}", Configuration.PasswordLength);
             var newPassword = await _cryptographicImplementation.GenerateCryptographicallyRandomString(Configuration.PasswordLength);

@@ -9,11 +9,13 @@ namespace AuthJanitor.UI.Shared.ViewModels
     {
         None,
         CanCleanup,
+        CanDistributeLongTermSecrets,
         CanDistributeTemporarySecrets,
         CanEnumerateResourceCandidates,
         CanGenerateTemporarySecrets,
         CanPerformUnifiedCommits,
         CanPerformUnifiedCommitForTemporarySecret,
+        CanRekey,
         CanRunSanityTests
     }
 
