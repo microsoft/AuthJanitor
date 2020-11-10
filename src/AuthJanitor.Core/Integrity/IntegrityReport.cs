@@ -68,7 +68,7 @@ namespace AuthJanitor.Integrity
                     .Select(t => new IntegrityReportExtensibilityType(t))
                     .ToList();
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
         }
     }
 }
