@@ -27,6 +27,6 @@ namespace AuthJanitor.UI.Shared.Models
 
         public Guid ManagedSecretId { get; set; }
 
-        public List<RekeyingAttemptLogger> Attempts { get; set; } = new List<RekeyingAttemptLogger>();
+        public List<ProviderWorkflowActionCollection> Attempts { get; set; } = new List<ProviderWorkflowActionCollection>();
     }
 }

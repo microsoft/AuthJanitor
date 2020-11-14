@@ -27,7 +27,7 @@ namespace AuthJanitor.Providers.CosmosDb
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
-        public CosmosDbRekeyableObjectProvider(ILogger<CosmosDbRekeyableObjectProvider> logger) : base(logger) { }
+        public CosmosDbRekeyableObjectProvider(ProviderWorkflowActionLogger<CosmosDbRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "CosmosDB";
 

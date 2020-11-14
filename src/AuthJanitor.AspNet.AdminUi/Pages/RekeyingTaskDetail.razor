@@ -66,12 +66,12 @@
                 <Items>
                     @foreach (var attempt in Task.Attempts)
                         {
-                    <Tab Name="@attempt.AttemptStarted.ToString()">
-                        @if (attempt.IsComplete && attempt.IsSuccessfulAttempt)
+                    <Tab Name="@attempt.StartedExecution.ToString()">
+                        @if (attempt.HasBeenExecuted && attempt.HasBeenExecutedSuccessfully)
                                 {
                         <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                                else if (attempt.IsComplete && !attempt.IsSuccessfulAttempt)
+                                else if (attempt.HasBeenExecuted && !attempt.HasBeenExecutedSuccessfully)
                                 {
                         <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
@@ -79,24 +79,24 @@
                                 {
                         <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                        @attempt.UserDisplayName<br />
-                        <small>@attempt.AttemptStarted.ToString()</small>
+                        @attempt.Actions.First().ContextUserName<br />
+                        <small>@attempt.StartedExecution.ToString()</small>
                     </Tab>
                         }
                 </Items>
                 <Content>
                     @foreach (var attempt in Task.Attempts)
                         {
-                    <TabPanel Name="@attempt.AttemptStarted.ToString()">
-                        <pre><code>@attempt.LogString</code></pre>
-                        @if (!attempt.IsSuccessfulAttempt)
+                    <TabPanel Name="@attempt.StartedExecution.ToString()">
+                        <pre><code>@attempt.OrchestrationLog</code></pre>
+                        @if (!attempt.HasBeenExecutedSuccessfully)
                                 {
                         <div class="alert alert-danger" role="alert">
                             <h4 class="text-danger">
                                 Exception thrown!
                             </h4>
                             <p>
-                                <pre><code>@attempt.OuterException</code></pre>
+                                <pre><code>@attempt.GetLastException().ToString()</code></pre>
                             </p>
                         </div>
                                 }
@@ -144,7 +144,7 @@
     protected bool DeleteModalShowing { get; set; }
     public bool ContextualHelpVisible { get; set; }
 
-    public RekeyingAttemptLogger Attempt { get; set; }
+    public ProviderWorkflowActionCollection Attempt { get; set; }
 
     [Parameter]
     public string RekeyingTaskId { get; set; }
@@ -163,8 +163,8 @@
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));
         if (Task.Attempts.Any())
         {
-            SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.AttemptStarted).FirstOrDefault()?.AttemptStarted.ToString();
-            Attempt = Task.Attempts.OrderByDescending(a => a.AttemptFinished).FirstOrDefault();
+            SelectedAttemptTab = Task.Attempts.OrderByDescending(a => a.StartedExecution).FirstOrDefault()?.StartedExecution.ToString();
+            Attempt = Task.Attempts.OrderByDescending(a => a.FinishedExecution).FirstOrDefault();
         }
 
         //await System.Threading.Tasks.Task.WhenAll(Task.ManagedSecret.Resources.Select(async resource =>
@@ -178,7 +178,7 @@
     private void OnSelectedTabChanged(string name)
     {
         SelectedAttemptTab = name;
-        Attempt = Task.Attempts.FirstOrDefault(a => a.AttemptStarted.ToString() == name);
+        Attempt = Task.Attempts.FirstOrDefault(a => a.StartedExecution.ToString() == name);
         StateHasChanged();
     }
 

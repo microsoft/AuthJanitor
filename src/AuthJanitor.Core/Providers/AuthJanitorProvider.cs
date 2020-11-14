@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,6 +11,8 @@ namespace AuthJanitor.Providers
 {
     public interface IAuthJanitorProvider : IAuthJanitorExtensibilityPoint
     {
+        ILogger Logger { get; }
+
         /// <summary>
         /// Serialized ProviderConfiguration
         /// </summary>
@@ -51,6 +55,10 @@ namespace AuthJanitor.Providers
     /// </summary>
     public abstract class AuthJanitorProvider<TConfiguration> : IAuthJanitorProvider where TConfiguration : AuthJanitorProviderConfiguration
     {
+        protected AuthJanitorProvider(ILogger logger) => Logger = logger;
+
+        public ILogger Logger { get; private set; }
+
         private TConfiguration _cachedConfigurationInstance;
 
         /// <summary>

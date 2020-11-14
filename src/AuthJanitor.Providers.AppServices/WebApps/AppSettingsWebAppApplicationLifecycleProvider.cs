@@ -23,7 +23,7 @@ namespace AuthJanitor.Providers.AppServices.WebApps
     {
         private readonly ILogger _logger;
 
-        public AppSettingsWebAppApplicationLifecycleProvider(ILogger<AppSettingsWebAppApplicationLifecycleProvider> logger) : base(logger)
+        public AppSettingsWebAppApplicationLifecycleProvider(ProviderWorkflowActionLogger<AppSettingsWebAppApplicationLifecycleProvider> logger) : base(logger)
         {
             _logger = logger;
         }

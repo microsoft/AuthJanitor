@@ -22,12 +22,7 @@ namespace AuthJanitor.Providers.KeyVault
         ICanRunSanityTests,
         ICanGenerateTemporarySecretValue
     {
-        private readonly ILogger _logger;
-
-        public KeyVaultKeyRekeyableObjectProvider(ILogger<KeyVaultKeyRekeyableObjectProvider> logger)
-        {
-            _logger = logger;
-        }
+        public KeyVaultKeyRekeyableObjectProvider(ProviderWorkflowActionLogger<KeyVaultKeyRekeyableObjectProvider> logger) : base(logger) { }
 
         public async Task Test()
         {
@@ -37,10 +32,10 @@ namespace AuthJanitor.Providers.KeyVault
 
         public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying based on current KID");
+            Logger.LogInformation("Getting temporary secret to use during rekeying based on current KID");
             var client = GetKeyClient();
             Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
-            _logger.LogInformation("Successfully retrieved temporary secret!");
+            Logger.LogInformation("Successfully retrieved temporary secret!");
 
             return new RegeneratedSecret()
             {
@@ -51,7 +46,7 @@ namespace AuthJanitor.Providers.KeyVault
 
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Key Vault key {KeyName}", Configuration.KeyName);
+            Logger.LogInformation("Regenerating Key Vault key {KeyName}", Configuration.KeyName);
             var client = GetKeyClient();
             Response<KeyVaultKey> currentKey = await client.GetKeyAsync(Configuration.KeyName);
 
@@ -72,7 +67,7 @@ namespace AuthJanitor.Providers.KeyVault
             }
 
             Response<KeyVaultKey> key = await client.CreateKeyAsync(Configuration.KeyName, currentKey.Value.KeyType, creationOptions);
-            _logger.LogInformation("Successfully rekeyed Key Vault key {KeyName}", Configuration.KeyName);
+            Logger.LogInformation("Successfully rekeyed Key Vault key {KeyName}", Configuration.KeyName);
 
             return new RegeneratedSecret()
             {

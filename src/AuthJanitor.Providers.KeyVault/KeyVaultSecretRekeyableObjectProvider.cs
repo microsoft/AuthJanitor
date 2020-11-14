@@ -23,13 +23,11 @@ namespace AuthJanitor.Providers.KeyVault
         ICanGenerateTemporarySecretValue
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
-        private readonly ILogger _logger;
 
         public KeyVaultSecretRekeyableObjectProvider(
             ILogger<KeyVaultSecretRekeyableObjectProvider> logger,
-            ICryptographicImplementation cryptographicImplementation)
+            ICryptographicImplementation cryptographicImplementation) : base(logger)
         {
-            _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
         }
 
@@ -41,10 +39,10 @@ namespace AuthJanitor.Providers.KeyVault
 
         public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
-            _logger.LogInformation("Getting temporary secret based on current version...");
+            Logger.LogInformation("Getting temporary secret based on current version...");
             var client = GetSecretClient();
             Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
-            _logger.LogInformation("Successfully retrieved temporary secret!");
+            Logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
                 Expiry = currentSecret.Value.Properties.ExpiresOn.Value,
@@ -55,7 +53,7 @@ namespace AuthJanitor.Providers.KeyVault
 
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Getting current Secret details from Secret name '{SecretName}'", Configuration.SecretName);
+            Logger.LogInformation("Getting current Secret details from Secret name '{SecretName}'", Configuration.SecretName);
             var client = GetSecretClient();
             Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
@@ -77,9 +75,9 @@ namespace AuthJanitor.Providers.KeyVault
             newSecret.Properties.NotBefore = DateTimeOffset.UtcNow;
             newSecret.Properties.ExpiresOn = DateTimeOffset.UtcNow + requestedValidPeriod;
 
-            _logger.LogInformation("Committing new Secret with name '{SecretName}'", newSecret.Name);
+            Logger.LogInformation("Committing new Secret with name '{SecretName}'", newSecret.Name);
             Response<KeyVaultSecret> secretResponse = await client.SetSecretAsync(newSecret);
-            _logger.LogInformation("Successfully committed '{SecretName}'", newSecret.Name);
+            Logger.LogInformation("Successfully committed '{SecretName}'", newSecret.Name);
 
             return new RegeneratedSecret()
             {

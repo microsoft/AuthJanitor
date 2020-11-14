@@ -7,6 +7,9 @@ namespace AuthJanitor
 {
     public class AccessTokenCredential
     {
+        public string DisplayUserName { get; set; }
+        public string DisplayEmail { get; set; }
+
         public string Username { get; set; }
 
         [JsonPropertyName("access_token")]

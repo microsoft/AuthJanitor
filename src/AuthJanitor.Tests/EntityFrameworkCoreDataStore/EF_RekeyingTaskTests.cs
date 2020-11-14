@@ -16,19 +16,8 @@ namespace AuthJanitor.Tests.EntityFrameworkCoreDataStore
             {
                 ObjectId = Guid.NewGuid(),
                 AvailabilityScheduleId = Guid.NewGuid(),
-                Attempts = new List<RekeyingAttemptLogger>()
-                {
-                    new RekeyingAttemptLogger()
-                    {
-                        AttemptStarted = new DateTimeOffset(DateTime.Now),
-                        AttemptFinished = new DateTimeOffset(DateTime.Now),
-                        ChainedLogger = null,
-                        LogString = "LogString",
-                        OuterException = "OuterException",
-                        UserDisplayName = "UserName",
-                        UserEmail = "user@email.com"
-                    }
-                },
+                Attempts = new List<ProviderWorkflowActionCollection>(),
+                // todo: attempt model?
                 ConfirmationType = TaskConfirmationStrategies.AdminCachesSignOff,
                 Expiry = new DateTimeOffset(DateTime.Now),
                 ManagedSecretId = Guid.NewGuid(),
@@ -47,19 +36,8 @@ namespace AuthJanitor.Tests.EntityFrameworkCoreDataStore
             {
                 ObjectId = model.ObjectId,
                 AvailabilityScheduleId = Guid.NewGuid(),
-                Attempts = new List<RekeyingAttemptLogger>()
-                {
-                    new RekeyingAttemptLogger()
-                    {
-                        AttemptStarted = new DateTimeOffset(DateTime.Now),
-                        AttemptFinished = new DateTimeOffset(DateTime.Now),
-                        ChainedLogger = null,
-                        LogString = "Another LogString",
-                        OuterException = "Another OuterException",
-                        UserDisplayName = "Another UserName",
-                        UserEmail = "user2@email.com"
-                    }
-                },
+                Attempts = new List<ProviderWorkflowActionCollection>(),
+                // todo: attempt model?
                 ConfirmationType = TaskConfirmationStrategies.AdminCachesSignOff,
                 Expiry = new DateTimeOffset(DateTime.Now),
                 ManagedSecretId = Guid.NewGuid(),

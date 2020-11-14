@@ -20,12 +20,7 @@ namespace AuthJanitor.Providers.KeyVault
         ICanDistributeLongTermSecretValues,
         ICanRunSanityTests
     {
-        private readonly ILogger _logger;
-
-        public KeyVaultSecretApplicationLifecycleProvider(ILogger<KeyVaultSecretApplicationLifecycleProvider> logger)
-        {
-            _logger = logger;
-        }
+        public KeyVaultSecretApplicationLifecycleProvider(ProviderWorkflowActionLogger<KeyVaultSecretApplicationLifecycleProvider> logger) : base(logger) { }
 
         public async Task Test()
         {
@@ -35,11 +30,11 @@ namespace AuthJanitor.Providers.KeyVault
         
         public async Task DistributeLongTermSecretValues(List<RegeneratedSecret> newSecretValues)
         {
-            _logger.LogInformation("Committing new secrets to Key Vault secret {SecretName}", Configuration.SecretName);
+            Logger.LogInformation("Committing new secrets to Key Vault secret {SecretName}", Configuration.SecretName);
             var client = GetSecretClient();
             foreach (RegeneratedSecret secret in newSecretValues)
             {
-                _logger.LogInformation("Getting current secret version from secret name {SecretName}", Configuration.SecretName);
+                Logger.LogInformation("Getting current secret version from secret name {SecretName}", Configuration.SecretName);
                 Response<KeyVaultSecret> currentSecret = await client.GetSecretAsync(Configuration.SecretName);
 
                 // Create a new version of the Secret
@@ -60,9 +55,9 @@ namespace AuthJanitor.Providers.KeyVault
                 newKvSecret.Properties.NotBefore = DateTimeOffset.UtcNow;
                 newKvSecret.Properties.ExpiresOn = secret.Expiry;
 
-                _logger.LogInformation("Committing new secret '{SecretName}'", secretName);
+                Logger.LogInformation("Committing new secret '{SecretName}'", secretName);
                 await client.SetSecretAsync(newKvSecret);
-                _logger.LogInformation("Successfully committed new secret '{SecretName}'", secretName);
+                Logger.LogInformation("Successfully committed new secret '{SecretName}'", secretName);
             }
         }
 

@@ -35,7 +35,7 @@
 
 @code {
     [Parameter]
-    public RekeyingAttemptLogger Attempt { get; set; }
+    public ProviderWorkflowActionCollection Attempt { get; set; }
 
     // TODO: Everything here is a hack to parse the log for indicators
     // Need to move provider actions into their own objects to track this better
@@ -72,15 +72,15 @@
     protected string GetColorFromLogLines(string leftBookend, string rightBookend = null)
     {
         if (Attempt == null) return PHASE_NOT_STARTED_COLOR;
-        if (Attempt.LogString == null) return PHASE_NOT_STARTED_COLOR;
+        if (Attempt.OrchestrationLog == null) return PHASE_NOT_STARTED_COLOR;
 
-        if (Attempt.LogString.Contains(leftBookend))
+        if (Attempt.OrchestrationLog.Contains(leftBookend))
         {
             if (string.IsNullOrEmpty(rightBookend))
                 return PHASE_COMPLETE_COLOR;
-            if (Attempt.LogString.Contains(rightBookend))
+            if (Attempt.OrchestrationLog.Contains(rightBookend))
                 return PHASE_COMPLETE_COLOR;
-            if (!string.IsNullOrEmpty(Attempt.OuterException))
+            if (!string.IsNullOrEmpty(Attempt.GetLastException()?.ToString()))
                 return PHASE_ERROR_COLOR;
             return PHASE_IN_PROGRESS_COLOR;
         }

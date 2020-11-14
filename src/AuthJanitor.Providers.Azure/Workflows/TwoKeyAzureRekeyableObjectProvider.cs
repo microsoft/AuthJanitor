@@ -19,8 +19,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
         where TConfiguration : TwoKeyAzureAuthJanitorProviderConfiguration<TKeyType>
         where TKeyType : struct, Enum
     {
-        private readonly ILogger _logger;
-        protected TwoKeyAzureRekeyableObjectProvider(ILogger logger) => _logger = logger;
+        protected TwoKeyAzureRekeyableObjectProvider(ILogger logger) : base(logger) { }
 
         protected abstract string Service { get; }
         protected abstract TSdkKeyType Translate(TKeyType keyType);
@@ -48,10 +47,10 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherPairedKey(Configuration.KeyType));
+            Logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherPairedKey(Configuration.KeyType));
             var resource = await GetResourceAsync();
             var keyring = await RetrieveCurrentKeyring(resource, Translate(GetOtherPairedKey(Configuration.KeyType)));
-            _logger.LogInformation("Successfully retrieved temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherPairedKey(Configuration.KeyType));
+            Logger.LogInformation("Successfully retrieved temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherPairedKey(Configuration.KeyType));
 
             var regeneratedSecret = CreateSecretFromKeyring(keyring, GetOtherPairedKey(Configuration.KeyType));
             regeneratedSecret.Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(30);
@@ -61,11 +60,11 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating key type {KeyType}", Configuration.KeyType);
+            Logger.LogInformation("Regenerating key type {KeyType}", Configuration.KeyType);
             var resource = await GetResourceAsync();
             var keyring = await RotateKeyringValue(resource, Translate(Configuration.KeyType));
             if (keyring == null) keyring = await RetrieveCurrentKeyring(resource, Translate(Configuration.KeyType));
-            _logger.LogInformation("Successfully rekeyed key type {KeyType}", Configuration.KeyType);
+            Logger.LogInformation("Successfully rekeyed key type {KeyType}", Configuration.KeyType);
 
             var regeneratedSecret = CreateSecretFromKeyring(keyring, Configuration.KeyType);
             regeneratedSecret.Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(30);
@@ -77,11 +76,11 @@ namespace AuthJanitor.Providers.Azure.Workflows
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling opposite key kind {OtherKeyType}", GetOtherPairedKey(Configuration.KeyType));
+                Logger.LogInformation("Scrambling opposite key kind {OtherKeyType}", GetOtherPairedKey(Configuration.KeyType));
                 await RotateKeyringValue(await GetResourceAsync(), Translate(GetOtherPairedKey(Configuration.KeyType)));
             }
             else
-                _logger.LogInformation("Skipping scrambling opposite key kind {OtherKeyKind}", GetOtherPairedKey(Configuration.KeyType));
+                Logger.LogInformation("Skipping scrambling opposite key kind {OtherKeyKind}", GetOtherPairedKey(Configuration.KeyType));
         }
 
         public override string GetDescription() =>

@@ -25,13 +25,11 @@ namespace AuthJanitor.Providers.AppServices.Functions
         ICanEnumerateResourceCandidates
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
-        private readonly ILogger _logger;
-
+        
         public FunctionKeyRekeyableObjectProvider(
             ILogger<FunctionKeyRekeyableObjectProvider> logger,
-            ICryptographicImplementation cryptographicImplementation)
+            ICryptographicImplementation cryptographicImplementation) : base(logger)
         {
-            _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
         }
 
@@ -47,7 +45,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Generating a new secret of length {SecretKeyLength}", Configuration.KeyLength);
+            Logger.LogInformation("Generating a new secret of length {SecretKeyLength}", Configuration.KeyLength);
             RegeneratedSecret newKey = new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -59,10 +57,10 @@ namespace AuthJanitor.Providers.AppServices.Functions
             if (functionsApp == null)
                 throw new Exception($"Cannot locate Functions application called '{Configuration.ResourceName}' in group '{Configuration.ResourceGroup}'");
 
-            _logger.LogInformation("Removing previous Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            Logger.LogInformation("Removing previous Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.RemoveFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName);
 
-            _logger.LogInformation("Adding new Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
+            Logger.LogInformation("Adding new Function Key '{FunctionKeyName}' from Function '{FunctionName}'", Configuration.FunctionKeyName, Configuration.FunctionName);
             await functionsApp.AddFunctionKeyAsync(Configuration.FunctionName, Configuration.FunctionKeyName, newKey.NewSecretValue.GetNormalString());
 
             return newKey;

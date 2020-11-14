@@ -51,9 +51,9 @@
                         }
                         else if (!string.IsNullOrEmpty(context.RekeyingErrorMessage))
                         {
-                            var attempt = context.Attempts.OrderByDescending(a => a.AttemptStarted).First();
+                            var attempt = context.Attempts.OrderByDescending(a => a.StartedExecution).First();
                             <Alert Color="Color.Danger" Dismisable="false" Visible="true">
-                                <strong>Error Rekeying!</strong> (Last attempted @attempt.AttemptStarted by @attempt.UserDisplayName)
+                                <strong>Error Rekeying!</strong> (Last attempted @attempt.StartedExecution by @attempt.Actions.First().ContextUserName)
                             </Alert>
                         }
                         else if (context.RekeyingInProgress)

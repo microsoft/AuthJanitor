@@ -5,6 +5,7 @@ using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using System;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ namespace AuthJanitor.Providers.Azure
     public abstract class AzureAuthJanitorProvider<TConfiguration, TResource> : AuthJanitorProvider<TConfiguration>
         where TConfiguration : AzureAuthJanitorProviderConfiguration
     {
+        protected AzureAuthJanitorProvider(ILogger logger) : base(logger) { }
+
         protected async Task<TResource> GetResourceAsync() =>
             await GetResourceCollection(await GetAzureAsync())
                     .GetByResourceGroupAsync(Configuration.ResourceGroup, Configuration.ResourceName);

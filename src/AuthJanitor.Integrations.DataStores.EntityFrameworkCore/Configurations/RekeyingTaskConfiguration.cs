@@ -18,7 +18,7 @@ namespace AuthJanitor.Integrations.DataStores.EntityFrameworkCore.Configurations
             builder.Property(x => x.Attempts)
                 .HasConversion(
                     v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<RekeyingAttemptLogger>>(v));
+                    v => JsonConvert.DeserializeObject<List<ProviderWorkflowActionCollection>>(v));
         }
     }
 }
