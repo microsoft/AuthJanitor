@@ -1,61 +1,100 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using System;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
 {
-    public abstract class ProviderWorkflowAction
+    public class ProviderWorkflowAction
     {
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public bool HasStarted => Start != null;
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public bool HasCompleted => End != null;
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public bool HasSucceeded => HasCompleted && Exception == null;
 
-        public int ExecutionOrder { get; protected set; }
+        public int ExecutionOrder { get; set; }
 
-        public DateTimeOffset Start { get; protected set; }
-        public DateTimeOffset End { get; protected set; }
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset End { get; set; }
 
-        public Exception Exception { get; protected set; }
+        public string Exception { get; protected set; }
 
-        public string ContextUserName => Instance.Credential.DisplayUserName;
-        public string ContextUserEmail => Instance.Credential.DisplayEmail;
-        public string Log => (Instance.Logger as ProviderWorkflowActionLogger).LogString;
+        public string ContextUserName => Instance != null && Instance.Credential != null ? Instance.Credential.DisplayUserName : string.Empty;
+        public string ContextUserEmail => Instance != null && Instance.Credential != null ? Instance.Credential.DisplayEmail : string.Empty;
 
+        public string Log { get; set; }
+
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public object Result { get; protected set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public IAuthJanitorProvider Instance { get; protected set; }
 
-        public abstract Task Execute();
-        public abstract Task Rollback();
+        public T ResultAs<T>() => (T)Result;
+        public T InstanceAs<T>() where T : IAuthJanitorProvider => (T)Instance;
+
+        public string ProviderType { get; set; }
+        public string ProviderConfiguration { get; set; }
+
+        public virtual async Task Execute() => await Task.Yield();
+        public virtual async Task Rollback() => await Task.Yield();
+
+        public string Name { get; set; }
 
         protected const int MAX_RETRIES = 5;
 
-        public static ProviderWorkflowAction<TProvider> Create<TProvider>(TProvider instance, Func<TProvider, Task> action)
-            where TProvider : IAuthJanitorProvider => new ProviderWorkflowAction<TProvider>(instance, action);
-        public static ProviderWorkflowAction<TProvider, TResult> Create<TProvider, TResult>(TProvider instance, Func<TProvider, Task<TResult>> action)
-            where TProvider : IAuthJanitorProvider => new ProviderWorkflowAction<TProvider, TResult>(instance, action);
+        public ProviderWorkflowAction() => PopulateBoundProperties();
+        public ProviderWorkflowAction(string name) : base() => Name = name;
+
+        protected void PopulateBoundProperties()
+        {
+            if (Instance != null)
+            {
+                ProviderType = Instance.GetType().AssemblyQualifiedName;
+                ProviderConfiguration = Instance.SerializedConfiguration;
+                Log = ((ProviderWorkflowActionLogger)Instance.Logger).LogString;
+            }
+        }
+
+        public static ProviderWorkflowActionWithoutResult<TProvider> Create<TProvider>(string name, TProvider instance, Func<TProvider, Task> action)
+            where TProvider : IAuthJanitorProvider => new ProviderWorkflowActionWithoutResult<TProvider>(name, instance, action);
+        public static ProviderWorkflowActionWithResult<TProvider, TResult> Create<TProvider, TResult>(string name, TProvider instance, Func<TProvider, Task<TResult>> action)
+            where TProvider : IAuthJanitorProvider => new ProviderWorkflowActionWithResult<TProvider, TResult>(name, instance, action);
     }
 
-    public class ProviderWorkflowAction<TProvider, TResult> : ProviderWorkflowAction
+    public class ProviderWorkflowActionWithResult<TProvider, TResult> : ProviderWorkflowAction
         where TProvider : IAuthJanitorProvider
     {
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public new TResult Result { get => (TResult)base.Result; set => base.Result = value; }
 
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public new TProvider Instance { get => (TProvider)base.Instance; set => base.Instance = value; }
-
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public Func<TProvider, Task<TResult>> Action { get; private set; }
 
-        public ProviderWorkflowAction<TProvider> RollbackAction { get; private set; }
+        //public ProviderWorkflowActionWithoutResult<TProvider> RollbackAction { get; private set; } = null;
 
-        public ProviderWorkflowAction(TProvider instance, Func<TProvider, Task<TResult>> action)
+        public ProviderWorkflowActionWithResult() : base() { }
+        public ProviderWorkflowActionWithResult(string name, TProvider instance, Func<TProvider, Task<TResult>> action) : base(name)
         {
             Instance = instance;
             Action = action;
         }
-        public ProviderWorkflowAction(TProvider instance, Func<TProvider, Task<TResult>> action, Func<TProvider, Task> rollbackAction) :
-            this(instance, action)
+        public ProviderWorkflowActionWithResult(string name, TProvider instance, Func<TProvider, Task<TResult>> action, Func<TProvider, Task> rollbackAction) :
+            this(name, instance, action)
         {
-            RollbackAction = new ProviderWorkflowAction<TProvider>(instance, rollbackAction);
+            //RollbackAction = new ProviderWorkflowActionWithoutResult<TProvider>(instance, rollbackAction);
         }
 
         public override async Task Execute()
@@ -77,39 +116,48 @@ namespace AuthJanitor.Providers
                     }
                 }
                 End = DateTimeOffset.UtcNow;
+                PopulateBoundProperties();
             }
             catch (Exception ex)
             {
                 End = DateTimeOffset.UtcNow;
-                Exception = ex;
+                Exception = ex.ToString();
+                PopulateBoundProperties();
                 throw ex;
             }
         }
 
         public override async Task Rollback()
         {
-            if (RollbackAction != null)
-                await RollbackAction.Execute();
+            await Task.Yield();
+            //if (RollbackAction != null)
+            //    await RollbackAction.Execute();
         }
     }
 
-    public class ProviderWorkflowAction<TProvider> : ProviderWorkflowAction
+    public class ProviderWorkflowActionWithoutResult<TProvider> : ProviderWorkflowAction
         where TProvider : IAuthJanitorProvider
     {
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public new TProvider Instance { get => (TProvider)base.Instance; set => base.Instance = value; }
+
+        [Newtonsoft.Json.JsonIgnore]
+        [JsonIgnore]
         public Func<TProvider, Task> Action { get; private set; }
 
-        public ProviderWorkflowAction<TProvider> RollbackAction { get; private set; }
+        //public ProviderWorkflowActionWithoutResult<TProvider> RollbackAction { get; private set; } = null;
 
-        public ProviderWorkflowAction(TProvider instance, Func<TProvider, Task> action)
+        public ProviderWorkflowActionWithoutResult() : base() { }
+        public ProviderWorkflowActionWithoutResult(string name, TProvider instance, Func<TProvider, Task> action) : base(name)
         {
             Instance = instance;
             Action = action;
         }
-        public ProviderWorkflowAction(TProvider instance, Func<TProvider, Task> action, Func<TProvider, Task> rollbackAction) :
-            this(instance, action)
+        public ProviderWorkflowActionWithoutResult(string name, TProvider instance, Func<TProvider, Task> action, Func<TProvider, Task> rollbackAction) :
+            this(name, instance, action)
         {
-            RollbackAction = new ProviderWorkflowAction<TProvider>(instance, rollbackAction);
+            //RollbackAction = new ProviderWorkflowActionWithoutResult<TProvider>(instance, rollbackAction);
         }
 
         public override async Task Execute()
@@ -131,19 +179,22 @@ namespace AuthJanitor.Providers
                     }
                 }
                 End = DateTimeOffset.UtcNow;
+                PopulateBoundProperties();
             }
             catch (Exception ex)
             {
                 End = DateTimeOffset.UtcNow;
-                Exception = ex;
+                Exception = ex.ToString();
+                PopulateBoundProperties();
                 throw ex;
             }
         }
 
         public override async Task Rollback()
         {
-            if (RollbackAction != null)
-                await RollbackAction.Execute();
+            await Task.Yield();
+            //if (RollbackAction != null)
+            //    await RollbackAction.Execute();
         }
     }
 }

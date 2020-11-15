@@ -123,7 +123,9 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
                     var etag = (await Blob.GetPropertiesAsync())?.Value?.ETag;
                     using (var ms = new MemoryStream())
                     {
-                        var serialized = JsonSerializer.Serialize(CachedCollection, _serializerOptions);
+                        var serialized = Newtonsoft.Json.JsonConvert.SerializeObject(CachedCollection,
+                            new Newtonsoft.Json.JsonSerializerSettings() { TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All });
+                        //var serialized = JsonSerializer.Serialize(CachedCollection, _serializerOptions);
                         ms.Write(Encoding.UTF8.GetBytes(serialized));
                         ms.Seek(0, SeekOrigin.Begin);
                         Blob.Upload(ms, conditions: new BlobRequestConditions() { IfMatch = etag });
@@ -152,7 +154,9 @@ namespace AuthJanitor.Integrations.DataStores.AzureBlobStorage
                 blobText.Value.Content.CopyTo(ms);
                 ms.Seek(0, SeekOrigin.Begin);
                 var str = Encoding.UTF8.GetString(ms.ToArray());
-                CachedCollection = JsonSerializer.Deserialize<List<TStoredModel>>(str, _serializerOptions);
+                //CachedCollection = JsonSerializer.Deserialize<List<TStoredModel>>(str, _serializerOptions);
+                CachedCollection = Newtonsoft.Json.JsonConvert.DeserializeObject<List<TStoredModel>>(str, 
+                    new Newtonsoft.Json.JsonSerializerSettings() { TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All });
             }
         }
 

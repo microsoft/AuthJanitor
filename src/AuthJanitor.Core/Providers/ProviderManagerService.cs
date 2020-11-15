@@ -2,14 +2,11 @@
 // Licensed under the MIT license.
 using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -80,7 +77,7 @@ namespace AuthJanitor.Providers
 
         public TProvider GetProviderInstance<TProvider>(TProvider existingProviderToClone)
             where TProvider : IAuthJanitorProvider =>
-            (TProvider)GetProviderInstance(existingProviderToClone.ProviderMetadata.Name, existingProviderToClone.SerializedConfiguration);
+            (TProvider)GetProviderInstance(existingProviderToClone.GetType().AssemblyQualifiedName, existingProviderToClone.SerializedConfiguration);
 
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name) => ActivatorUtilities.CreateInstance(_serviceProvider, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonSerializer.Deserialize(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions) as AuthJanitorProviderConfiguration;
@@ -107,19 +104,25 @@ namespace AuthJanitor.Providers
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanRunSanityTests>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.Test())).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Sanity Test",
+                    p, p => p.Test())).ToArray());
 
             // ---
 
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanGenerateTemporarySecretValue>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.GenerateTemporarySecretValue())).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Generate Temporary Secrets", 
+                    p, p => p.GenerateTemporarySecretValue())).ToArray());
 
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanDistributeTemporarySecretValues>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p =>
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Distribute Temporary Secrets",
+                    p, p =>
                 {
                     var actions = workflowCollection.GetActions<ICanGenerateTemporarySecretValue, RegeneratedSecret>();
                     if (actions.Any())
@@ -132,19 +135,25 @@ namespace AuthJanitor.Providers
                 .GroupBy(p => p.GenerateResourceIdentifierHashCode())
                 .Select(p => p.First())
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.UnifiedCommitForTemporarySecretValues())).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Perform Unified Commit", 
+                    p, p => p.UnifiedCommitForTemporarySecretValues())).ToArray());
 
             // ---
 
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanRekey>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.Rekey(validPeriod))).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Rekey Object",
+                    p, p => p.Rekey(validPeriod))).ToArray());
 
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanDistributeLongTermSecretValues>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p =>
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Distribute Rekeyed Secrets",
+                    p, p =>
                 {
                     return p.DistributeLongTermSecretValues(
                         workflowCollection.GetActions<ICanRekey, RegeneratedSecret>()
@@ -156,14 +165,18 @@ namespace AuthJanitor.Providers
                 .GroupBy(p => p.GenerateResourceIdentifierHashCode())
                 .Select(p => p.First())
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.UnifiedCommit())).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Perform Unified Commit on Rekeyed Secrets",
+                    p, p => p.UnifiedCommit())).ToArray());
 
             // ---
 
             workflowCollection.AddWithOneIncrement(providers
                 .OfType<ICanCleanup>()
                 .Select(DuplicateProvider)
-                .Select(p => ProviderWorkflowAction.Create(p, p => p.Cleanup())).ToArray());
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Cleanup",
+                    p, p => p.Cleanup())).ToArray());
 
             return workflowCollection;
         }

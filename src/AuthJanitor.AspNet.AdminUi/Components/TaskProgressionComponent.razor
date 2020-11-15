@@ -80,7 +80,7 @@
                 return PHASE_COMPLETE_COLOR;
             if (Attempt.OrchestrationLog.Contains(rightBookend))
                 return PHASE_COMPLETE_COLOR;
-            if (!string.IsNullOrEmpty(Attempt.GetLastException()?.ToString()))
+            if (!string.IsNullOrEmpty(Attempt.GetLastException()))
                 return PHASE_ERROR_COLOR;
             return PHASE_IN_PROGRESS_COLOR;
         }

@@ -161,12 +161,11 @@ namespace AuthJanitor.UI.Shared
             }
             catch (Exception) { secret = new ManagedSecretViewModel() { ObjectId = Guid.Empty }; }
             string errorMessage = string.Empty;
-            var mostRecentAttempt = rekeyingTask?.Attempts
-                                                 .OrderByDescending(a => a.Actions.Min(act => act.Start))
-                                                 .FirstOrDefault();
+            var mostRecentAttempt = rekeyingTask?.Attempts.OrderByDescending(a => a.StartedExecution).FirstOrDefault();
+
             if (mostRecentAttempt != null)
                 errorMessage = mostRecentAttempt.HasBeenExecutedSuccessfully ?
-                                 string.Empty : mostRecentAttempt.GetLastException().ToString();
+                                 string.Empty : mostRecentAttempt.GetLastException();
 
             return new RekeyingTaskViewModel()
             {

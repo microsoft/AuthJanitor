@@ -71,15 +71,14 @@
                                 {
                         <Icon Name="FontAwesomeIcons.CheckCircle" Class="text-success" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                                else if (attempt.HasBeenExecuted && !attempt.HasBeenExecutedSuccessfully)
+                        else if (attempt.HasBeenExecuted && !attempt.HasBeenExecutedSuccessfully)
                                 {
                         <Icon Name="FontAwesomeIcons.TimesCircle" Class="text-danger" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                                else
+                        else
                                 {
                         <Icon Name="FontAwesomeIcons.PlayCircle" Class="text-info" Margin="Margin.IsAuto.OnY.Is1.FromRight" />
                                 }
-                        @attempt.Actions.First().ContextUserName<br />
                         <small>@attempt.StartedExecution.ToString()</small>
                     </Tab>
                         }
@@ -88,19 +87,40 @@
                     @foreach (var attempt in Task.Attempts)
                         {
                     <TabPanel Name="@attempt.StartedExecution.ToString()">
-                        <pre><code>@attempt.OrchestrationLog</code></pre>
-                        @if (!attempt.HasBeenExecutedSuccessfully)
-                                {
-                        <div class="alert alert-danger" role="alert">
-                            <h4 class="text-danger">
-                                Exception thrown!
-                            </h4>
-                            <p>
-                                <pre><code>@attempt.GetLastException().ToString()</code></pre>
-                            </p>
-                        </div>
-                                }
-                    </TabPanel>
+                        <Accordion>
+                            @foreach (var action in attempt.Actions)
+                            {
+                            <Collapse Visible="@_actionVisibilities.GetValueOrDefault(attempt.Actions.ToList().IndexOf(action), false)">
+                                <CollapseHeader>
+                                    <Heading Size="HeadingSize.Is5">
+                                        <Button Clicked="@(() => _actionVisibilities[attempt.Actions.ToList().IndexOf(action)] = !_actionVisibilities.GetValueOrDefault(attempt.Actions.ToList().IndexOf(action), false))">
+                                            @action.Name
+                                            <small>@action.ProviderType</small>
+                                        </Button>
+                                    </Heading>
+                                </CollapseHeader>
+                                <CollapseBody>
+                                    <strong>Started: </strong> @action.Start<br />
+                                    <strong>Ended: </strong> @action.End<br />
+                                    <pre><code>@action.Log</code></pre>
+                                </CollapseBody>
+                            </Collapse>
+                            }
+                            </Accordion>
+
+                            <pre><code>@attempt.OrchestrationLog</code></pre>
+                            @if (!attempt.HasBeenExecutedSuccessfully)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    <h4 class="text-danger">
+                                        Exception thrown!
+                                    </h4>
+                                    <p>
+                                        <pre><code>@attempt.GetLastException()</code></pre>
+                                    </p>
+                                </div>
+                            }
+</TabPanel>
                         }
                 </Content>
             </Tabs>
@@ -139,6 +159,8 @@
 @code {
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
     public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
+
+    Dictionary<int, bool> _actionVisibilities = new Dictionary<int, bool>();
 
     protected bool ApproveModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }

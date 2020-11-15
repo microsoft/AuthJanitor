@@ -4,21 +4,25 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Providers
 {
     public class ProviderWorkflowActionCollection
     {
-        private List<ProviderWorkflowAction> _actions = new List<ProviderWorkflowAction>();
+        public List<ProviderWorkflowAction> _actions { get; set; } = new List<ProviderWorkflowAction>();
         private readonly IServiceProvider _serviceProvider;
 
+        public ProviderWorkflowActionCollection() { }
         public ProviderWorkflowActionCollection(IServiceProvider serviceProvider) =>
             _serviceProvider = serviceProvider;
 
         public int CurrentExecutionOrder { get; set; }
 
+        [JsonIgnore]
         public DateTimeOffset StartedExecution => Actions.Min(a => a.Start);
+        [JsonIgnore]
         public DateTimeOffset FinishedExecution => Actions.Max(a => a.End);
 
         public bool HasBeenExecuted { get; private set; }
@@ -26,31 +30,37 @@ namespace AuthJanitor.Providers
 
         public string OrchestrationLog { get; private set; }
 
-        public IEnumerable<Exception> GetExceptions() => Actions
+        [JsonIgnore]
+        public IReadOnlyList<ProviderWorkflowAction> Actions => _actions
+            .OrderBy(a => a.ExecutionOrder)
+            .ToList()
+            .AsReadOnly();
+
+        public IEnumerable<string> GetExceptions() => Actions
             .Where(a => a.Exception != null)
             .Select(a => a.Exception);
 
-        public Exception GetLastException() => GetExceptions().Last();
+        public string GetLastException() => GetExceptions().LastOrDefault();
 
         private TProvider DuplicateProvider<TProvider>(TProvider provider)
             where TProvider : IAuthJanitorProvider =>
             _serviceProvider.GetRequiredService<ProviderManagerService>()
                             .GetProviderInstance(provider);
 
-        public IReadOnlyList<ProviderWorkflowAction> Actions => _actions
-            .OrderBy(a => a.ExecutionOrder)
-            .ToList()
-            .AsReadOnly();
+        private IAuthJanitorProvider CreateProvider(string providerType, string providerConfiguration) =>
+            _serviceProvider.GetRequiredService<ProviderManagerService>()
+                            .GetProviderInstance(providerType, providerConfiguration);
 
         public void EmbedCredentials(AccessTokenCredential credential) =>
             _actions.ForEach(a => a.Instance.Credential = credential);
 
-        public void Add<TProvider>(params ProviderWorkflowAction<TProvider>[] actions)
+        public void Add<TProvider>(params ProviderWorkflowActionWithoutResult<TProvider>[] actions)
             where TProvider : IAuthJanitorProvider
         {
             foreach (var action in actions)
             {
                 CurrentExecutionOrder++;
+                action.ExecutionOrder = CurrentExecutionOrder;
                 _actions.Add(action);
             }
         }
@@ -58,32 +68,37 @@ namespace AuthJanitor.Providers
         public void AddWithOneIncrement(params ProviderWorkflowAction[] actions)
         {
             CurrentExecutionOrder++;
+            actions.ToList().ForEach(a => a.ExecutionOrder = CurrentExecutionOrder);
             AddWithoutIncrement(actions);
         }
 
-        public void AddWithoutIncrement<TProvider, TResult>(TProvider instance, Func<TProvider, Task<TResult>> action)
-            where TProvider : IAuthJanitorProvider => AddWithoutIncrement(ProviderWorkflowAction.Create(DuplicateProvider(instance), action));
+        public void AddWithoutIncrement<TProvider, TResult>(string name, TProvider instance, Func<TProvider, Task<TResult>> action)
+            where TProvider : IAuthJanitorProvider => AddWithoutIncrement(ProviderWorkflowAction.Create(name, DuplicateProvider(instance), action));
 
-        public void AddWithoutIncrement<TProvider>(TProvider instance, Func<TProvider, Task> action)
-            where TProvider : IAuthJanitorProvider => AddWithoutIncrement(ProviderWorkflowAction.Create(DuplicateProvider(instance), action));
+        public void AddWithoutIncrement<TProvider>(string name, TProvider instance, Func<TProvider, Task> action)
+            where TProvider : IAuthJanitorProvider => AddWithoutIncrement(ProviderWorkflowAction.Create(name, DuplicateProvider(instance), action));
 
-        public void AddWithoutIncrement(params ProviderWorkflowAction[] actions) => _actions.AddRange(actions);
+        public void AddWithoutIncrement(params ProviderWorkflowAction[] actions)
+        {
+            actions.ToList().ForEach(a => a.ExecutionOrder = CurrentExecutionOrder);
+            _actions.AddRange(actions);
+        }
 
-        public IEnumerable<ProviderWorkflowAction<TProvider>> GetActions<TProvider>()
+        public IEnumerable<ProviderWorkflowActionWithoutResult<TProvider>> GetActions<TProvider>()
             where TProvider : IAuthJanitorProvider =>
                 _actions.Where(a => typeof(TProvider).IsAssignableFrom(a.Instance.GetType()))
-                    .Cast<ProviderWorkflowAction<TProvider>>();
+                    .OfType<ProviderWorkflowActionWithoutResult<TProvider>>();
 
-        public IEnumerable<ProviderWorkflowAction<TProvider, TResult>> GetActions<TProvider, TResult>()
+        public IEnumerable<ProviderWorkflowActionWithResult<TProvider, TResult>> GetActions<TProvider, TResult>()
             where TProvider : IAuthJanitorProvider =>
                 _actions.Where(a => typeof(TProvider).IsAssignableFrom(a.Instance.GetType()))
-                    .Cast<ProviderWorkflowAction<TProvider, TResult>>();
+                    .OfType<ProviderWorkflowActionWithResult<TProvider, TResult>>();
 
         public async Task Run()
         {
+            HasBeenExecuted = true;
             OrchestrationLog += $"Started workflow orchestration execution at {DateTimeOffset.UtcNow}\n";
 
-            HasBeenExecuted = true;
             var executionOrderIndexes = _actions.Select(a => a.ExecutionOrder).Distinct().ToList();
             var rollbackQueue = new List<ProviderWorkflowAction>();
 

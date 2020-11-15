@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace AuthJanitor.UI.Shared.MetaServices
 {
@@ -21,6 +22,7 @@ namespace AuthJanitor.UI.Shared.MetaServices
         private readonly IDataStore<Resource> _resources;
         private readonly ISecureStorage _secureStorageProvider;
 
+        private readonly ILogger<TaskExecutionMetaService> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly ProviderManagerService _providerManagerService;
 
@@ -28,6 +30,7 @@ namespace AuthJanitor.UI.Shared.MetaServices
         private readonly IIdentityService _identityService;
 
         public TaskExecutionMetaService(
+            ILogger<TaskExecutionMetaService> logger,
             IServiceProvider serviceProvider,
             EventDispatcherMetaService eventDispatcherMetaService,
             IIdentityService identityService,
@@ -37,6 +40,7 @@ namespace AuthJanitor.UI.Shared.MetaServices
             IDataStore<Resource> resources,
             ISecureStorage secureStorageProvider)
         {
+            _logger = logger;
             _serviceProvider = serviceProvider;
             _eventDispatcherMetaService = eventDispatcherMetaService;
             _identityService = identityService;
@@ -125,10 +129,12 @@ namespace AuthJanitor.UI.Shared.MetaServices
         public async Task ExecuteTask(Guid taskId, CancellationToken cancellationToken)
         {
             // Prepare record
+            _logger.LogInformation("Retrieving task {TaskId}", taskId);
             var task = await _rekeyingTasks.GetOne(taskId, cancellationToken);
             task.RekeyingInProgress = true;
 
             // Create task to perform regular updates to UI (every 15s)
+            _logger.LogInformation("Starting log update task");
             var logUpdateCancellationTokenSource = new CancellationTokenSource();
             var logUpdateTask = Task.Run(async () =>
             {
@@ -141,22 +147,26 @@ namespace AuthJanitor.UI.Shared.MetaServices
 
             // Retrieve the secret configuration and its resources
             var secret = await _managedSecrets.GetOne(task.ManagedSecretId, cancellationToken);
+            _logger.LogInformation("Retrieving resources for secret {SecretId}", secret.ObjectId);
             var resources = await _resources.Get(r => secret.ResourceIds.Contains(r.ObjectId), cancellationToken);
 
             ProviderWorkflowActionCollection workflowCollection = null;
             try
             {
                 // Create configured providers for each resource
+                _logger.LogInformation("Getting providers for {ResourceCount} resources", resources.Count);
                 var providers = resources.Select(r => _providerManagerService.GetProviderInstance(
                     r.ProviderType,
                     r.ProviderConfiguration)).ToList();
 
                 // Generate a workflow collection from the configured providers
+                _logger.LogInformation("Creating workflow collection");
                 workflowCollection = _providerManagerService.CreateWorkflowCollection(
                     secret.ValidPeriod,
                     providers);
-
+                
                 // Get the token credential for this task and embed it
+                _logger.LogInformation("Embedding credentials");
                 workflowCollection.EmbedCredentials(await GetTokenCredentialAsync(taskId, cancellationToken));
 
                 // TODO: Per-action credentialing will go here eventually
@@ -166,23 +176,37 @@ namespace AuthJanitor.UI.Shared.MetaServices
                 //    a.Instance.Credential = credential;
                 //});
 
-                // Update the UI with the data from this attempt
-                task.Attempts.Add(workflowCollection);
-                await _rekeyingTasks.Update(task, cancellationToken);
+                try
+                { 
+                    // Update the UI with the data from this attempt
+                    _logger.LogInformation("Adding workflow collection to task");
+                    task.Attempts.Add(workflowCollection);
+                    await _rekeyingTasks.Update(task, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating task: {ex}", ex.ToString());
+                    throw ex;
+                }
+
 
                 // Execute the workflow collection
+                _logger.LogInformation("Executing {ActionCount} actions", workflowCollection.Actions.Count);
                 try { await workflowCollection.Run(); }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error executing action(s)");
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error preparing workflow: {ex}", ex);
                 await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskAttemptFailed, nameof(TaskExecutionMetaService.ExecuteTask), task);
             }
 
             // Update Task record
+            _logger.LogInformation("Completing task record");
             task.RekeyingInProgress = false;
             task.RekeyingCompleted = (workflowCollection?.HasBeenExecuted).GetValueOrDefault();
             task.RekeyingCompleted = (workflowCollection?.HasBeenExecutedSuccessfully).GetValueOrDefault();
@@ -194,6 +218,7 @@ namespace AuthJanitor.UI.Shared.MetaServices
             // Run cleanup if Task is complete
             if (!task.RekeyingFailed)
             {
+                _logger.LogInformation("Performing cleanup");
                 try
                 {
                     secret.LastChanged = DateTimeOffset.UtcNow;
@@ -206,12 +231,12 @@ namespace AuthJanitor.UI.Shared.MetaServices
 
                     await _rekeyingTasks.Update(task, cancellationToken);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error deleting persisted credentials");
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred, nameof(TaskExecutionMetaService.ExecuteTask),
                         "Failure to clean up persisted credentials");
                 }
-
 
                 if (task.ConfirmationType.UsesOBOTokens())
                     await _eventDispatcherMetaService.DispatchEvent(AuthJanitorSystemEvents.RotationTaskCompletedManually, nameof(TaskExecutionMetaService.ExecuteTask), task);
