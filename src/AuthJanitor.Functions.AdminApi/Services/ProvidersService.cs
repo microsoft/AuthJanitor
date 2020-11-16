@@ -8,13 +8,13 @@ using AuthJanitor.IdentityServices;
 using AuthJanitor.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AuthJanitor.Providers.Capabilities;
+using AuthJanitor.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace AuthJanitor.Services
 {
@@ -25,6 +25,7 @@ namespace AuthJanitor.Services
     public class ProvidersService
     {
         private readonly IIdentityService _identityService;
+        private readonly ILogger _logger;
         private readonly EventDispatcherMetaService _eventDispatcher;
         private readonly ProviderManagerService _providerManager;
 
@@ -33,12 +34,14 @@ namespace AuthJanitor.Services
 
         public ProvidersService(
             IIdentityService identityService,
+            ILogger<ProvidersService> logger,
             EventDispatcherMetaService eventDispatcher,
             ProviderManagerService providerManager,
             Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate)
         {
             _identityService = identityService;
+            _logger = logger;
             _eventDispatcher = eventDispatcher;
             _providerManager = providerManager;
 
@@ -53,6 +56,41 @@ namespace AuthJanitor.Services
             if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
 
             return new OkObjectResult(_providerManager.LoadedProviders.Select(p => _providerViewModel(p)));
+        }
+
+        public async Task<IActionResult> Enumerate(HttpRequest req)
+        {
+            _ = req;
+
+            if (!_identityService.IsUserLoggedIn) return new UnauthorizedResult();
+
+            _logger.LogInformation("Acquiring OBO token");
+            var token = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync();
+
+            _logger.LogInformation("Starting provider enumeration");
+            var providerSuggestions = await _providerManager.EnumerateProviders(token);
+
+            _logger.LogInformation("Enumerated {Count} provider suggestions", providerSuggestions.Count());
+
+            var results = new System.Collections.Generic.List<ProviderResourceSuggestionViewModel>();
+            return new OkObjectResult(providerSuggestions.Select(p =>
+            {
+                try
+                {
+                    return new ProviderResourceSuggestionViewModel()
+                    {
+                        Name = p.Name,
+                        ProviderType = p.ProviderType,
+                        ProviderConfiguration = _configViewModel(p.Configuration),
+                        ProviderConfigurationSerialized = p.SerializedConfiguration
+                    };
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error preparing suggestion: " + ex.ToString());
+                    return null;
+                }
+            }).Where(s => s != null));
         }
 
         public async Task<IActionResult> GetBlankConfiguration(HttpRequest req, string providerType)

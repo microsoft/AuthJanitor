@@ -31,7 +31,7 @@ namespace AuthJanitor.Providers.CosmosDb
 
         protected override string Service => "CosmosDB";
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -42,12 +42,17 @@ namespace AuthJanitor.Providers.CosmosDb
                 items = await (await GetAzureAsync()).CosmosDBAccounts.ListAsync();
 
             return items.Select(i =>
-                new CosmosDbKeyConfiguration()
+            new ProviderResourceSuggestion()
+            {
+                Configuration = new CosmosDbKeyConfiguration()
                 {
                     ResourceGroup = i.ResourceGroupName,
                     ResourceName = i.Name,
                     KeyType = CosmosDbKeyConfiguration.CosmosDbKeyKinds.Primary,
-                } as AuthJanitorProviderConfiguration).ToList();
+                },
+                Name = $"CosmosDB - {i.ResourceGroupName} - {i.Name}",
+                ProviderType = this.GetType().AssemblyQualifiedName
+            }).ToList();
         }
 
         protected override RegeneratedSecret CreateSecretFromKeyring(IDatabaseAccountListKeysResult keyring, CosmosDbKeyConfiguration.CosmosDbKeyKinds keyType) =>

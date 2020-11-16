@@ -51,7 +51,7 @@ namespace AuthJanitor.Providers.AzureSearch
 
         protected override ISupportsGettingByResourceGroup<ISearchService> GetResourceCollection(IAzure azure) => azure.SearchServices;
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -61,12 +61,17 @@ namespace AuthJanitor.Providers.AzureSearch
             else
                 items = await (await GetAzureAsync()).SearchServices.ListAsync();
 
-            return items.Select(i => new AzureSearchAdminKeyConfiguration()
+            return items.Select(i => new ProviderResourceSuggestion()
             {
-                ResourceGroup = i.ResourceGroupName,
-                ResourceName = i.Name,
-                KeyType = AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds.Primary
-            } as AuthJanitorProviderConfiguration).ToList();
+                Configuration = new AzureSearchAdminKeyConfiguration()
+                {
+                    ResourceGroup = i.ResourceGroupName,
+                    ResourceName = i.Name,
+                    KeyType = AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds.Primary
+                },
+                Name = $"Azure Search - {i.ResourceGroupName} - {i.Name}",
+                ProviderType = this.GetType().AssemblyQualifiedName
+            }).ToList();
         }
     }
 }

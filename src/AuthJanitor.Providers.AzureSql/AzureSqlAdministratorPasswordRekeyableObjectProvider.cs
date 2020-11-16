@@ -120,7 +120,7 @@ namespace AuthJanitor.Providers.AzureSql
 
         protected override ISupportsGettingByResourceGroup<ISqlServer> GetResourceCollection(IAzure azure) => azure.SqlServers;
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -133,13 +133,18 @@ namespace AuthJanitor.Providers.AzureSql
             return (await Task.WhenAll(items.Select(async i =>
             {
                 return (await i.Databases.ListAsync()).Select(db =>
-                    new AzureSqlAdministratorPasswordConfiguration()
+                new ProviderResourceSuggestion()
+                {
+                    Configuration = new AzureSqlAdministratorPasswordConfiguration()
                     {
                         ResourceGroup = i.ResourceGroupName,
                         ResourceName = i.Name,
                         DatabaseName = db.Name,
                         PasswordLength = 32
-                    } as AuthJanitorProviderConfiguration);
+                    },
+                    Name = $"SQL Admin - {i.ResourceGroupName} - {i.Name} (DB: {db.Name})",
+                    ProviderType = this.GetType().AssemblyQualifiedName
+                });
             }))).SelectMany(f => f).ToList();
         }
     }
