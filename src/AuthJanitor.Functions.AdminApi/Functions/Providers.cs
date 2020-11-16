@@ -28,6 +28,12 @@ namespace AuthJanitor.Functions
             return _service.List(req);
         }
 
+        [FunctionName("Providers-Enumerate")]
+        public async Task<IActionResult> Enumerate([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers/enumerate")] HttpRequest req)
+        {
+            return await _service.Enumerate(req);
+        }
+
         [FunctionName("Providers-GetBlankConfiguration")]
         public async Task<IActionResult> GetBlankConfiguration(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "providers/{providerType}")] HttpRequest req,

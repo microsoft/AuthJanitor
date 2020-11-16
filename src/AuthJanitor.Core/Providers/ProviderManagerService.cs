@@ -69,6 +69,13 @@ namespace AuthJanitor.Providers
             return ActivatorUtilities.CreateInstance(_serviceProvider, metadata.ProviderType) as IAuthJanitorProvider;
         }
 
+        public IAuthJanitorProvider GetProviderInstanceDefault(string providerName)
+        {
+            var instance = GetProviderInstance(providerName);
+            instance.SerializedConfiguration = GetProviderConfiguration(providerName, GetProviderConfiguration(providerName));
+            return instance;
+        }
+
         public IAuthJanitorProvider GetProviderInstance(string providerName, string serializedProviderConfiguration)
         {
             var instance = GetProviderInstance(providerName);
@@ -78,6 +85,7 @@ namespace AuthJanitor.Providers
 
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name) => ActivatorUtilities.CreateInstance(_serviceProvider, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonSerializer.Deserialize(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions) as AuthJanitorProviderConfiguration;
+        public string GetProviderConfiguration<T>(string name, T configuration) => JsonSerializer.Serialize(configuration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions);
 
         public bool TestProviderConfiguration(string name, string serializedConfiguration)
         {
@@ -88,6 +96,39 @@ namespace AuthJanitor.Providers
                 return obj != null;
             }
             catch { return false; }
+        }
+
+        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential) =>
+            (await Task.WhenAll(
+                LoadedProviders.Select(p => GetProviderInstanceDefault(p.ProviderTypeName))
+                    .OfType<ICanEnumerateResourceCandidates>()
+                    .Select(p => EnumerateProviders(credential, p))))
+                .Where(c => c != null)
+                .SelectMany(c => c);
+
+        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential, IAuthJanitorProvider provider)
+        {
+            provider.Credential = credential;
+            if (provider is ICanEnumerateResourceCandidates)
+            {
+                var enumerable = provider as ICanEnumerateResourceCandidates;
+                try
+                {
+                    var results = await enumerable.EnumerateResourceCandidates(GetProviderConfiguration(provider.GetType().AssemblyQualifiedName, provider.SerializedConfiguration));
+                    return results.Select(r => new ProviderResourceSuggestion()
+                    { 
+                        Name = r.Name,
+                        ProviderType = r.ProviderType,
+                        Configuration = r.Configuration,
+                        SerializedConfiguration = JsonSerializer.Serialize<object>(r.Configuration)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _serviceProvider.GetRequiredService<ILogger<ProviderManagerService>>().LogError(ex, "Error enumerating resource candidates for provider type " + provider.GetType().AssemblyQualifiedName);
+                }
+            }
+            return new ProviderResourceSuggestion[0];
         }
 
         public IReadOnlyList<LoadedProviderMetadata> LoadedProviders { get; }

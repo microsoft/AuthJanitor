@@ -17,6 +17,10 @@
       "matchCondition": { "route": "/providers" },
       "backendUri": "%STORAGE_WEB_URL%/providers"
     },
+    "ui-providers-suggestions": {
+      "matchCondition": { "route": "/providers/suggestions" },
+      "backendUri": "%STORAGE_WEB_URL%/providers/suggestions"
+    },
     "ui-integrityReports": {
       "matchCondition": { "route": "/integrityReports" },
       "backendUri": "%STORAGE_WEB_URL%/integrityReports"

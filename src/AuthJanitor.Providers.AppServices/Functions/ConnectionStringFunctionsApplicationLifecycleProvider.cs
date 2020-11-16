@@ -66,7 +66,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             $"be moved from slot '{Configuration.SourceSlot}' to slot '{Configuration.TemporarySlot}' " +
             $"temporarily, and then back.";
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -79,13 +79,18 @@ namespace AuthJanitor.Providers.AppServices.Functions
             return (await Task.WhenAll(items.Select(async i =>
             {
                 return (await i.GetConnectionStringsAsync()).Select(c =>
-                new ConnectionStringConfiguration()
+                new ProviderResourceSuggestion()
                 {
-                    ResourceName = i.Name,
-                    ResourceGroup = i.ResourceGroupName,
-                    ConnectionStringName = c.Key,
-                    ConnectionStringType = c.Value.Type
-                } as AuthJanitorProviderConfiguration);
+                    Configuration = new ConnectionStringConfiguration()
+                    {
+                        ResourceName = i.Name,
+                        ResourceGroup = i.ResourceGroupName,
+                        ConnectionStringName = c.Key,
+                        ConnectionStringType = c.Value.Type
+                    },
+                    Name = $"Functions/ConnStr - {i.ResourceGroupName} - {i.Name} ({c.Key})",
+                    ProviderType = this.GetType().AssemblyQualifiedName
+                });
             }))).SelectMany(f => f).ToList();
         }
     }

@@ -32,7 +32,7 @@ namespace AuthJanitor.Providers.Storage
 
         protected override string Service => "Storage";
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -43,11 +43,16 @@ namespace AuthJanitor.Providers.Storage
                 items = await (await GetAzureAsync()).StorageAccounts.ListAsync();
 
             return items.Select(i =>
-                new StorageAccountKeyConfiguration()
+            new ProviderResourceSuggestion()
+            {
+                Configuration = new StorageAccountKeyConfiguration()
                 {
                     ResourceGroup = i.ResourceGroupName,
                     ResourceName = i.Name
-                } as AuthJanitorProviderConfiguration).ToList();
+                },
+                Name = $"Storage Account - {i.ResourceGroupName} - {i.Name}",
+                ProviderType = this.GetType().AssemblyQualifiedName
+            }).ToList();
         }
 
         protected override RegeneratedSecret CreateSecretFromKeyring(IReadOnlyList<StorageAccountKey> keyring, StorageAccountKeyConfiguration.StorageKeyTypes keyType)
