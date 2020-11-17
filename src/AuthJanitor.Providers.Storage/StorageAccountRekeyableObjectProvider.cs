@@ -43,15 +43,33 @@ namespace AuthJanitor.Providers.Storage
                 items = await (await GetAzureAsync()).StorageAccounts.ListAsync();
 
             return items.Select(i =>
-            new ProviderResourceSuggestion()
             {
-                Configuration = new StorageAccountKeyConfiguration()
+                return new ProviderResourceSuggestion()
                 {
-                    ResourceGroup = i.ResourceGroupName,
-                    ResourceName = i.Name
-                },
-                Name = $"Storage Account - {i.ResourceGroupName} - {i.Name}",
-                ProviderType = this.GetType().AssemblyQualifiedName
+                    Configuration = new StorageAccountKeyConfiguration()
+                    {
+                        ResourceGroup = i.ResourceGroupName,
+                        ResourceName = i.Name
+                    },
+                    Name = $"Storage Account - {i.ResourceGroupName} - {i.Name}",
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    AddressableNames = new List<string>()
+                    {
+                        i.Name,
+                        i.EndPoints?.Primary?.Blob,
+                        i.EndPoints?.Primary?.Dfs,
+                        i.EndPoints?.Primary?.File,
+                        i.EndPoints?.Primary?.Queue,
+                        i.EndPoints?.Primary?.Table,
+                        i.EndPoints?.Primary?.Web,
+                        i.EndPoints?.Secondary?.Blob,
+                        i.EndPoints?.Secondary?.Dfs,
+                        i.EndPoints?.Secondary?.File,
+                        i.EndPoints?.Secondary?.Queue,
+                        i.EndPoints?.Secondary?.Table,
+                        i.EndPoints?.Secondary?.Web,
+                    }.Where(a => !string.IsNullOrEmpty(a))
+                };
             }).ToList();
         }
 

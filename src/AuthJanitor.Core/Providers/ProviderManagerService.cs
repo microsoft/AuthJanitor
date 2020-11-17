@@ -26,12 +26,14 @@ namespace AuthJanitor.Providers
             Converters = { new JsonStringEnumConverter() }
         };
 
+        private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
 
         public ProviderManagerService(
             IServiceProvider serviceProvider,
             params Type[] providerTypes)
         {
+            _logger = serviceProvider.GetRequiredService<ILogger<ProviderManagerService>>();
             _serviceProvider = serviceProvider;
             LoadedProviders = providerTypes
                 .Where(type => !type.IsAbstract && typeof(IAuthJanitorProvider).IsAssignableFrom(type))
@@ -98,13 +100,26 @@ namespace AuthJanitor.Providers
             catch { return false; }
         }
 
-        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential) =>
-            (await Task.WhenAll(
+        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential)
+        {
+            var providers = (await Task.WhenAll(
                 LoadedProviders.Select(p => GetProviderInstanceDefault(p.ProviderTypeName))
                     .OfType<ICanEnumerateResourceCandidates>()
                     .Select(p => EnumerateProviders(credential, p))))
                 .Where(c => c != null)
                 .SelectMany(c => c);
+
+            foreach (var provider in providers.Where(p => p.AddressableNames.Any()))
+            {
+                foreach (var name in provider.AddressableNames)
+                {
+                    var refs = providers.Where(p => p.ResourceValues.Any(r => r.Contains(name)));
+                    provider.ResourcesAddressingThis.AddRange(refs);
+                }
+            }
+
+            return providers;
+        }
 
         public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential, IAuthJanitorProvider provider)
         {
@@ -120,7 +135,10 @@ namespace AuthJanitor.Providers
                         Name = r.Name,
                         ProviderType = r.ProviderType,
                         Configuration = r.Configuration,
-                        SerializedConfiguration = JsonSerializer.Serialize<object>(r.Configuration)
+                        SerializedConfiguration = JsonSerializer.Serialize<object>(r.Configuration),
+                        AddressableNames = r.AddressableNames.Distinct(),
+                        ResourceValues = r.ResourceValues.Distinct(),
+                        ResourcesAddressingThis = r.ResourcesAddressingThis
                     });
                 }
                 catch (Exception ex)

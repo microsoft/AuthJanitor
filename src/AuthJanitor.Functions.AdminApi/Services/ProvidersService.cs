@@ -77,13 +77,7 @@ namespace AuthJanitor.Services
             {
                 try
                 {
-                    return new ProviderResourceSuggestionViewModel()
-                    {
-                        Name = p.Name,
-                        ProviderType = p.ProviderType,
-                        ProviderConfiguration = _configViewModel(p.Configuration),
-                        ProviderConfigurationSerialized = p.SerializedConfiguration
-                    };
+                    return GetSuggestionViewModel(p);
                 }
                 catch (Exception ex)
                 {
@@ -92,6 +86,15 @@ namespace AuthJanitor.Services
                 }
             }).Where(s => s != null));
         }
+        private ProviderResourceSuggestionViewModel GetSuggestionViewModel(ProviderResourceSuggestion p) =>
+            new ProviderResourceSuggestionViewModel()
+            {
+                Name = p.Name,
+                ProviderType = p.ProviderType,
+                ProviderConfiguration = _configViewModel(p.Configuration),
+                ProviderConfigurationSerialized = p.SerializedConfiguration,
+                ResourcesAddressingThis = p.ResourcesAddressingThis.Select(r => GetSuggestionViewModel(r))
+            };
 
         public async Task<IActionResult> GetBlankConfiguration(HttpRequest req, string providerType)
         {

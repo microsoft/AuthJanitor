@@ -83,7 +83,8 @@ namespace AuthJanitor.Providers.ServiceBus
                         KeyType = ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary
                     },
                     Name = $"Service Bus Key - {i.ResourceGroupName} - {i.Name} ({rule.Name})",
-                    ProviderType = this.GetType().AssemblyQualifiedName
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    AddressableNames = new[] { i.Fqdn }
                 });
             }))).SelectMany(f => f).ToList();
         }

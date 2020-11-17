@@ -89,7 +89,9 @@ namespace AuthJanitor.Providers.AppServices.Functions
                         ConnectionStringType = c.Value.Type
                     },
                     Name = $"Functions/ConnStr - {i.ResourceGroupName} - {i.Name} ({c.Key})",
-                    ProviderType = this.GetType().AssemblyQualifiedName
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    ResourceValues = new[] { c.Value?.Value },
+                    AddressableNames = i.EnabledHostNames.ToList()
                 });
             }))).SelectMany(f => f).ToList();
         }

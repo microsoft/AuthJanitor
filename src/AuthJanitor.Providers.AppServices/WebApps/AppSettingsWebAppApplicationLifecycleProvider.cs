@@ -89,7 +89,9 @@ namespace AuthJanitor.Providers.AppServices.WebApps
                         SettingName = c.Key
                     },
                     Name = $"WebApp/AppSettings - {i.ResourceGroupName} - {i.Name}",
-                    ProviderType = this.GetType().AssemblyQualifiedName
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    ResourceValues = new[] { c.Value?.Value },
+                    AddressableNames = i.EnabledHostNames.ToList()
                 });
             }))).SelectMany(f => f).ToList();
         }

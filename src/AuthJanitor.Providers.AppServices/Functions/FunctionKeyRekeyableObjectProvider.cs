@@ -106,8 +106,10 @@ namespace AuthJanitor.Providers.AppServices.Functions
                                         KeyLength = key.Value.Length > 10 ? key.Value.Length : 32
                                     },
                                     Name = $"Function Key - {i.ResourceGroupName} - {i.Name} - {func.Name} ({key.Key})",
-                                    ProviderType = this.GetType().AssemblyQualifiedName
-                                });
+                                    ProviderType = this.GetType().AssemblyQualifiedName,
+                                    ResourceValues = new[] { key.Value },
+                                    AddressableNames = i.EnabledHostNames.ToList()
+                                }) ;
                         }
                     }
                 }
