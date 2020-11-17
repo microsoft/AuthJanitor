@@ -28,7 +28,7 @@ namespace AuthJanitor.Providers.EventHub
 
         protected override string Service => "Event Hub";
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -45,13 +45,19 @@ namespace AuthJanitor.Providers.EventHub
                 {
                     var rules = await eh.ListAuthorizationRulesAsync();
                     return rules.Select(rule =>
-                        new EventHubKeyConfiguration()
+                    new ProviderResourceSuggestion()
+                    {
+                        Configuration = new EventHubKeyConfiguration()
                         {
                             ResourceGroup = i.ResourceGroupName,
                             ResourceName = eh.Name,
                             NamespaceName = eh.NamespaceName,
                             AuthorizationRuleName = rule.Name
-                        } as AuthJanitorProviderConfiguration);
+                        },
+                        Name = $"Event Hub Key - {i.ResourceGroupName} - {eh.Name} - {eh.NamespaceName} ({rule.Name})",
+                        ProviderType = this.GetType().AssemblyQualifiedName,
+                        AddressableNames = new[] { i.ServiceBusEndpoint }
+                    });
                 }))).SelectMany(f => f);
             }))).SelectMany(f => f).ToList();
         }

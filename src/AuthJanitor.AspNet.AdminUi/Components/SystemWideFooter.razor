@@ -20,20 +20,23 @@
                         <i class="fa fa-sync-alt text-info"></i>
                     </a>
                 </div>
-                <div class="float-right mr-2">
-                    @if (Metrics.TasksInError > 0)
-                    {
-                        <a class="btn btn-sm btn-outline-danger mx-2" role="button" href="/rekeyingTasks">
-                            Errors <span class="badge badge-danger">@Metrics.TasksInError</span>
-                            <span class="sr-only">in rekeying tasks</span>
-                        </a>}
-                    @if (Metrics.TotalPendingApproval > 0)
-                    {
-                        <a class="btn btn-sm btn-outline-success mx-2" role="button" href="/rekeyingTasks">
-                            Approvals <span class="badge badge-success">@Metrics.TotalPendingApproval</span>
-                            <span class="sr-only">for pending rekeying tasks</span>
-                        </a>}
-                </div>
+                @if (Metrics != null)
+                {
+                    <div class="float-right mr-2">
+                        @if (Metrics.TasksInError > 0)
+                        {
+                            <a class="btn btn-sm btn-outline-danger mx-2" role="button" href="/rekeyingTasks">
+                                Errors <span class="badge badge-danger">@Metrics.TasksInError</span>
+                                <span class="sr-only">in rekeying tasks</span>
+                            </a>}
+                        @if (Metrics.TotalPendingApproval > 0)
+                        {
+                            <a class="btn btn-sm btn-outline-success mx-2" role="button" href="/rekeyingTasks">
+                                Approvals <span class="badge badge-success">@Metrics.TotalPendingApproval</span>
+                                <span class="sr-only">for pending rekeying tasks</span>
+                            </a>}
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -55,7 +58,8 @@
     protected void ChangeContextualHelpVisibility()
     {
         ContextualHelpVisible = !ContextualHelpVisible;
-        ContextualHelpVisibleChanged.InvokeAsync(ContextualHelpVisible);
+        if (!ContextualHelpVisibleChanged.Equals(default(EventCallback<bool>)))
+            ContextualHelpVisibleChanged.InvokeAsync(ContextualHelpVisible);
     }
 
     protected override async Task OnInitializedAsync()

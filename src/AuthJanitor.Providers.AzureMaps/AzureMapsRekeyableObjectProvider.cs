@@ -113,7 +113,7 @@ namespace AuthJanitor.Providers.AzureMaps
             _ => throw new NotImplementedException()
         };
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -124,11 +124,17 @@ namespace AuthJanitor.Providers.AzureMaps
                 items = await ManagementClient.Accounts.ListBySubscriptionAsync();
 
             return items.Select(i =>
-                new AzureMapsConfiguration()
+            new ProviderResourceSuggestion()
+            {
+                Configuration = new AzureMapsConfiguration()
                 {
                     ResourceName = i.Name,
                     KeyType = AzureMapsConfiguration.AzureMapsKeyType.Primary
-                } as AuthJanitorProviderConfiguration).ToList();
+                },
+                Name = $"Azure Maps - {i.Name}",
+                ProviderType = this.GetType().AssemblyQualifiedName,
+                AddressableNames = new[] { i.Name }
+            }).ToList();
         }
 
         private string GetKeyType => Configuration.KeyType switch

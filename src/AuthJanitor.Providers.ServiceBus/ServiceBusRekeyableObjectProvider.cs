@@ -59,7 +59,7 @@ namespace AuthJanitor.Providers.ServiceBus
 
         protected override ISupportsGettingByResourceGroup<IServiceBusNamespace> GetResourceCollection(IAzure azure) => azure.ServiceBusNamespaces;
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -73,13 +73,19 @@ namespace AuthJanitor.Providers.ServiceBus
             {
                 var rules = await i.AuthorizationRules.ListAsync();
                 return rules.Select(rule =>
-                    new ServiceBusKeyConfiguration()
+                new ProviderResourceSuggestion()
+                {
+                    Configuration = new ServiceBusKeyConfiguration()
                     {
                         ResourceGroup = i.ResourceGroupName,
                         ResourceName = i.Name,
                         AuthorizationRuleName = rule.Name,
                         KeyType = ServiceBusKeyConfiguration.ServiceBusKeyTypes.Primary
-                    } as AuthJanitorProviderConfiguration);
+                    },
+                    Name = $"Service Bus Key - {i.ResourceGroupName} - {i.Name} ({rule.Name})",
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    AddressableNames = new[] { i.Fqdn }
+                });
             }))).SelectMany(f => f).ToList();
         }
     }

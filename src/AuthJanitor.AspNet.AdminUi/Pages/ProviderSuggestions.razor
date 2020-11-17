@@ -1,0 +1,104 @@
+﻿@page "/providers/suggestions"
+
+<Container Fluid="true" Style="position:relative;">
+    <AuthJanitor.UI.Components.BreadcrumbRow Category="Manage"
+                                             PageGroup="Resource Suggestions">
+        <Column ColumnSize="ColumnSize.Is3" Margin="Margin.IsAuto.OnY" Padding="Padding.Is3.FromRight" Class="text-right">
+            <Button Clicked="@(() => Enumerate())">
+                <Icon Name="@FontAwesomeIcons.SearchPlus" Margin="Margin.Is1.FromRight" />
+                Enumerate Services
+            </Button>
+        </Column>
+    </AuthJanitor.UI.Components.BreadcrumbRow>
+
+    <Row>
+        <Column Padding="Padding.Is0">
+            <BlazorTable.Table TableItem="ProviderResourceSuggestionViewModel"
+                               TableClass="table table-striped table-hover"
+                               @bind-Items="@Suggestions">
+
+                <!-- Resource Name -->
+                <BlazorTable.Column TableItem="ProviderResourceSuggestionViewModel"
+                                    Title="Name" Field="@(x => x.Name)"
+                                    Sortable="true" Filterable="true" />
+
+                <!-- Provider -->
+                <BlazorTable.Column TableItem="ProviderResourceSuggestionViewModel"
+                                    Title="Provider" Field="@(x => x.ProviderType)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        @{
+                            var provider = _providers.FirstOrDefault(p => p.ProviderTypeName == context.ProviderType); }
+                        @if (provider != null)
+                        {
+                            <span class="float-left mr-2" style="width:1em;">
+                                @((MarkupString)provider.Details.SvgImage)
+                            </span>
+                            @provider.Details.Name
+                        }
+                        else
+                        {
+                            <p>Error Identifying Provider <strong>@context.ProviderType</strong>!</p>
+                        }
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Provider Config -->
+                <BlazorTable.Column TableItem="ProviderResourceSuggestionViewModel"
+                                    Title="Configuration" Field="@(x => x.ProviderConfiguration)"
+                                    Sortable="true" Filterable="true">
+                    <Template>
+                        <AuthJanitor.UI.Components.ConfigurationVisualizer ShowEditControls="false" Value="@context.ProviderConfiguration" />
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Links -->
+                <BlazorTable.Column TableItem="ProviderResourceSuggestionViewModel"
+                                    Title="Resources Pointing to This" Field="@(x => x.ResourcesAddressingThis)">
+                    <Template>
+                        <ul>
+                        @foreach (var resource in context.ResourcesAddressingThis)
+                        {
+                            <li>@resource.Name</li>
+                        }
+                        </ul>
+                    </Template>
+                </BlazorTable.Column>
+
+                <!-- Pager -->
+                <BlazorTable.Pager ShowPageNumber="true" ShowTotalCount="true" />
+            </BlazorTable.Table>
+        </Column>
+    </Row>
+
+    <AuthJanitor.UI.Components.HelpSlideInComponent Title="Resource Suggestions"
+                                                    Icon="@FontAwesomeIcons.SearchPlus"
+                                                    @bind-Visible="@ContextualHelpVisible">
+        <p>
+            <strong>Resource Suggestions</strong> are derived from your currently logged in user's Azure services. AuthJanitor
+            will scan all available services for ones which are supported by a loaded <strong>Provider</strong> and suggest
+            possible configurations for new <strong>Resources</strong> here.
+        </p>
+    </AuthJanitor.UI.Components.HelpSlideInComponent>
+</Container>
+
+<SystemWideFooter RefreshDataClicked="@(async () => { await Enumerate(); })"
+                  @bind-ContextualHelpVisible="@ContextualHelpVisible"/>
+
+@using AuthJanitor.ViewModels 
+@code {
+    protected IEnumerable<ProviderResourceSuggestionViewModel> Suggestions { get; set; } = new List<ProviderResourceSuggestionViewModel>();
+
+    private IEnumerable<LoadedProviderViewModel> _providers = new LoadedProviderViewModel[0];
+    protected bool ContextualHelpVisible { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _providers = await Http.AJList<LoadedProviderViewModel>();
+    }
+
+    protected async Task Enumerate()
+    {
+        Suggestions = await Http.AJList<ProviderResourceSuggestionViewModel>("enumerate");
+    }
+}

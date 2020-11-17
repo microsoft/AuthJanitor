@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.UI.Shared.ViewModels;
+using AuthJanitor.ViewModels;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,8 @@ namespace AuthJanitor.UI.Shared
             { typeof(ResourceViewModel), "resources" },
             { typeof(LoadedProviderViewModel), "providers" },
             { typeof(ProviderConfigurationViewModel), "providers" },
-            { typeof(AuthJanitorAuthorizedUserViewModel), "access" }
+            { typeof(AuthJanitorAuthorizedUserViewModel), "access" },
+            { typeof(ProviderResourceSuggestionViewModel), "providers" }
         };
 
         public AuthJanitorHttpClient() : base()
@@ -62,6 +64,12 @@ namespace AuthJanitor.UI.Shared
         public Task<IEnumerable<T>> AJList<T>() where T : IAuthJanitorViewModel => this
             .AssertRequestIsSane<T>()
             .GetAsync($"{BaseAddress}/{ApiFormatStrings[typeof(T)]}")
+            .ContinueWith(t => GetFromContentPayload<IEnumerable<T>>(t.Result))
+            .Unwrap();
+
+        public Task<IEnumerable<T>> AJList<T>(string objectName) where T : IAuthJanitorViewModel => this
+            .AssertRequestIsSane<T>()
+            .GetAsync($"{BaseAddress}/{ApiFormatStrings[typeof(T)]}/{objectName}")
             .ContinueWith(t => GetFromContentPayload<IEnumerable<T>>(t.Result))
             .Unwrap();
 

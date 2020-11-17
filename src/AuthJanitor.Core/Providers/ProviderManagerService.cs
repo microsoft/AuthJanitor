@@ -25,12 +25,14 @@ namespace AuthJanitor.Providers
             Converters = { new JsonStringEnumConverter() }
         };
 
+        private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
 
         public ProviderManagerService(
             IServiceProvider serviceProvider,
             params Type[] providerTypes)
         {
+            _logger = serviceProvider.GetRequiredService<ILogger<ProviderManagerService>>();
             _serviceProvider = serviceProvider;
             LoadedProviders = providerTypes
                 .Where(type => !type.IsAbstract && typeof(IAuthJanitorProvider).IsAssignableFrom(type))
@@ -68,6 +70,13 @@ namespace AuthJanitor.Providers
             return ActivatorUtilities.CreateInstance(_serviceProvider, metadata.ProviderType) as IAuthJanitorProvider;
         }
 
+        public IAuthJanitorProvider GetProviderInstanceDefault(string providerName)
+        {
+            var instance = GetProviderInstance(providerName);
+            instance.SerializedConfiguration = GetProviderConfiguration(providerName, GetProviderConfiguration(providerName));
+            return instance;
+        }
+
         public IAuthJanitorProvider GetProviderInstance(string providerName, string serializedProviderConfiguration)
         {
             var instance = GetProviderInstance(providerName);
@@ -81,11 +90,61 @@ namespace AuthJanitor.Providers
 
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name) => ActivatorUtilities.CreateInstance(_serviceProvider, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonSerializer.Deserialize(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions) as AuthJanitorProviderConfiguration;
+        public string GetProviderConfiguration<T>(string name, T configuration) => JsonSerializer.Serialize(configuration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions);
 
         public bool TestProviderConfiguration(string name, string serializedConfiguration)
         {
             try { return GetProviderConfiguration(name, serializedConfiguration) != null; }
             catch { return false; }
+        }
+
+        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential)
+        {
+            var providers = (await Task.WhenAll(
+                LoadedProviders.Select(p => GetProviderInstanceDefault(p.ProviderTypeName))
+                    .OfType<ICanEnumerateResourceCandidates>()
+                    .Select(p => EnumerateProviders(credential, p))))
+                .Where(c => c != null)
+                .SelectMany(c => c);
+
+            foreach (var provider in providers.Where(p => p.AddressableNames.Any()))
+            {
+                foreach (var name in provider.AddressableNames)
+                {
+                    var refs = providers.Where(p => p.ResourceValues.Any(r => r.Contains(name)));
+                    provider.ResourcesAddressingThis.AddRange(refs);
+                }
+            }
+
+            return providers;
+        }
+
+        public async Task<IEnumerable<ProviderResourceSuggestion>> EnumerateProviders(AccessTokenCredential credential, IAuthJanitorProvider provider)
+        {
+            provider.Credential = credential;
+            if (provider is ICanEnumerateResourceCandidates)
+            {
+                var enumerable = provider as ICanEnumerateResourceCandidates;
+                try
+                {
+                    var results = await enumerable.EnumerateResourceCandidates(GetProviderConfiguration(provider.GetType().AssemblyQualifiedName, provider.SerializedConfiguration));
+                    return results.Select(r => new ProviderResourceSuggestion()
+                    { 
+                        Name = r.Name,
+                        ProviderType = r.ProviderType,
+                        Configuration = r.Configuration,
+                        SerializedConfiguration = JsonSerializer.Serialize<object>(r.Configuration),
+                        AddressableNames = r.AddressableNames.Distinct(),
+                        ResourceValues = r.ResourceValues.Distinct(),
+                        ResourcesAddressingThis = r.ResourcesAddressingThis
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _serviceProvider.GetRequiredService<ILogger<ProviderManagerService>>().LogError(ex, "Error enumerating resource candidates for provider type " + provider.GetType().AssemblyQualifiedName);
+                }
+            }
+            return new ProviderResourceSuggestion[0];
         }
 
         public IReadOnlyList<LoadedProviderMetadata> LoadedProviders { get; }

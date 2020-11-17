@@ -73,7 +73,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
 
         protected override ISupportsGettingByResourceGroup<IFunctionApp> GetResourceCollection(IAzure azure) => azure.AppServices.FunctionApps;
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
             
@@ -83,23 +83,35 @@ namespace AuthJanitor.Providers.AppServices.Functions
             else
                 items = await (await GetAzureAsync()).AppServices.FunctionApps.ListAsync();
 
-            return (await Task.WhenAll<List<AuthJanitorProviderConfiguration>>(items.Select(async i =>
+            return (await Task.WhenAll(items.Select(async i =>
             {
-                var items = new List<AuthJanitorProviderConfiguration>();
-                foreach (var func in await i.ListFunctionsAsync())
+                var items = new List<ProviderResourceSuggestion>();
+                try
                 {
-                    foreach (var key in await i.ListFunctionKeysAsync(func.Name))
+                    foreach (var func in await i.ListFunctionsAsync())
                     {
-                        items.Add(new FunctionKeyConfiguration()
+                        foreach (var key in await i.ListFunctionKeysAsync(func.Name))
                         {
-                            ResourceName = i.Name,
-                            ResourceGroup = i.ResourceGroupName,
-                            FunctionName = func.Name,
-                            FunctionKeyName = key.Key,
-                            KeyLength = key.Value.Length > 10 ? key.Value.Length : 32
-                        });
+                            items.Add(
+                                new ProviderResourceSuggestion()
+                                {
+                                    Configuration = new FunctionKeyConfiguration()
+                                    {
+                                        ResourceName = i.Name,
+                                        ResourceGroup = i.ResourceGroupName,
+                                        FunctionName = func.Name,
+                                        FunctionKeyName = key.Key,
+                                        KeyLength = key.Value.Length > 10 ? key.Value.Length : 32
+                                    },
+                                    Name = $"Function Key - {i.ResourceGroupName} - {i.Name} - {func.Name} ({key.Key})",
+                                    ProviderType = this.GetType().AssemblyQualifiedName,
+                                    ResourceValues = new[] { key.Value },
+                                    AddressableNames = i.EnabledHostNames.ToList()
+                                }) ;
+                        }
                     }
                 }
+                catch (Exception) { }
                 return items;
             }))).SelectMany(f => f).ToList();
         }

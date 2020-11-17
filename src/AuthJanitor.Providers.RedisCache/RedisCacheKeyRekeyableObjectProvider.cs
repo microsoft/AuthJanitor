@@ -53,7 +53,7 @@ namespace AuthJanitor.Providers.Redis
             _ => throw new NotImplementedException()
         };
 
-        public async Task<List<AuthJanitorProviderConfiguration>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
+        public async Task<List<ProviderResourceSuggestion>> EnumerateResourceCandidates(AuthJanitorProviderConfiguration baseConfig)
         {
             var azureConfig = baseConfig as AzureAuthJanitorProviderConfiguration;
 
@@ -64,12 +64,18 @@ namespace AuthJanitor.Providers.Redis
                 items = await (await GetAzureAsync()).RedisCaches.ListAsync();
 
             return items.Select(i =>
-                new RedisCacheKeyConfiguration()
+            new ProviderResourceSuggestion()
+            {
+                Configuration = new RedisCacheKeyConfiguration()
                 {
                     ResourceGroup = i.ResourceGroupName,
                     ResourceName = i.Name,
                     KeyType = RedisCacheKeyConfiguration.RedisKeyTypes.Primary
-                } as AuthJanitorProviderConfiguration).ToList();
+                },
+                Name = $"Redis Cache - {i.ResourceGroupName} - {i.Name}",
+                ProviderType = this.GetType().AssemblyQualifiedName,
+                AddressableNames = new[] { i.HostName }
+            }).ToList();
         }
     }
 }
