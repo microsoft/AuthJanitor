@@ -137,7 +137,8 @@ namespace AuthJanitor.Providers.AzureMaps
                     KeyType = AzureMapsConfiguration.AzureMapsKeyType.Primary
                 },
                 Name = $"Azure Maps - {i.Name}",
-                ProviderType = this.GetType().AssemblyQualifiedName
+                ProviderType = this.GetType().AssemblyQualifiedName,
+                AddressableNames = new[] { i.Name }
             }).ToList();
         }
 

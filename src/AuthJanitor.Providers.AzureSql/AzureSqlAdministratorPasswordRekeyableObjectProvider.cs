@@ -143,7 +143,8 @@ namespace AuthJanitor.Providers.AzureSql
                         PasswordLength = 32
                     },
                     Name = $"SQL Admin - {i.ResourceGroupName} - {i.Name} (DB: {db.Name})",
-                    ProviderType = this.GetType().AssemblyQualifiedName
+                    ProviderType = this.GetType().AssemblyQualifiedName,
+                    AddressableNames = new[] { i.FullyQualifiedDomainName }
                 });
             }))).SelectMany(f => f).ToList();
         }

@@ -55,7 +55,8 @@ namespace AuthJanitor.Providers.EventHub
                             AuthorizationRuleName = rule.Name
                         },
                         Name = $"Event Hub Key - {i.ResourceGroupName} - {eh.Name} - {eh.NamespaceName} ({rule.Name})",
-                        ProviderType = this.GetType().AssemblyQualifiedName
+                        ProviderType = this.GetType().AssemblyQualifiedName,
+                        AddressableNames = new[] { i.ServiceBusEndpoint }
                     });
                 }))).SelectMany(f => f);
             }))).SelectMany(f => f).ToList();

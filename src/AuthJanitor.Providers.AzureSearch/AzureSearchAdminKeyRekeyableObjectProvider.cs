@@ -70,7 +70,8 @@ namespace AuthJanitor.Providers.AzureSearch
                     KeyType = AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds.Primary
                 },
                 Name = $"Azure Search - {i.ResourceGroupName} - {i.Name}",
-                ProviderType = this.GetType().AssemblyQualifiedName
+                ProviderType = this.GetType().AssemblyQualifiedName,
+                AddressableNames = new[] { i.Name }
             }).ToList();
         }
     }

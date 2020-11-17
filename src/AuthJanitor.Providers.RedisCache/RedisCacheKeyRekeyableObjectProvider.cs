@@ -73,7 +73,8 @@ namespace AuthJanitor.Providers.Redis
                     KeyType = RedisCacheKeyConfiguration.RedisKeyTypes.Primary
                 },
                 Name = $"Redis Cache - {i.ResourceGroupName} - {i.Name}",
-                ProviderType = this.GetType().AssemblyQualifiedName
+                ProviderType = this.GetType().AssemblyQualifiedName,
+                AddressableNames = new[] { i.HostName }
             }).ToList();
         }
     }
