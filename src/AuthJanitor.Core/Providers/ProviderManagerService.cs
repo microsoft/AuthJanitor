@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;

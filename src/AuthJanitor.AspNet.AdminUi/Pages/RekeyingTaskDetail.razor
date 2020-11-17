@@ -87,40 +87,9 @@
                     @foreach (var attempt in Task.Attempts)
                         {
                     <TabPanel Name="@attempt.StartedExecution.ToString()">
-                        <Accordion>
-                            @foreach (var action in attempt.Actions)
-                            {
-                            <Collapse Visible="@_actionVisibilities.GetValueOrDefault(attempt.Actions.ToList().IndexOf(action), false)">
-                                <CollapseHeader>
-                                    <Heading Size="HeadingSize.Is5">
-                                        <Button Clicked="@(() => _actionVisibilities[attempt.Actions.ToList().IndexOf(action)] = !_actionVisibilities.GetValueOrDefault(attempt.Actions.ToList().IndexOf(action), false))">
-                                            @action.Name
-                                            <small>@action.ProviderType</small>
-                                        </Button>
-                                    </Heading>
-                                </CollapseHeader>
-                                <CollapseBody>
-                                    <strong>Started: </strong> @action.Start<br />
-                                    <strong>Ended: </strong> @action.End<br />
-                                    <pre><code>@action.Log</code></pre>
-                                </CollapseBody>
-                            </Collapse>
-                            }
-                            </Accordion>
-
-                            <pre><code>@attempt.OrchestrationLog</code></pre>
-                            @if (!attempt.HasBeenExecutedSuccessfully)
-                            {
-                                <div class="alert alert-danger" role="alert">
-                                    <h4 class="text-danger">
-                                        Exception thrown!
-                                    </h4>
-                                    <p>
-                                        <pre><code>@attempt.GetLastException()</code></pre>
-                                    </p>
-                                </div>
-                            }
-</TabPanel>
+                        <RekeyingTaskAttemptAccordion Action="@attempt" Secret="@Secret" />
+                        <pre class="border-dark bg-gradient-light"><code>@attempt.OrchestrationLog</code></pre>
+                    </TabPanel>
                         }
                 </Content>
             </Tabs>
@@ -160,8 +129,6 @@
     public ManagedSecretViewModel Secret => Task == null ? new ManagedSecretViewModel() : Task.ManagedSecret;
     public RekeyingTaskViewModel Task { get; set; } = new RekeyingTaskViewModel();
 
-    Dictionary<int, bool> _actionVisibilities = new Dictionary<int, bool>();
-
     protected bool ApproveModalShowing { get; set; }
     protected bool DeleteModalShowing { get; set; }
     public bool ContextualHelpVisible { get; set; }
@@ -171,9 +138,6 @@
     [Parameter]
     public string RekeyingTaskId { get; set; }
 
-    public TimeSpan DurationSoFar => DateTimeOffset.UtcNow - Secret.LastChanged.GetValueOrDefault();
-    protected IEnumerable<LoadedProviderViewModel> _providers;
-
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
@@ -181,7 +145,6 @@
 
     protected async Task LoadData()
     {
-        _providers = await Http.AJList<LoadedProviderViewModel>();
         Task = await Http.AJGet<RekeyingTaskViewModel>(Guid.Parse(RekeyingTaskId));
         if (Task.Attempts.Any())
         {
