@@ -25,7 +25,7 @@ namespace AuthJanitor.Providers.Redis
     {
         protected override string Service => "Redis Cache";
 
-        public RedisCacheKeyRekeyableObjectProvider(ILogger<RedisCacheKeyRekeyableObjectProvider> logger) : base(logger) { }
+        public RedisCacheKeyRekeyableObjectProvider(ProviderWorkflowActionLogger<RedisCacheKeyRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override RegeneratedSecret CreateSecretFromKeyring(IRedisAccessKeys keyring, RedisCacheKeyConfiguration.RedisKeyTypes keyType) =>
             new RegeneratedSecret()

@@ -24,7 +24,7 @@ namespace AuthJanitor.Providers.EventHub
     public class EventHubRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<EventHubKeyConfiguration, IEventHubNamespace, IEventHubAuthorizationKey, EventHubKeyConfiguration.EventHubKeyTypes, KeyType>,
         ICanEnumerateResourceCandidates
     {
-        public EventHubRekeyableObjectProvider(ILogger<EventHubRekeyableObjectProvider> logger) : base(logger) { }
+        public EventHubRekeyableObjectProvider(ProviderWorkflowActionLogger<EventHubRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Event Hub";
 

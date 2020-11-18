@@ -23,7 +23,7 @@ namespace AuthJanitor.Providers.AzureSearch
     public class AzureSearchAdminKeyRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<AzureSearchAdminKeyConfiguration, ISearchService, IAdminKeys, AzureSearchAdminKeyConfiguration.AzureSearchKeyKinds, AdminKeyKind>,
         ICanEnumerateResourceCandidates
     {
-        public AzureSearchAdminKeyRekeyableObjectProvider(ILogger<AzureSearchAdminKeyRekeyableObjectProvider> logger) : base(logger) { }
+        public AzureSearchAdminKeyRekeyableObjectProvider(ProviderWorkflowActionLogger<AzureSearchAdminKeyRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Azure Search";
 

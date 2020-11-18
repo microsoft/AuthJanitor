@@ -17,8 +17,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
         where TConfiguration : SlottableAzureAuthJanitorProviderConfiguration
     {
         protected const string PRODUCTION_SLOT_NAME = "production";
-        private readonly ILogger _logger;
-        protected SlottableAzureApplicationLifecycleProvider(ILogger logger) => _logger = logger;
+        protected SlottableAzureApplicationLifecycleProvider(ILogger logger) : base(logger) { }
 
         public async Task Test()
         {
@@ -39,7 +38,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         public async Task UnifiedCommitForTemporarySecretValues()
         {
-            _logger.LogInformation("Swapping settings from {TemporarySlot} to {SourceSlot}",
+            Logger.LogInformation("Swapping settings from {TemporarySlot} to {SourceSlot}",
                 Configuration.TemporarySlot,
                 Configuration.SourceSlot);
             var resource = await GetResourceAsync();
@@ -54,7 +53,7 @@ namespace AuthJanitor.Providers.Azure.Workflows
 
         public async Task UnifiedCommit()
         {
-            _logger.LogInformation("Swapping from {SourceSlot} to {DestinationSlot}",
+            Logger.LogInformation("Swapping from {SourceSlot} to {DestinationSlot}",
                 Configuration.TemporarySlot,
                 Configuration.DestinationSlot);
             var resource = await GetResourceAsync();

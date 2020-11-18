@@ -26,12 +26,7 @@ namespace AuthJanitor.Providers.AzureMaps
         private const string PRIMARY_KEY = "primary";
         private const string SECONDARY_KEY = "secondary";
 
-        private readonly ILogger _logger;
-
-        public AzureMapsRekeyableObjectProvider(ILogger<AzureMapsRekeyableObjectProvider> logger)
-        {
-            _logger = logger;
-        }
+        public AzureMapsRekeyableObjectProvider(ProviderWorkflowActionLogger<AzureMapsRekeyableObjectProvider> logger) : base(logger) { }
 
         public async Task Test()
         {
@@ -43,11 +38,11 @@ namespace AuthJanitor.Providers.AzureMaps
 
         public async Task<RegeneratedSecret> GenerateTemporarySecretValue()
         {
-            _logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType);
+            Logger.LogInformation("Getting temporary secret to use during rekeying from other ({OtherKeyType}) key...", GetOtherKeyType);
             var keys = await ManagementClient.Accounts.ListKeysAsync(
                 Configuration.ResourceGroup,
                 Configuration.ResourceName);
-            _logger.LogInformation("Successfully retrieved temporary secret!");
+            Logger.LogInformation("Successfully retrieved temporary secret!");
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10),
@@ -58,12 +53,12 @@ namespace AuthJanitor.Providers.AzureMaps
 
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Regenerating Azure Maps key type '{KeyType}'", GetKeyType);
+            Logger.LogInformation("Regenerating Azure Maps key type '{KeyType}'", GetKeyType);
             var keys = await ManagementClient.Accounts.RegenerateKeysAsync(
                 Configuration.ResourceGroup,
                 Configuration.ResourceName,
                 new MapsKeySpecification(GetKeyType));
-            _logger.LogInformation("Successfully regenerated Azure Maps key type '{KeyType}'", GetKeyType);
+            Logger.LogInformation("Successfully regenerated Azure Maps key type '{KeyType}'", GetKeyType);
             return new RegeneratedSecret()
             {
                 Expiry = DateTimeOffset.UtcNow + requestedValidPeriod,
@@ -76,14 +71,14 @@ namespace AuthJanitor.Providers.AzureMaps
         {
             if (!Configuration.SkipScramblingOtherKey)
             {
-                _logger.LogInformation("Scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
+                Logger.LogInformation("Scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
                 await ManagementClient.Accounts.RegenerateKeysAsync(
                     Configuration.ResourceGroup,
                     Configuration.ResourceName,
                     new MapsKeySpecification(GetOtherKeyType));
             }
             else
-                _logger.LogInformation("Skipping scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
+                Logger.LogInformation("Skipping scrambling Azure Maps key type '{OtherKeyType}'", GetOtherKeyType);
         }
 
         public override IList<RiskyConfigurationItem> GetRisks()

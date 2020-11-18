@@ -21,12 +21,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
     public class ConnectionStringFunctionsApplicationLifecycleProvider : SlottableAzureApplicationLifecycleProvider<ConnectionStringConfiguration, IFunctionApp>,
         ICanEnumerateResourceCandidates
     {
-        private readonly ILogger _logger;
-
-        public ConnectionStringFunctionsApplicationLifecycleProvider(ILogger<AppSettingsFunctionsApplicationLifecycleProvider> logger) : base(logger)
-        {
-            _logger = logger;
-        }
+        public ConnectionStringFunctionsApplicationLifecycleProvider(ProviderWorkflowActionLogger<AppSettingsFunctionsApplicationLifecycleProvider> logger) : base(logger) { }
 
         protected override async Task ApplyUpdate(IFunctionApp resource, string slotName, List<RegeneratedSecret> secrets)
         {
@@ -34,7 +29,7 @@ namespace AuthJanitor.Providers.AppServices.Functions
             foreach (RegeneratedSecret secret in secrets)
             {
                 var connectionStringName = string.IsNullOrEmpty(secret.UserHint) ? Configuration.ConnectionStringName : $"{Configuration.ConnectionStringName}-{secret.UserHint}";
-                _logger.LogInformation("Updating Connection String '{ConnectionStringName}' in slot '{SlotName}'", connectionStringName, Configuration.TemporarySlot);
+                Logger.LogInformation("Updating Connection String '{ConnectionStringName}' in slot '{SlotName}'", connectionStringName, Configuration.TemporarySlot);
                 updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)
                               updateBase.WithoutConnectionString(connectionStringName);
                 updateBase = (Microsoft.Azure.Management.AppService.Fluent.FunctionDeploymentSlot.Update.IUpdate)

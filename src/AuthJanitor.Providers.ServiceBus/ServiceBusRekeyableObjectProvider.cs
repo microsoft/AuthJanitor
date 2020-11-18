@@ -23,7 +23,7 @@ namespace AuthJanitor.Providers.ServiceBus
     public class ServiceBusRekeyableObjectProvider : TwoKeyAzureRekeyableObjectProvider<ServiceBusKeyConfiguration, IServiceBusNamespace, IAuthorizationKeys, ServiceBusKeyConfiguration.ServiceBusKeyTypes, Policykey>,
         ICanEnumerateResourceCandidates
     {
-        public ServiceBusRekeyableObjectProvider(ILogger<ServiceBusRekeyableObjectProvider> logger) : base(logger) { }
+        public ServiceBusRekeyableObjectProvider(ProviderWorkflowActionLogger<ServiceBusRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Service Bus";
 

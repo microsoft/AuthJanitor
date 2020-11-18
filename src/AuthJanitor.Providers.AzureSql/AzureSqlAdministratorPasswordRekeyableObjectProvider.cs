@@ -27,13 +27,11 @@ namespace AuthJanitor.Providers.AzureSql
         ICanEnumerateResourceCandidates
     {
         private readonly ICryptographicImplementation _cryptographicImplementation;
-        private readonly ILogger _logger;
-
+        
         public AzureSqlAdministratorPasswordRekeyableObjectProvider(
             ILogger<AzureSqlAdministratorPasswordRekeyableObjectProvider> logger,
-            ICryptographicImplementation cryptographicImplementation)
+            ICryptographicImplementation cryptographicImplementation) : base(logger)
         {
-            _logger = logger;
             _cryptographicImplementation = cryptographicImplementation;
         }
 
@@ -46,14 +44,14 @@ namespace AuthJanitor.Providers.AzureSql
         
         public async Task<RegeneratedSecret> Rekey(TimeSpan requestedValidPeriod)
         {
-            _logger.LogInformation("Generating new password of length {PasswordLength}", Configuration.PasswordLength);
+            Logger.LogInformation("Generating new password of length {PasswordLength}", Configuration.PasswordLength);
             var newPassword = await _cryptographicImplementation.GenerateCryptographicallyRandomString(Configuration.PasswordLength);
             var sqlServer = await GetResourceAsync();
-            _logger.LogInformation("Updating administrator password...");
+            Logger.LogInformation("Updating administrator password...");
             await sqlServer.Update()
                            .WithAdministratorPassword(newPassword)
                            .ApplyAsync();
-            _logger.LogInformation("Password update complete");
+            Logger.LogInformation("Password update complete");
 
             return new RegeneratedSecret()
             {

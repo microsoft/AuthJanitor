@@ -85,18 +85,17 @@ namespace AuthJanitor.Providers
             return instance;
         }
 
+        public TProvider GetProviderInstance<TProvider>(TProvider existingProviderToClone)
+            where TProvider : IAuthJanitorProvider =>
+            (TProvider)GetProviderInstance(existingProviderToClone.GetType().AssemblyQualifiedName, existingProviderToClone.SerializedConfiguration);
+
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name) => ActivatorUtilities.CreateInstance(_serviceProvider, GetProviderMetadata(name).ProviderConfigurationType) as AuthJanitorProviderConfiguration;
         public AuthJanitorProviderConfiguration GetProviderConfiguration(string name, string serializedConfiguration) => JsonSerializer.Deserialize(serializedConfiguration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions) as AuthJanitorProviderConfiguration;
         public string GetProviderConfiguration<T>(string name, T configuration) => JsonSerializer.Serialize(configuration, GetProviderMetadata(name).ProviderConfigurationType, SerializerOptions);
 
         public bool TestProviderConfiguration(string name, string serializedConfiguration)
         {
-            try
-            {
-                var metadata = GetProviderMetadata(name);
-                var obj = JsonSerializer.Deserialize(serializedConfiguration, metadata.ProviderConfigurationType, SerializerOptions);
-                return obj != null;
-            }
+            try { return GetProviderConfiguration(name, serializedConfiguration) != null; }
             catch { return false; }
         }
 
@@ -151,248 +150,95 @@ namespace AuthJanitor.Providers
 
         public IReadOnlyList<LoadedProviderMetadata> LoadedProviders { get; }
 
-        public async Task ExecuteRekeyingWorkflow(
-            RekeyingAttemptLogger logger,
+        private TProvider DuplicateProvider<TProvider>(TProvider provider)
+            where TProvider : IAuthJanitorProvider =>
+            _serviceProvider.GetRequiredService<ProviderManagerService>()
+                            .GetProviderInstance(provider);
+
+        public ProviderWorkflowActionCollection CreateWorkflowCollection(
             TimeSpan validPeriod,
             IEnumerable<IAuthJanitorProvider> providers)
         {
-            logger.LogInformation("########## BEGIN REKEYING WORKFLOW ##########");
+            var workflowCollection = new ProviderWorkflowActionCollection(_serviceProvider);
 
-            // -----
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanRunSanityTests>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Sanity Test",
+                    p, p => p.Test())).ToArray());
 
-            logger.LogInformation("### Performing provider tests...");
+            // ---
 
-            await PerformActionsInParallel(
-                logger,
-                providers.OfType<ICanRunSanityTests>(),
-                p => p.Test(),
-                "Error running sanity test on provider '{ProviderName}'",
-                "Error running one or more sanity tests!");
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanGenerateTemporarySecretValue>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Generate Temporary Secrets", 
+                    p, p => p.GenerateTemporarySecretValue())).ToArray());
 
-            // -----
-
-            logger.LogInformation("### Retrieving/generating temporary secrets...");
-
-            var temporarySecrets = new List<RegeneratedSecret>();
-            await PerformActionsInParallel(
-                logger,
-                providers.OfType<ICanGenerateTemporarySecretValue>(),
-                p => p.GenerateTemporarySecretValue()
-                      .ContinueWith(t =>
-                      {
-                          if (t.Result != null)
-                          {
-                              temporarySecrets.Add(t.Result);
-                          }
-                      }),
-                "Error getting temporary secret from provider '{ProviderName}'",
-                "Error retrieving temporary secrets from one or more Rekeyable Object Providers!");
-
-            logger.LogInformation("{SecretCount} temporary secrets were created/read to be used during operation.", temporarySecrets.Count);
-
-            // -----
-
-            logger.LogInformation("### Distributing temporary secrets...");
-
-            await PerformActionsInParallelGroups(
-                logger,
-                providers.OfType<ICanDistributeTemporarySecretValues>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
-                p => p.DistributeTemporarySecretValues(temporarySecrets),
-                "Error distributing secrets to ALC provider '{ProviderName}'",
-                "Error distributing secrets!");
-
-            // -----
-
-            logger.LogInformation("### Performing commits for temporary secrets...");
-
-            await PerformActionsInParallel(
-                logger,
-                providers.OfType<ICanPerformUnifiedCommitForTemporarySecretValues>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode())
-                         .Select(g => g.First()),
-                p => p.UnifiedCommitForTemporarySecretValues(),
-                "Error committing temporary secrets for ALC provider '{ProviderName}'",
-                "Error committing temporary secrets!");
-
-            // -----
-
-            logger.LogInformation("### Rekeying objects and services...");
-
-            var newSecrets = new List<RegeneratedSecret>();
-            await PerformActionsInParallel(
-                logger,
-                providers.OfType<ICanRekey>(),
-                p => p.Rekey(validPeriod)
-                        .ContinueWith(t => 
-                        { 
-                            if (t.Result != null) 
-                            {
-                                newSecrets.Add(t.Result);
-                            } 
-                        }),
-                "Error rekeying provider '{ProviderName}'",
-                "Error rekeying one or more Rekeyable Object Providers!");
-
-            logger.LogInformation("{SecretCount} secrets were regenerated.", newSecrets.Count);
-
-            // -----
-
-            logger.LogInformation("### Distributing regenerated secrets...");
-
-            await PerformActionsInParallelGroups(
-                logger,
-                providers.OfType<ICanDistributeLongTermSecretValues>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
-                p => p.DistributeLongTermSecretValues(newSecrets),
-                "Error committing to provider '{ProviderName}'",
-                "Error committing regenerated secrets!");
-            
-            // -----
-
-            logger.LogInformation("### Performing commits...");
-
-            await PerformActionsInParallel(
-                logger,
-                providers.OfType<ICanPerformUnifiedCommit>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode())
-                         .Select(g => g.First()),
-                p => p.UnifiedCommit(),
-                "Error committing secrets for ALC provider '{ProviderName}'",
-                "Error committing secrets!");
-
-            // -----
-
-            logger.LogInformation("### Running cleanup operations...");
-
-            await PerformActionsInParallelGroups(
-                logger,
-                providers.OfType<ICanCleanup>()
-                         .GroupBy(p => p.GenerateResourceIdentifierHashCode()),
-                p => p.Cleanup(),
-                "Error cleaning up provider '{ProviderName}'",
-                "Error cleaning up!");
-
-            logger.LogInformation("########## END REKEYING WORKFLOW ##########");
-
-            logger.IsComplete = true;
-        }
-
-        private static async Task PerformActionsInSerial<TProviderType>(
-            ILogger logger, 
-            IEnumerable<TProviderType> providers, 
-            Func<TProviderType, Task> providerAction, 
-            string individualFailureErrorLogMessageTemplate)
-            where TProviderType : IAuthJanitorProvider
-        {
-            foreach (var provider in providers)
-            {
-                try
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanDistributeTemporarySecretValues>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Distribute Temporary Secrets",
+                    p, p =>
                 {
-                    logger.LogInformation("Running action in serial on {0}", provider.GetType().Name);
-                    await PerformAction(logger, provider, providerAction);
-                    await Task.Delay(DELAY_BETWEEN_ACTIONS_MS / 2);
-                }
-                catch (Exception exception)
+                    var actions = workflowCollection.GetActions<ICanGenerateTemporarySecretValue, RegeneratedSecret>();
+                    if (actions.Any())
+                        return p.DistributeTemporarySecretValues(actions.Select(a => a.Result).ToList());
+                    return Task.FromResult(false);
+                })).ToArray());
+
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanPerformUnifiedCommitForTemporarySecretValues>()
+                .GroupBy(p => p.GenerateResourceIdentifierHashCode())
+                .Select(p => p.First())
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Perform Unified Commit", 
+                    p, p => p.UnifiedCommitForTemporarySecretValues())).ToArray());
+
+            // ---
+
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanRekey>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Rekey Object",
+                    p, p => p.Rekey(validPeriod))).ToArray());
+
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanDistributeLongTermSecretValues>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Distribute Rekeyed Secrets",
+                    p, p =>
                 {
-                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, provider.GetType().Name);
+                    return p.DistributeLongTermSecretValues(
+                        workflowCollection.GetActions<ICanRekey, RegeneratedSecret>()
+                                          .Select(a => a.Result).ToList());
+                })).ToArray());
 
-                    throw;
-                }
-            }
-        }
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanPerformUnifiedCommit>()
+                .GroupBy(p => p.GenerateResourceIdentifierHashCode())
+                .Select(p => p.First())
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Perform Unified Commit on Rekeyed Secrets",
+                    p, p => p.UnifiedCommit())).ToArray());
 
-        private static async Task PerformActionsInParallelGroups<TProviderType>(
-            ILogger logger, 
-            IEnumerable<IGrouping<int, TProviderType>> providers, 
-            Func<TProviderType, Task> providerAction, 
-            string individualFailureErrorLogMessageTemplate, 
-            string anyFailureExceptionMessage)
-            where TProviderType : IAuthJanitorProvider
-        {
-            var providerActions = providers.Select(async provider =>
-            {
-                await PerformActionsInSerial(
-                    logger,
-                    provider,
-                    providerAction,
-                    individualFailureErrorLogMessageTemplate);
-            });
+            // ---
 
-            try
-            {
-                await Task.WhenAll(providerActions);
-            }
-            catch (Exception exception)
-            {
-                throw new Exception(anyFailureExceptionMessage, exception);
-            }
+            workflowCollection.AddWithOneIncrement(providers
+                .OfType<ICanCleanup>()
+                .Select(DuplicateProvider)
+                .Select(p => ProviderWorkflowAction.Create(
+                    "Cleanup",
+                    p, p => p.Cleanup())).ToArray());
 
-            if (providers.Any())
-            {
-                logger.LogInformation("Sleeping for {SleepTime}", DELAY_BETWEEN_ACTIONS_MS);
-                await Task.Delay(DELAY_BETWEEN_ACTIONS_MS);
-            }
-        }
-
-        private static async Task PerformActionsInParallel<TProviderType>(
-            ILogger logger,
-            IEnumerable<TProviderType> providers,
-            Func<TProviderType, Task> providerAction,
-            string individualFailureErrorLogMessageTemplate,
-            string anyFailureExceptionMessage)
-            where TProviderType : IAuthJanitorProvider
-        {
-            var providerActions = providers.Select(async provider =>
-            {
-                try
-                {
-                    logger.LogInformation("Running action in parallel on {0}", provider.GetType().Name);
-                    await PerformAction(logger, provider, providerAction);
-                }
-                catch (Exception exception)
-                {
-                    logger.LogError(exception, individualFailureErrorLogMessageTemplate, provider.GetType().Name);
-
-                    throw;
-                }
-            });
-
-            try
-            {
-                await Task.WhenAll(providerActions);
-            }
-            catch (Exception exception)
-            {
-                throw new Exception(anyFailureExceptionMessage, exception);
-            }
-
-            if (providers.Any())
-            {
-                logger.LogInformation("Sleeping for {SleepTime}", DELAY_BETWEEN_ACTIONS_MS);
-                await Task.Delay(DELAY_BETWEEN_ACTIONS_MS);
-            }
-        }
-
-        private static async Task PerformAction<TProviderType>(ILogger logger, TProviderType provider, Func<TProviderType, Task> providerAction)
-        {
-            for (var i = 0; i < MAX_RETRIES; i++)
-            {
-                try
-                {
-                    logger.LogInformation("Attempting action ({AttemptNumber}/{MaxAttempts})", i + 1, MAX_RETRIES);
-                    await providerAction(provider);
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning("Attempt failed! Exception was: {Exception}", ex);
-                    // TODO: Providers need to be able to specify what Exceptions are ignored
-                    //       For example, catching an invalid credential exception shouldn't do a retry
-                    if (i == MAX_RETRIES - 1)
-                        throw ex; // rethrow if at end of retries
-                }
-            }
+            return workflowCollection;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace AuthJanitor.Providers.Storage
         private const string KERB1 = "kerb1";
         private const string KERB2 = "kerb2";
 
-        public StorageAccountRekeyableObjectProvider(ILogger<StorageAccountRekeyableObjectProvider> logger) : base(logger) { }
+        public StorageAccountRekeyableObjectProvider(ProviderWorkflowActionLogger<StorageAccountRekeyableObjectProvider> logger) : base(logger) { }
 
         protected override string Service => "Storage";
 

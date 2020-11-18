@@ -103,7 +103,7 @@ namespace AuthJanitor.UI.Shared
 
         // NOTE: For the moment, we use Newtonsoft with the API, but that limits it to just the Automation.
         //       When support for System.Text.Json is put into Functions, we can change this back.
-        private string Serialize<T>(T obj) => JsonConvert.SerializeObject(obj);
-        private T Deserialize<T>(string str) => JsonConvert.DeserializeObject<T>(str);
+        private string Serialize<T>(T obj) => JsonConvert.SerializeObject(obj, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.All });
+        private T Deserialize<T>(string str) => JsonConvert.DeserializeObject<T>(str, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.All });
     }
 }
