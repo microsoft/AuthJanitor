@@ -8,6 +8,33 @@ Manage the lifecycle of your application secrets in Azure with ease. Migrate to 
 
 :red_circle: **This system has not been thoroughly tested yet! Please use at your own risk!** :red_circle:
 
+### Installation (Azure)
+#### Create the AuthJanitor application
+Follow the instructions at https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app to register a new application in the Active Directory tenant where you expect to run AuthJanitor. You may use any nomenclature you prefer; make note of the Client ID and generate a Client Secret. These will be necessary for the application to run properly. The application must have the following permissions:
+
+* Azure AD - Sign in and Read User Profile
+* Azure Service Management API - Access as organization users (_ADMIN CONSENT REQUIRED_)
+
+(Optional for User Management to work)
+* Graph - Read Applications
+* Graph - Manage App Permission Grants and Role Assignments
+* Graph - Read All users' basic profiles
+
+#### Deploy Infrastructure
+Once your application is created, you can quickly deploy AuthJanitor's infrastructure to your Azure subscription by clicking the button below:
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmicrosoft%2FAuthJanitor%2Fmaster%2Fauthjanitor.azuredeploy.json)
+
+You will need your Client ID and Client Secret from the application created above.
+
+#### Deploy Code
+At the moment, there is no quick way to deploy the AuthJanitor application (expect this soon). Currently, you must build/publish the code manually:
+1) Build and publish the `AuthJanitor.AspNet.AdminUi` project to a file folder.
+2) Upload the content of the `publish/wwwroot` directory to the $web share of the AuthJanitor storage account created by the ARM template
+3) Enable the "Static Website" feature of the AuthJanitor storage account from the Azure Portal. (Currently there is no way to do this via ARM.)
+4) Build and publish the `AuthJanitor.Functions.AdminApi` project to the Functions app created in the deployment.
+5) Navigate to the URL for the new Functions app and launch "Configuration Wizard" from the main menu, if it does not appear automatically.
+
 ### :unlock: Learn more about how AuthJanitor can improve the security around your application secrets [here](https://github.com/microsoft/AuthJanitor/wiki/Authentication-Authorization-Concepts).
 
 ### Secret Rotation Process
