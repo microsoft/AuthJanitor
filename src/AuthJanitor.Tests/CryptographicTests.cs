@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Data.SqlTypes;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -58,39 +59,36 @@ namespace AuthJanitor.Tests
         [Fact]
         public async Task RoundtripEncryptionIsSuccessful()
         {
-            var salt = "RoundtripEncryptionIsSuccessful";
-            var secret = "MySecret";
+            var secret = Encoding.UTF8.GetBytes("MySecret");
 
             var notary = GetCryptoNotary();
-            var cipherText = await notary.Encrypt(salt, secret);
-            var clearText = await notary.Decrypt(salt, cipherText);
+            var cipherText = await notary.Encrypt(secret);
+            var clearText = await notary.Decrypt(cipherText);
             Assert.Equal(secret, clearText);
         }
 
         [Fact]
         public async Task EnsureReasonableEntropyExists()
         {
-            var salt = "RoundtripEncryptionIsSuccessful";
-            var secret = "MySecret";
+            var secret = Encoding.UTF8.GetBytes("MySecret");
 
             var notary = GetCryptoNotary();
-            var cipherA =  await notary.Encrypt(salt, secret);
-            var cipherB = await notary.Encrypt(salt, secret);
+            var cipherA = await notary.Encrypt(secret);
+            var cipherB = await notary.Encrypt(secret);
             Assert.NotEqual(cipherA, cipherB);
         }
 
         [Fact]
         public async Task RoundtripShouldFailWhenMasterKeyDiffers()
         {
-            var salt = "RoundtripEncryptionIsSuccessful";
-            var secret = "MySecret";
+            var secret = Encoding.UTF8.GetBytes("MySecret");
 
             var notary = GetCryptoNotary("MasterKey 1");
             var notaryB = GetCryptoNotary("MasterKey 2");
-            var cipherText = await notary.Encrypt(salt, secret);
+            var cipherText = await notary.Encrypt(secret);
 
-            Assert.Equal(secret, await notary.Decrypt(salt, cipherText));
-            await Assert.ThrowsAsync<CryptographicException>(async () => await notaryB.Decrypt(salt, cipherText));
+            Assert.Equal(secret, await notary.Decrypt(cipherText));
+            await Assert.ThrowsAsync<CryptographicException>(async () => await notaryB.Decrypt(cipherText));
         }
 
         [Fact]
@@ -100,16 +98,13 @@ namespace AuthJanitor.Tests
             var expectedHash = "cb23f1d0b2b1f605366d6fc1da2ed25f445a6bd2975c1ada270c578628a3a820";
 
             var notary = GetCryptoNotary();
-            var hashedInput = await notary.Hash(hashInput);
+            var hashedInput = BitConverter.ToString(await notary.Hash(hashInput)).Remove('-').ToLower();
             Assert.Equal(expectedHash, hashedInput);
         }
 
         private ICryptographicImplementation GetCryptoNotary(string masterKey = "This is my master key!")
         {
-            var config = new DefaultCryptographicImplementationConfiguration()
-            {
-                MasterEncryptionKey = masterKey
-            };
+            var config = new DefaultCryptographicImplementationConfiguration();
             return new DefaultCryptographicImplementation(Options.Create(config));
         }
     }

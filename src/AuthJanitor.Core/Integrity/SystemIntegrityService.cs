@@ -93,7 +93,7 @@ namespace AuthJanitor.Integrity
                 if (string.IsNullOrEmpty(asm.LibraryFile))
                     return;
 
-                asm.LibraryFileHash = await _cryptographicImplementation.HashFile(asm.LibraryFile);
+                asm.LibraryFileHash = BitConverter.ToString(await _cryptographicImplementation.HashFile(asm.LibraryFile));
 
                 var inspector = new FileInspector(asm.LibraryFile);
                 var signatureCheckResult = inspector.Validate();

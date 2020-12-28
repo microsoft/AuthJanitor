@@ -57,7 +57,8 @@ namespace AuthJanitor
             logger.LogDebug("Registering Cryptographic Implementation");
             builder.Services.AddAJDefaultCryptographicImplementation<DefaultCryptographicImplementationConfiguration>(o =>
             {
-                o.MasterEncryptionKey = "weakkey";
+                o.PublicKey = new byte[0];
+                o.PrivateKey = new byte[0];
             });
 
             logger.LogDebug("Registering Secure Storage Provider");
