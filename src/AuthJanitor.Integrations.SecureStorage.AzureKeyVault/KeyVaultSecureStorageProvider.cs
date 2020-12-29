@@ -8,6 +8,8 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Text;
+using System.Buffers.Text;
 
 namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 {
@@ -40,7 +42,9 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
         {
             var newId = Guid.NewGuid();
             var newSecret = new KeyVaultSecret($"{Configuration.Prefix}{newId}",
-                await _cryptographicImplementation.Encrypt(newId.ToString(), JsonSerializer.Serialize(persistedObject)));
+                Convert.ToBase64String(
+                await _cryptographicImplementation.Encrypt(
+                    Encoding.UTF8.GetBytes(JsonSerializer.Serialize(persistedObject)))));
             newSecret.Properties.ExpiresOn = expiry;
 
             var client = await GetClient();
@@ -55,7 +59,8 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
             if (secret == null || secret.Value == null)
                 throw new Exception("Secret not found");
 
-            return JsonSerializer.Deserialize<T>(await _cryptographicImplementation.Decrypt(persistenceId.ToString(), secret.Value.Value));
+            return JsonSerializer.Deserialize<T>(await _cryptographicImplementation.Decrypt(
+                Convert.FromBase64String(secret.Value.Value)));
         }
 
         private Task<SecretClient> GetClient() =>

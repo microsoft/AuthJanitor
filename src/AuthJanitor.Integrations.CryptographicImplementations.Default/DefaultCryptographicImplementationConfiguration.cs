@@ -1,12 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace AuthJanitor.Integrations.CryptographicImplementations.Default
 {
     public class DefaultCryptographicImplementationConfiguration
-    {
-        [Description("Encryption key to use (with salt) when encrypting/decrypting data")]
-        public string MasterEncryptionKey { get; set; }
+    { 
+        public byte[] PublicKey { get; set; }
+        public byte[] PrivateKey { get; set; }
+
+        public Dictionary<string, byte[]> OtherPublicKeys { get; set; } = new
+            Dictionary<string, byte[]>();
+
+        public Dictionary<string, byte[]> OtherPrivateKeys { get; set; } = new
+            Dictionary<string, byte[]>();
     }
 }

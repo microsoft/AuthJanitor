@@ -26,69 +26,82 @@ namespace AuthJanitor.Integrations.CryptographicImplementations
         /// </summary>
         /// <param name="str">Input string</param>
         /// <returns>One-way hash of input string</returns>
-        Task<string> Hash(string str);
+        Task<byte[]> Hash(string str);
 
         /// <summary>
         /// Hash a given array of bytes
         /// </summary>
         /// <param name="bytes">Input bytes</param>
         /// <returns>One-way hash of input bytes</returns>
-        Task<string> Hash(byte[] bytes);
+        Task<byte[]> Hash(byte[] bytes);
 
         /// <summary>
         /// Hash the contents of a given file
         /// </summary>
         /// <param name="filePath">File to hash</param>
         /// <returns>One-way hash of file content</returns>
-        Task<string> HashFile(string filePath);
+        Task<byte[]> HashFile(string filePath);
+
+        /// <summary>
+        /// Sign data and get the signature
+        /// </summary>
+        /// <param name="digest">Data to sign</param>
+        /// <returns>Signature</returns>
+        Task<byte[]> Sign(byte[] digest);
+
+        /// <summary>
+        /// Verify data with a given signature
+        /// </summary>
+        /// <param name="digest">Data to verify</param>
+        /// <param name="signature">Signature</param>
+        /// <returns><c>TRUE</c> if the signature is valid</returns>
+        Task<bool> Verify(byte[] digest, byte[] signature);
 
         /// <summary>
         /// Sign data with a key and get the signature
         /// </summary>
-        /// <param name="key">Signing key</param>
-        /// <param name="dataToSign">Data to sign</param>
-        /// <returns>Base64-encoded signature</returns>
-        Task<string> Sign(byte[] key, string dataToSign);
+        /// <param name="key">Key to use</param>
+        /// <param name="digest">Data to sign</param>
+        /// <returns>Signature</returns>
+        Task<byte[]> Sign(string key, byte[] digest);
 
         /// <summary>
         /// Verify data with a given signature and key
         /// </summary>
-        /// <param name="key">Signing key</param>
-        /// <param name="dataToVerify">Data to verify</param>
-        /// <param name="signature">Base64-encoded signature</param>
+        /// <param name="key">Key to use</param>
+        /// <param name="digest">Data to verify</param>
+        /// <param name="signature">Signature</param>
         /// <returns><c>TRUE</c> if the signature is valid</returns>
-        Task<bool> Verify(byte[] key, string dataToVerify, string signature);
+        Task<bool> Verify(string key, byte[] digest, byte[] signature);
 
         /// <summary>
         /// Decrypt sensitive data
         /// </summary>
-        /// <param name="key">Encryption key</param>
         /// <param name="cipherText">Encrypted ciphertext</param>
         /// <returns>Decrypted text</returns>
-        Task<string> Decrypt(byte[] key, string cipherText);
+        Task<byte[]> Decrypt(byte[] cipherText);
+
+        /// <summary>
+        /// Encrypt sensitive data
+        /// </summary>
+        /// <param name="plainText">Text to encrypt</param>
+        /// <returns>Encrypted ciphertext</returns>
+        Task<byte[]> Encrypt(byte[] plainText);
 
         /// <summary>
         /// Decrypt sensitive data
         /// </summary>
-        /// <param name="salt">Encryption salt</param>
+        /// <param name="key">Key to use</param>
         /// <param name="cipherText">Encrypted ciphertext</param>
         /// <returns>Decrypted text</returns>
-        Task<string> Decrypt(string salt, string cipherText);
+        Task<byte[]> Decrypt(string key, byte[] cipherText);
 
         /// <summary>
         /// Encrypt sensitive data
         /// </summary>
-        /// <param name="key">Encryption key</param>
+        /// <param name="key">Key to use</param>
         /// <param name="plainText">Text to encrypt</param>
         /// <returns>Encrypted ciphertext</returns>
-        Task<string> Encrypt(byte[] key, string plainText);
-
-        /// <summary>
-        /// Encrypt sensitive data
-        /// </summary>
-        /// <param name="salt">Encryption salt</param>
-        /// <param name="plainText">Text to encrypt</param>
-        /// <returns>Encrypted ciphertext</returns>
-        Task<string> Encrypt(string salt, string plainText);
+        Task<byte[]> Encrypt(string key, byte[] plainText);
     }
 }
