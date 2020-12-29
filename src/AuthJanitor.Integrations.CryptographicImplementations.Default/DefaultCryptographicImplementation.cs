@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Security;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -120,9 +121,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Signature</returns>
         public Task<byte[]> Sign(byte[] digest)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPrivateKey(Configuration.PrivateKey, out _);
+            using (RSA rsa = GetRSAPublic(Configuration.PrivateKey))
+            { 
                 return Task.FromResult(
                     rsa.SignData(
                         digest,
@@ -141,9 +141,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns><c>TRUE</c> if the signature is valid</returns>
         public Task<bool> Verify(byte[] dataToVerify, byte[] signature)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPublicKey(Configuration.PublicKey, out _);
+            using (RSA rsa = GetRSAPublic(Configuration.PublicKey))
+            { 
                 return Task.FromResult(
                     rsa.VerifyData(
                         dataToVerify,
@@ -163,9 +162,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Signature</returns>
         public Task<byte[]> Sign(string key, byte[] digest)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPrivateKey(Configuration.OtherPrivateKeys[key], out _);
+            using (RSA rsa = GetRSAPrivate(Configuration.OtherPrivateKeys[key]))
+            { 
                 return Task.FromResult(
                     rsa.SignData(
                         digest,
@@ -185,9 +183,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns><c>TRUE</c> if the signature is valid</returns>
         public Task<bool> Verify(string key, byte[] dataToVerify, byte[] signature)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPublicKey(Configuration.OtherPublicKeys[key], out _);
+            using (RSA rsa = GetRSAPublic(Configuration.OtherPublicKeys[key]))
+            { 
                 return Task.FromResult(
                     rsa.VerifyData(
                         dataToVerify,
@@ -206,9 +203,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Decrypted string</returns>
         public Task<byte[]> Decrypt(byte[] cipherText)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPrivateKey(Configuration.PrivateKey, out _);
+            using (RSA rsa = GetRSAPrivate(Configuration.PrivateKey))
+            { 
                 return Task.FromResult(
                     rsa.Decrypt(cipherText, RSAEncryptionPadding.OaepSHA512));
             }
@@ -223,9 +219,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Encrypted ciphertext</returns>
         public Task<byte[]> Encrypt(byte[] plainText)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPublicKey(Configuration.PublicKey, out _);
+            using (RSA rsa = GetRSAPublic(Configuration.PublicKey))
+            { 
                 return Task.FromResult(
                     rsa.Encrypt(plainText, RSAEncryptionPadding.OaepSHA512));
             }
@@ -241,9 +236,8 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Decrypted string</returns>
         public Task<byte[]> Decrypt(string key, byte[] cipherText)
         {
-            using (RSA rsa = RSA.Create())
-            {
-                rsa.ImportRSAPrivateKey(Configuration.OtherPrivateKeys[key], out _);
+            using (RSA rsa = GetRSAPrivate(Configuration.OtherPrivateKeys[key]))
+            { 
                 return Task.FromResult(
                     rsa.Decrypt(cipherText, RSAEncryptionPadding.OaepSHA512));
             }
@@ -259,12 +253,25 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.Default
         /// <returns>Encrypted ciphertext</returns>
         public Task<byte[]> Encrypt(string key, byte[] plainText)
         {
-            using (RSA rsa = RSA.Create())
+            using (RSA rsa = GetRSAPublic(Configuration.OtherPublicKeys[key]))
             {
-                rsa.ImportRSAPublicKey(Configuration.OtherPublicKeys[key], out _);
                 return Task.FromResult(
                     rsa.Encrypt(plainText, RSAEncryptionPadding.OaepSHA512));
             }
         }
-    }
+
+        private RSA GetRSAPrivate(byte[] keyMaterial)
+        {
+            var rsa = RSA.Create();
+            rsa.ImportRSAPrivateKey(keyMaterial, out _);
+            return rsa;
+        }
+
+        private RSA GetRSAPublic(byte[] keyMaterial)
+        {
+            var rsa = RSA.Create();
+            rsa.ImportRSAPublicKey(keyMaterial, out _);
+            return rsa;
+        }
+}
 }

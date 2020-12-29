@@ -14,6 +14,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 
 [assembly: FunctionsStartup(typeof(AuthJanitor.Startup))]
 namespace AuthJanitor
@@ -55,10 +56,11 @@ namespace AuthJanitor
             //       The *entire system* offloads to the EventDispatcherService to generalize events.
 
             logger.LogDebug("Registering Cryptographic Implementation");
+            var rsa = RSA.Create();
             builder.Services.AddAJDefaultCryptographicImplementation<DefaultCryptographicImplementationConfiguration>(o =>
             {
-                o.PublicKey = new byte[0];
-                o.PrivateKey = new byte[0];
+                o.PublicKey = rsa.ExportRSAPublicKey();
+                o.PrivateKey = rsa.ExportRSAPrivateKey();
             });
 
             logger.LogDebug("Registering Secure Storage Provider");

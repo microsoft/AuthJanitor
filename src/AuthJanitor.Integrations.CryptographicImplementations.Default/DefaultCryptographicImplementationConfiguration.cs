@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace AuthJanitor.Integrations.CryptographicImplementations.Default
 {
     public class DefaultCryptographicImplementationConfiguration
-    {
+    { 
         public byte[] PublicKey { get; set; }
         public byte[] PrivateKey { get; set; }
 
