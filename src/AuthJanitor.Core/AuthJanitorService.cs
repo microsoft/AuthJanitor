@@ -75,35 +75,22 @@ namespace AuthJanitor
             _options = options;
         }
 
-        public async Task DispatchOrExecuteAsync(
-            TimeSpan secretValidPeriod,
-            Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
-            string dispatchTopicState,
-            params ProviderExecutionParameters[] providerConfigurations)
-        {
-            if (providerConfigurations.Any(c => c.AgentId != _options.Value.InstanceId))
-            {
-                var agentId = providerConfigurations.FirstOrDefault(c => c.AgentId != _options.Value.InstanceId)?.AgentId;
-                await _agentCommunicationProvider.Send(
-                    await AgentMessageEnvelope.Create(_cryptographicImplementation,
-                        _options.Value.InstanceId,
-                        agentId,
-                        new AgentProviderCommandMessage()
-                        {
-                            State = dispatchTopicState,
-                            ValidPeriod = secretValidPeriod,
-                            Providers = providerConfigurations.Where(c => c.AgentId == agentId).ToList()
-                        }));
-            }
-
-            if (providerConfigurations.Any(c => c.AgentId == _options.Value.InstanceId))
-            {
-                await ExecuteAsync(secretValidPeriod,
-                    periodicUpdateFunction,
-                    providerConfigurations.Where(c => c.AgentId == _options.Value.InstanceId).ToArray());
-            }
-        }
-
+        /// <summary>
+        /// Process an incoming serialized message.
+        /// 
+        /// The message will be deserialized, its signature verified,
+        /// and it will be routed.
+        /// 
+        /// If the message is a command to execute, the execution will
+        /// run and the periodicUpdateFunction will be run regularly to
+        /// update the caller on the runtime status.
+        /// 
+        /// If the message is a status update, the periodicUpdateFunction
+        /// will be executed only once.
+        /// </summary>
+        /// <param name="serializedMessage">Serialized Agent message</param>
+        /// <param name="periodicUpdateFunction">Function which is invoked periodically to communicate runtime status</param>
+        /// <returns></returns>
         public async Task ProcessMessageAsync(
             string serializedMessage,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction)
@@ -138,28 +125,35 @@ namespace AuthJanitor
             }
         }
 
-        public async Task<string> CreateMessage(
-            string destination,
-            IAgentMessage message)
-        {
-            var envelope = await AgentMessageEnvelope.Create(_cryptographicImplementation,
-                _options.Value.InstanceId,
-                destination,
-                message);
-            envelope.MessageObject = null;
-            return JsonConvert.SerializeObject(envelope);
-        }
-
+        /// <summary>
+        /// Stash the credentials for the current user in the preferred
+        /// secure storage, and return the Guid of the stashed object.
+        /// </summary>
+        /// <param name="expiry">When the credentials expire, if unused</param>
+        /// <returns>Guid of stashed object</returns>
         public async Task<Guid> StashCredentialForCurrentUserAsync(DateTimeOffset expiry = default) =>
             await StashCredentialAsync(
                 await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync(),
                 expiry);
 
+        /// <summary>
+        /// Stash the credentials for the application's identity in the preferred
+        /// secure storage, and return the Guid of the stashed object.
+        /// </summary>
+        /// <param name="expiry">When the credentials expire, if unused</param>
+        /// <returns>Guid of stashed object</returns>
         public async Task<Guid> StashCredentialForCurrentAppAsync(DateTimeOffset expiry = default) =>
             await StashCredentialAsync(
                 await _identityService.GetAccessTokenForApplicationAsync(),
                 expiry);
 
+        /// <summary>
+        /// Stash a given credentials object in the preferred
+        /// secure storage, and return the Guid of the stashed object.
+        /// </summary>
+        /// <param name="token">AccessTokenCredential to stash</param>
+        /// <param name="expiry">When the credentials expire, if unused</param>
+        /// <returns>Guid of stashed object</returns>
         public async Task<Guid> StashCredentialAsync(
             AccessTokenCredential token,
             DateTimeOffset expiry = default)
@@ -168,6 +162,63 @@ namespace AuthJanitor
             return await _secureStorage.Persist(expiry, token);
         }
 
+        /// <summary>
+        /// Process a given set of providerConfigurations and either
+        /// execute the workflow locally or dispatch a message to an Agent
+        /// to run the workflow.
+        /// 
+        /// The periodicUpdateFunction will be executed regularly throughout
+        /// the execution of the workflow.
+        /// 
+        /// When dispatching a message, the dispatchMessageState string will
+        /// be included to differentiate message sets
+        /// </summary>
+        /// <param name="secretValidPeriod">Secret's period of validity</param>
+        /// <param name="periodicUpdateFunction">Function which is invoked periodically to communicate runtime status</param>
+        /// <param name="dispatchMessageState">State included in any dispatched messages to group related messages</param>
+        /// <param name="providerConfigurations">Provider configurations</param>
+        /// <returns></returns>
+        public async Task DispatchOrExecuteAsync(
+            TimeSpan secretValidPeriod,
+            Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
+            string dispatchMessageState,
+            params ProviderExecutionParameters[] providerConfigurations)
+        {
+            if (providerConfigurations.Any(c => c.AgentId != _options.Value.InstanceId))
+            {
+                var agentId = providerConfigurations.FirstOrDefault(c => c.AgentId != _options.Value.InstanceId)?.AgentId;
+                await _agentCommunicationProvider.Send(
+                    await AgentMessageEnvelope.Create(_cryptographicImplementation,
+                        _options.Value.InstanceId,
+                        agentId,
+                        new AgentProviderCommandMessage()
+                        {
+                            State = dispatchMessageState,
+                            ValidPeriod = secretValidPeriod,
+                            Providers = providerConfigurations.Where(c => c.AgentId == agentId).ToList()
+                        }));
+            }
+
+            if (providerConfigurations.Any(c => c.AgentId == _options.Value.InstanceId))
+            {
+                await ExecuteAsync(secretValidPeriod,
+                    periodicUpdateFunction,
+                    providerConfigurations.Where(c => c.AgentId == _options.Value.InstanceId).ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Process a given set of providerConfigurations and execute the 
+        /// workflow locally. If the Instance ID doesn't match the expected
+        /// Agent ID, this will return immediately.
+        /// 
+        /// The periodicUpdateFunction will be executed regularly throughout
+        /// the execution of the workflow.
+        /// </summary>
+        /// <param name="secretValidPeriod">Secret's period of validity</param>
+        /// <param name="periodicUpdateFunction">Function which is invoked periodically to communicate runtime status</param>
+        /// <param name="providerConfigurations">Provider configurations</param>
+        /// <returns></returns>
         public async Task<ProviderWorkflowActionCollection> ExecuteAsync(
             TimeSpan secretValidPeriod,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
