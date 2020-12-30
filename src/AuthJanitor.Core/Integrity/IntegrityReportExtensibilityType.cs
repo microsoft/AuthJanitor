@@ -10,7 +10,6 @@ namespace AuthJanitor.Integrity
         public enum ExtensibilityTypes
         {
             CryptographicImplementation,
-            DataStore,
             EventSink,
             Identity,
             Provider,
@@ -38,10 +37,6 @@ namespace AuthJanitor.Integrity
             else if (typeof(CryptographicImplementations.ICryptographicImplementation).IsAssignableFrom(type))
             {
                 ExtensibilityType = ExtensibilityTypes.CryptographicImplementation;
-            }
-            else if (typeof(DataStores.IDataStore<>).IsAssignableFrom(type))
-            {
-                ExtensibilityType = ExtensibilityTypes.DataStore;
             }
             else if (typeof(EventSinks.IEventSink).IsAssignableFrom(type))
             {
