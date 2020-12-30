@@ -1,4 +1,6 @@
-﻿using AuthJanitor.Agents;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.Agents;
 using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;

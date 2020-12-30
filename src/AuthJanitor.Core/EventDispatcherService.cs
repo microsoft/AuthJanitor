@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.EventSinks;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.EventSinks
+namespace AuthJanitor
 {
     public class EventDispatcherService
     {
