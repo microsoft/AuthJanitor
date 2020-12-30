@@ -89,9 +89,6 @@ namespace AuthJanitor
             builder.Services.AddTransient<ProvidersService>();
             builder.Services.AddTransient<ResourcesService>();
 
-            logger.LogDebug("Registering AuthJanitor MetaServices");
-            AuthJanitorServiceRegistration.RegisterServices(builder.Services);
-
             // -----
 
             logger.LogDebug("Registering DataStores");
@@ -119,7 +116,7 @@ namespace AuthJanitor
 
             logger.LogInformation("Found {ProviderCount} providers: {ProviderTypeNames}", providerTypes.Length, string.Join("  ", providerTypes.Select(t => t.Name)));
             logger.LogInformation("Registering Provider Manager Service");
-            ProviderManagerService.ConfigureServices(builder.Services, providerTypes);
+            builder.Services.AddAuthJanitorService("admin-service", providerTypes);
         }
     }
 }

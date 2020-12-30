@@ -4,7 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace AuthJanitor.Integrations.CryptographicImplementations
+namespace AuthJanitor.CryptographicImplementations
 {
     public static class CryptographicImplementationExtensions
     {

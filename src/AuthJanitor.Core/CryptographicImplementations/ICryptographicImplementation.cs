@@ -3,7 +3,7 @@
 using System.Security;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Integrations.CryptographicImplementations
+namespace AuthJanitor.CryptographicImplementations
 {
     public interface ICryptographicImplementation : IAuthJanitorExtensibilityPoint
     {

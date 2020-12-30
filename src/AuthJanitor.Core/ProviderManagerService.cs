@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers;
 using AuthJanitor.Providers.Capabilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,14 +11,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Providers
+namespace AuthJanitor
 {
     public class ProviderManagerService
     {
-        private const int MAX_RETRIES = 5;
-        private const int DELAY_BETWEEN_ACTIONS_MS = 1000;
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
         {
             WriteIndented = false,
@@ -48,11 +48,6 @@ namespace AuthJanitor.Providers
                 })
                 .ToList()
                 .AsReadOnly();
-        }
-
-        public static void ConfigureServices(IServiceCollection serviceCollection, params Type[] loadedProviderTypes)
-        {
-            serviceCollection.AddSingleton<ProviderManagerService>((s) => new ProviderManagerService(s, loadedProviderTypes));
         }
 
         public bool HasProvider(string providerName) => LoadedProviders.Any(p => p.ProviderTypeName == providerName);
@@ -239,6 +234,84 @@ namespace AuthJanitor.Providers
                     p, p => p.Cleanup())).ToArray());
 
             return workflowCollection;
+        }
+
+        private ProviderWorkflowActionCollection CreateWorkflowCollection(
+            TimeSpan secretValidPeriod,
+            IEnumerable<ProviderExecutionParameters> providerConfigurations,
+            AccessTokenCredential accessToken = null)
+        {
+            var providers = providerConfigurations.Select(r =>
+            {
+                var p = GetProviderInstance(
+                    r.ProviderType,
+                    r.ProviderConfiguration);
+                if (r.AccessToken != null)
+                    p.Credential = r.AccessToken;
+                return p;
+            }).ToList();
+
+            var workflowCollection = CreateWorkflowCollection(
+                secretValidPeriod,
+                providers);
+
+            if (accessToken != null)
+                workflowCollection.EmbedCredentials(accessToken);
+
+            return workflowCollection;
+        }
+
+        /// <summary>
+        /// Execute the workflows for a given set of configured providers.
+        /// 
+        /// Providers will run either with the access token in the ProviderExecutionConfiguration
+        /// object or with the AccessTokenCredential provided to this function.
+        /// 
+        /// Every (5) seconds, the periodicUpdateFunction will be invoked to update the
+        /// caller on the status of the long-running action.
+        /// </summary>
+        /// <param name="providerConfigurations"></param>
+        /// <param name="secretValidPeriod"></param>
+        /// <param name="periodicUpdateFunction"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        public async Task ExecuteProviderWorkflows(
+            IEnumerable<ProviderExecutionParameters> providerConfigurations,
+            TimeSpan secretValidPeriod,
+            Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
+            AccessTokenCredential accessToken = null)
+        {
+            _logger.LogInformation("Creating workflow collection for {ProviderCount} provider instances", providerConfigurations.Count());
+            var workflowCollection = CreateWorkflowCollection(
+                secretValidPeriod,
+                providerConfigurations,
+                accessToken);
+
+            Task workflowCollectionRunTask = new Task(async () =>
+            {
+                try { await workflowCollection.Run(); }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error executing action(s)");
+                    throw ex;
+                }
+            });
+            _logger.LogInformation("Creating tracker task for workflow collection");
+            var logUpdateCancellationTokenSource = new CancellationTokenSource();
+            var periodicUpdateTask = Task.Run(async () =>
+            {
+                while (!workflowCollectionRunTask.IsCompleted &&
+                       !workflowCollectionRunTask.IsCanceled)
+                {
+                    await Task.Delay(5 * 1000);
+                    await periodicUpdateFunction(workflowCollection);
+                }
+            }, logUpdateCancellationTokenSource.Token);
+
+            _logger.LogInformation("Executing {ActionCount} actions", workflowCollection.Actions.Count);
+            await workflowCollectionRunTask;
+
+            logUpdateCancellationTokenSource.Cancel();
         }
     }
 }

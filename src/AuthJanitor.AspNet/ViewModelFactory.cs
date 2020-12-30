@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.UI.Shared.ViewModels;
-using AuthJanitor.Integrations.DataStores;
 using AuthJanitor.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -14,6 +13,7 @@ using System.Reflection;
 using System.Threading;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Providers.Capabilities;
+using AuthJanitor.DataStores;
 
 namespace AuthJanitor.UI.Shared
 {
@@ -143,6 +143,7 @@ namespace AuthJanitor.UI.Shared
                 Name = secret.Name,
                 Description = secret.Description,
                 TaskConfirmationStrategies = secret.TaskConfirmationStrategies,
+                ExecutingAgentId = secret.ExecutingAgentId,
                 LastChanged = secret.LastChanged,
                 ValidPeriodMinutes = (int)secret.ValidPeriod.TotalMinutes,
                 Nonce = secret.Nonce,

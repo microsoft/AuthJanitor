@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
+using AuthJanitor.DataStores;
 using AuthJanitor.UI.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

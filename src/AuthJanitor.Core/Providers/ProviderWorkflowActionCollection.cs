@@ -52,7 +52,8 @@ namespace AuthJanitor.Providers
                             .GetProviderInstance(providerType, providerConfiguration);
 
         public void EmbedCredentials(AccessTokenCredential credential) =>
-            _actions.ForEach(a => a.Instance.Credential = credential);
+            _actions.Where(a => a.Instance.Credential == null).ToList()
+                    .ForEach(a => a.Instance.Credential = credential);
 
         public void Add<TProvider>(params ProviderWorkflowActionWithoutResult<TProvider>[] actions)
             where TProvider : IAuthJanitorProvider

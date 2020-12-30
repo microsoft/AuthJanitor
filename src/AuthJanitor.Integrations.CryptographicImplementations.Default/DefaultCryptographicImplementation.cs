@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.CryptographicImplementations;
 using Microsoft.Extensions.Options;
 using System;
 using System.IO;
 using System.Security;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 

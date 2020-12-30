@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using AuthJanitor.CryptographicImplementations;
+
 namespace AuthJanitor.Integrations.CryptographicImplementations.AzureKeyVault
 {
     public class AzureKeyVaultCryptographicImplementationConfiguration

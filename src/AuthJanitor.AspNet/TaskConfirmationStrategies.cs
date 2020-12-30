@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 using System;
 
-namespace AuthJanitor.UI.Shared
+namespace AuthJanitor
 {
     [Serializable]
     [Flags]

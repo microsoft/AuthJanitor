@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthenticodeExaminer;
-using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.Providers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace AuthJanitor.Integrity
