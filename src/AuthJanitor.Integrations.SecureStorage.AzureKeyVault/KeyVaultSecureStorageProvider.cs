@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.SecureStorage;
 using Azure.Security.KeyVault.Secrets;
@@ -9,7 +8,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Text;
-using System.Buffers.Text;
+using AuthJanitor.CryptographicImplementations;
 
 namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 {

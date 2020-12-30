@@ -14,6 +14,7 @@ namespace AuthJanitor.UI.Shared.Models
         public string Description { get; set; }
 
         public TaskConfirmationStrategies TaskConfirmationStrategies { get; set; } = TaskConfirmationStrategies.None;
+        public string ExecutingAgentId { get; set; } = "admin-service";
 
         public DateTimeOffset LastChanged { get; set; } = DateTimeOffset.MinValue;
         public TimeSpan ValidPeriod { get; set; }

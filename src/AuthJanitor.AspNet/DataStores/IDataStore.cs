@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.DataStores;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Integrations.DataStores
+namespace AuthJanitor.DataStores
 {
-    public interface IDataStore<TStoredModel> : IAuthJanitorExtensibilityPoint
+    public interface IDataStore<TStoredModel>
         where TStoredModel : IAuthJanitorModel
     {
         /// <summary>

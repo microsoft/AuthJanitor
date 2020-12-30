@@ -1,11 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.CryptographicImplementations;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
-using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +11,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AuthJanitor.CryptographicImplementations;
+using AuthJanitor.DataStores;
 
 namespace AuthJanitor.Services
 {
@@ -28,7 +26,7 @@ namespace AuthJanitor.Services
         private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherMetaService _eventDispatcher;
+        private readonly EventDispatcherService _eventDispatcher;
 
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<Resource> _resources;
@@ -38,7 +36,7 @@ namespace AuthJanitor.Services
             IOptions<AuthJanitorCoreConfiguration> configuration,
             IIdentityService identityService,
             ICryptographicImplementation cryptographicImplementation,
-            EventDispatcherMetaService eventDispatcher,
+            EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,

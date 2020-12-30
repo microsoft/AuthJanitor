@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.ViewModels;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
@@ -26,7 +25,7 @@ namespace AuthJanitor.Services
     {
         private readonly IIdentityService _identityService;
         private readonly ILogger _logger;
-        private readonly EventDispatcherMetaService _eventDispatcher;
+        private readonly EventDispatcherService _eventDispatcher;
         private readonly ProviderManagerService _providerManager;
 
         private readonly Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> _configViewModel;
@@ -35,7 +34,7 @@ namespace AuthJanitor.Services
         public ProvidersService(
             IIdentityService identityService,
             ILogger<ProvidersService> logger,
-            EventDispatcherMetaService eventDispatcher,
+            EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             Func<AuthJanitorProviderConfiguration, ProviderConfigurationViewModel> configViewModelDelegate,
             Func<LoadedProviderMetadata, LoadedProviderViewModel> providerViewModelDelegate)

@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.DataStores;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
-using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.Models;
 using AuthJanitor.UI.Shared.ViewModels;
 using Microsoft.AspNetCore.Http;
@@ -25,14 +23,14 @@ namespace AuthJanitor.Services
     {
         private readonly IIdentityService _identityService;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherMetaService _eventDispatcher;
+        private readonly EventDispatcherService _eventDispatcher;
 
         private readonly IDataStore<Resource> _resources;
         private readonly Func<Resource, ResourceViewModel> _resourceViewModel;
 
         public ResourcesService(
             IIdentityService identityService,
-            EventDispatcherMetaService eventDispatcher,
+            EventDispatcherService eventDispatcher,
             ProviderManagerService providerManager,
             IDataStore<Resource> resourceStore,
             Func<Resource, ResourceViewModel> resourceViewModelDelegate)

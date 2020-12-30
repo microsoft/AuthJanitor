@@ -21,6 +21,7 @@ namespace AuthJanitor.UI.Shared.ViewModels
         }
 
         public int TaskConfirmationStrategiesInt { get; set; }
+        public string ExecutingAgentId { get; set; }
 
         public DateTimeOffset? LastChanged { get; set; }
         public int ValidPeriodMinutes { get; set; }

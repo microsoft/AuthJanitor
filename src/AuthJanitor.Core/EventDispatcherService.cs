@@ -1,24 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.EventSinks;
-using AuthJanitor.Integrations.EventSinks;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.UI.Shared.MetaServices
+namespace AuthJanitor
 {
-    public class EventDispatcherMetaService
+    public class EventDispatcherService
     {
         private readonly ILogger _logger;
         private readonly IEnumerable<IEventSink> _eventSinks;
 
-        public EventDispatcherMetaService(
+        public EventDispatcherService(
             ILoggerFactory loggerFactory,
             IEnumerable<IEventSink> eventSinks)
         {
-            _logger = loggerFactory.CreateLogger<EventDispatcherMetaService>();
+            _logger = loggerFactory.CreateLogger<EventDispatcherService>();
             _eventSinks = eventSinks;
         }
 

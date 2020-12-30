@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.Models;
-using AuthJanitor.Integrations.DataStores;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AuthJanitor.DataStores;
 
 namespace AuthJanitor
 {

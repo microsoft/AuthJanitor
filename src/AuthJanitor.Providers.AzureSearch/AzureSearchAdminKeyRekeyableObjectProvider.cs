@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-using AuthJanitor.Integrations.CryptographicImplementations;
+using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.Providers.Azure;
 using AuthJanitor.Providers.Azure.Workflows;
 using AuthJanitor.Providers.Capabilities;
@@ -9,7 +9,6 @@ using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core.CollectionActions;
 using Microsoft.Azure.Management.Search.Fluent;
 using Microsoft.Azure.Management.Search.Fluent.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;

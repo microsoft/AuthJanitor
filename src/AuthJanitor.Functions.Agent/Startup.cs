@@ -69,9 +69,6 @@ namespace AuthJanitor
                 o.VaultName = "vault";
             });
 
-            logger.LogDebug("Registering AuthJanitor MetaServices");
-            AuthJanitorServiceRegistration.RegisterServices(builder.Services);
-
             // -----
 
             logger.LogDebug("Registering DataStores");
@@ -98,8 +95,8 @@ namespace AuthJanitor
                                          .ToArray();
 
             logger.LogInformation("Found {ProviderCount} providers: {ProviderTypeNames}", providerTypes.Length, string.Join("  ", providerTypes.Select(t => t.Name)));
-            logger.LogInformation("Registering Provider Manager Service");
-            ProviderManagerService.ConfigureServices(builder.Services, providerTypes);
+            logger.LogInformation("Registering AuthJanitor Service");
+            builder.Services.AddAuthJanitorService("agent-abc123", providerTypes); // todo: change this to env var
         }
     }
 }

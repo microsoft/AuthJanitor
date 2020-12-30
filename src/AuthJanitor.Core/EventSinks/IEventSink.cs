@@ -4,7 +4,7 @@ using AuthJanitor.EventSinks;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace AuthJanitor.Integrations.EventSinks
+namespace AuthJanitor.EventSinks
 {
     public interface IEventSink : IAuthJanitorExtensibilityPoint
     {

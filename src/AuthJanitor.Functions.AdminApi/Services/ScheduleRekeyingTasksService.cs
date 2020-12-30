@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.DataStores;
 using AuthJanitor.EventSinks;
-using AuthJanitor.Integrations.DataStores;
-using AuthJanitor.Providers;
-using AuthJanitor.UI.Shared;
-using AuthJanitor.UI.Shared.MetaServices;
 using AuthJanitor.UI.Shared.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -21,7 +18,7 @@ namespace AuthJanitor.Services
     {
         private readonly AuthJanitorCoreConfiguration _configuration;
         private readonly ProviderManagerService _providerManager;
-        private readonly EventDispatcherMetaService _eventDispatcherMetaService;
+        private readonly EventDispatcherService _eventDispatcherMetaService;
 
         private readonly IDataStore<ManagedSecret> _managedSecrets;
         private readonly IDataStore<Resource> _resources;
@@ -29,7 +26,7 @@ namespace AuthJanitor.Services
 
         public ScheduleRekeyingTasksService(
             IOptions<AuthJanitorCoreConfiguration> configuration,
-            EventDispatcherMetaService eventDispatcherMetaService,
+            EventDispatcherService eventDispatcherMetaService,
             ProviderManagerService providerManager,
             IDataStore<ManagedSecret> managedSecretStore,
             IDataStore<Resource> resourceStore,
