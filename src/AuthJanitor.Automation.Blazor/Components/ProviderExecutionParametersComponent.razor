@@ -1,0 +1,38 @@
+﻿<Container>
+    <Row>
+        <Column>
+            <LoadedProviderMetadataComponent ProviderType="@Parameters.ProviderType" />
+        </Column>
+    </Row>
+    <Row>
+        <Column>
+            <Row>
+                <Column>
+                    <Heading Size="HeadingSize.Is6">
+                        Token Source
+                    </Heading>
+                </Column>
+                <Column>
+                    @Parameters.TokenSource
+                    @Parameters.TokenParameter
+                </Column>
+            </Row>
+            <Row>
+                <Column>
+                    <Heading Size="HeadingSize.Is6">
+                        Agent
+                    </Heading>
+                </Column>
+                <Column>
+                    @Parameters.AgentId
+                </Column>
+            </Row>
+        </Column>
+    </Row>
+</Container>
+
+@using AuthJanitor.Providers
+@code {
+    [Parameter]
+    public ProviderExecutionParameters Parameters { get; set; }
+}

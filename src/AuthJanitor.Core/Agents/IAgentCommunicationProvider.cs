@@ -6,7 +6,7 @@ namespace AuthJanitor.Agents
 {
     public interface IAgentCommunicationProvider
     {
-        Task Send(AgentMessageEnvelope envelop);
+        Task Send(AgentMessageEnvelope envelope);
         Task<AgentMessageEnvelope> TryReceive();
     }
 }

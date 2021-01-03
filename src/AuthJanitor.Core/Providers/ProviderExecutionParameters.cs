@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace AuthJanitor.Providers
 {
     public enum TokenSources
@@ -20,6 +22,7 @@ namespace AuthJanitor.Providers
         public string TokenParameter { get; set; }
         public string AgentId { get; set; } = "admin-service";
 
+        [NotMapped]
         public AccessTokenCredential AccessToken { get; set; }
     }
 }

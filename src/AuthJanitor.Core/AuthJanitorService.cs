@@ -4,7 +4,6 @@ using AuthJanitor.Agents;
 using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.EventSinks;
 using AuthJanitor.IdentityServices;
-using AuthJanitor.Integrity;
 using AuthJanitor.Providers;
 using AuthJanitor.SecureStorage;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,26 +23,6 @@ namespace AuthJanitor
         public string InstanceId { get; set; }
     }
 
-    public static class AuthJanitorServiceExtensions
-    {
-        public static void AddAuthJanitorService(this IServiceCollection serviceCollection,
-            string instanceIdentity,
-            Type[] providerTypes)
-        {
-            serviceCollection.AddSingleton<EventDispatcherService>();
-            serviceCollection.AddSingleton<SystemIntegrityService>();
-
-            serviceCollection.AddSingleton<ProviderManagerService>((s) => 
-                new ProviderManagerService(s, providerTypes));
-
-            serviceCollection.Configure<AuthJanitorServiceOptions>((o) => o.InstanceId = instanceIdentity);
-            serviceCollection.AddSingleton<AuthJanitorService>();
-
-            serviceCollection.AddTransient<ProviderWorkflowActionLogger>();
-            serviceCollection.AddTransient(typeof(ProviderWorkflowActionLogger<>), typeof(ProviderWorkflowActionLogger<>));
-        }
-    }
-
     public class AuthJanitorService
     {
         private readonly ILogger<AuthJanitorService> _logger;
@@ -54,6 +33,15 @@ namespace AuthJanitor
         private readonly EventDispatcherService _eventDispatcher;
         private readonly IAgentCommunicationProvider _agentCommunicationProvider;
         private readonly IOptions<AuthJanitorServiceOptions> _options;
+
+        public static readonly Type[] ProviderSharedTypes = new Type[]
+        {
+            typeof(IAuthJanitorProvider),
+            typeof(AuthJanitorProvider<>),
+            typeof(IServiceCollection),
+            typeof(ILogger)
+        };
+        public const string AdminServiceAgentIdentity = "agent-service";
 
         public AuthJanitorService(
             ILogger<AuthJanitorService> logger,
@@ -75,6 +63,20 @@ namespace AuthJanitor
             _options = options;
         }
 
+        public ISecureStorage SecureStorage => _secureStorage;
+        public IIdentityService IdentityService => _identityService;
+        public EventDispatcherService EventDispatcher => _eventDispatcher;
+        public ProviderManagerService ProviderManager => _providerManagerService;
+        public IAgentCommunicationProvider AgentCommunicationProvider => _agentCommunicationProvider;
+        public string AgentId => _options.Value.InstanceId;
+
+        /// <summary>
+        /// Get a list of the possible Providers which can be used inside
+        /// this instance of the AuthJanitor service
+        /// </summary>
+        public IReadOnlyList<LoadedProviderMetadata> LoadedProviders =>
+            _providerManagerService.LoadedProviders;
+
         /// <summary>
         /// Process an incoming serialized message.
         /// 
@@ -93,6 +95,8 @@ namespace AuthJanitor
         /// <returns></returns>
         public async Task ProcessMessageAsync(
             string serializedMessage,
+            Func<Task<AccessTokenCredential>> getOboCallback,
+            Func<Task<AccessTokenCredential>> getMsiCallback,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction)
         {
             var envelope = JsonConvert.DeserializeObject<AgentMessageEnvelope>(serializedMessage);
@@ -115,6 +119,8 @@ namespace AuthJanitor
                 var message = envelope.MessageObject as AgentProviderCommandMessage;
                 await ExecuteAsync(message.ValidPeriod, 
                     periodicUpdateFunction,
+                    getOboCallback,
+                    getMsiCallback,
                     message.Providers.ToArray());
             }
             if (envelope.MessageObject is AgentProviderStatusMessage)
@@ -181,6 +187,8 @@ namespace AuthJanitor
         public async Task DispatchOrExecuteAsync(
             TimeSpan secretValidPeriod,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
+            Func<Task<AccessTokenCredential>> getOboCallback,
+            Func<Task<AccessTokenCredential>> getMsiCallback,
             string dispatchMessageState,
             params ProviderExecutionParameters[] providerConfigurations)
         {
@@ -203,6 +211,8 @@ namespace AuthJanitor
             {
                 await ExecuteAsync(secretValidPeriod,
                     periodicUpdateFunction,
+                    getOboCallback,
+                    getMsiCallback,
                     providerConfigurations.Where(c => c.AgentId == _options.Value.InstanceId).ToArray());
             }
         }
@@ -222,6 +232,8 @@ namespace AuthJanitor
         public async Task<ProviderWorkflowActionCollection> ExecuteAsync(
             TimeSpan secretValidPeriod,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
+            Func<Task<AccessTokenCredential>> getOboCallback,
+            Func<Task<AccessTokenCredential>> getMsiCallback,
             params ProviderExecutionParameters[] providerConfigurations)
         {
             ProviderWorkflowActionCollection workflowCollection =
@@ -243,12 +255,12 @@ namespace AuthJanitor
                 if (providerConfigurations.Any(p => p.TokenSource == TokenSources.OBO))
                 {
                     _logger.LogInformation("Acquiring OBO token");
-                    obo = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync();
+                    obo = await getOboCallback();
                 }
                 if (providerConfigurations.Any(p => p.TokenSource == TokenSources.ServicePrincipal))
                 {
                     _logger.LogInformation("Acquiring application token");
-                    msi = await _identityService.GetAccessTokenForApplicationAsync();
+                    msi = await getMsiCallback();
                 }
 
                 _logger.LogInformation("Getting providers for {ResourceCount} resources", providerConfigurations.Count());
@@ -351,5 +363,14 @@ namespace AuthJanitor
                 return workflowCollection;
             }
         }
+
+        /// <summary>
+        /// Enumerate all available Provider configurations with a given AccessTokenCredential
+        /// </summary>
+        /// <param name="credential">Credential to enumerate from</param>
+        /// <returns>Collection of ProviderResourceSuggestions</returns>
+        public Task<IEnumerable<ProviderResourceSuggestion>> EnumerateAsync(
+            AccessTokenCredential credential) =>
+            _providerManagerService.EnumerateProviders(credential);
     }
 }
