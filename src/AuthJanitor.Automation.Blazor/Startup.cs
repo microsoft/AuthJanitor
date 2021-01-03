@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers;
 using AuthJanitor.Repository;
 using Blazorise;
 using Blazorise.Bootstrap;
@@ -16,6 +17,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using System;
+using System.Threading.Tasks;
 
 namespace AuthJanitor.Automation.Blazor
 {
@@ -27,6 +29,8 @@ namespace AuthJanitor.Automation.Blazor
         }
 
         public IConfiguration Configuration { get; }
+
+        public delegate Task<AccessTokenCredential> GetToken(TokenSources src, string parameter);
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -47,6 +51,8 @@ namespace AuthJanitor.Automation.Blazor
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddMicrosoftIdentityUI();
 
+            services.AddTransient<ITokenCredentialProvider, BlazorTokenCredentialProvider>();
+            
             // NOTE: In this mode, the RSA data is ephemeral and cleared at shutdown
             services.AddAuthJanitorDummyServices();
             services.AddAuthJanitorService((file) =>
@@ -65,8 +71,6 @@ namespace AuthJanitor.Automation.Blazor
 
             services.AddHttpClient("AuthJanitorHttpClient", o =>
                 o.BaseAddress = new Uri("https://localhost:44396"));
-
-            services.AddTransient<TokenAbstractionService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

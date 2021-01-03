@@ -19,20 +19,20 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
         private const string PERMISSION_APPROLE_ASSIGNMENT_READWRITE_ALL = "appRoleAssignment.readWrite.all";
 
         private AzureADIdentityServiceConfiguration Configuration { get; }
-        private IIdentityService _identityService;
 
         private readonly ILogger<AzureADIdentityServiceManager> _logger;
+        private readonly ITokenCredentialProvider _tokenCredentialProvider;
 
         /// <summary>
         /// Implements user management and role controls for an identity service which reads from the HttpContext to integrate with Azure Active Directory
         /// </summary>
         public AzureADIdentityServiceManager(
+            ITokenCredentialProvider tokenCredentialProvider,
             IOptions<AzureADIdentityServiceConfiguration> configuration,
-            IIdentityService identityService,
             ILogger<AzureADIdentityServiceManager> logger)
         {
+            _tokenCredentialProvider = tokenCredentialProvider;
             Configuration = configuration.Value;
-            _identityService = identityService;
             _logger = logger;
         }
 
@@ -164,7 +164,7 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
 
         private async Task<GraphServiceClient> GetGraphServiceClientAsync(params string[] scopes)
         {
-            var token = await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync("https://graph.microsoft.com/");// + string.Join('+', scopes));
+            var token = await _tokenCredentialProvider.GetToken(Configuration.TokenSource, string.Empty);
 
             if (!token.IsInError)
                 _logger.LogInformation("Got token for user {user} -- resource {resource} -- scope {scope}", token.Username, token.Resource, token.Scope);

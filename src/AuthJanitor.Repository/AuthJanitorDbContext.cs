@@ -102,8 +102,6 @@ namespace AuthJanitor.Repository
                             task.DependencyGroup.LastRotation = DateTimeOffset.UtcNow;
                         await SaveChangesAsync();
                     },
-                    getOboCallback,
-                    getMsiCallback,
                     task.DependencyGroup.Resources.Select(r =>
                         r.Resource.Parameters).ToArray());
             }

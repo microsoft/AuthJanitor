@@ -3,7 +3,6 @@
 using AuthJanitor.Agents;
 using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.EventSinks;
-using AuthJanitor.IdentityServices;
 using AuthJanitor.Providers;
 using AuthJanitor.SecureStorage;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,10 +28,10 @@ namespace AuthJanitor
         private readonly ProviderManagerService _providerManagerService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
         private readonly ISecureStorage _secureStorage;
-        private readonly IIdentityService _identityService;
         private readonly EventDispatcherService _eventDispatcher;
         private readonly IAgentCommunicationProvider _agentCommunicationProvider;
         private readonly IOptions<AuthJanitorServiceOptions> _options;
+        private readonly ITokenCredentialProvider _tokenCredentialProvider;
 
         public static readonly Type[] ProviderSharedTypes = new Type[]
         {
@@ -48,23 +47,23 @@ namespace AuthJanitor
             ProviderManagerService providerManagerService,
             ICryptographicImplementation cryptographicImplementation,
             ISecureStorage secureStorage,
-            IIdentityService identityService,
             EventDispatcherService eventDispatcherService,
             IAgentCommunicationProvider agentCommunicationProvider,
-            IOptions<AuthJanitorServiceOptions> options)
+            IOptions<AuthJanitorServiceOptions> options,
+            ITokenCredentialProvider tokenCredentialProvider)
         {
             _logger = logger;
             _providerManagerService = providerManagerService;
             _cryptographicImplementation = cryptographicImplementation;
             _secureStorage = secureStorage;
-            _identityService = identityService;
             _eventDispatcher = eventDispatcherService;
             _agentCommunicationProvider = agentCommunicationProvider;
             _options = options;
+            _tokenCredentialProvider = tokenCredentialProvider;
         }
 
+        public ITokenCredentialProvider TokenCredentialProvider => _tokenCredentialProvider;
         public ISecureStorage SecureStorage => _secureStorage;
-        public IIdentityService IdentityService => _identityService;
         public EventDispatcherService EventDispatcher => _eventDispatcher;
         public ProviderManagerService ProviderManager => _providerManagerService;
         public IAgentCommunicationProvider AgentCommunicationProvider => _agentCommunicationProvider;
@@ -95,8 +94,6 @@ namespace AuthJanitor
         /// <returns></returns>
         public async Task ProcessMessageAsync(
             string serializedMessage,
-            Func<Task<AccessTokenCredential>> getOboCallback,
-            Func<Task<AccessTokenCredential>> getMsiCallback,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction)
         {
             var envelope = JsonConvert.DeserializeObject<AgentMessageEnvelope>(serializedMessage);
@@ -119,8 +116,6 @@ namespace AuthJanitor
                 var message = envelope.MessageObject as AgentProviderCommandMessage;
                 await ExecuteAsync(message.ValidPeriod, 
                     periodicUpdateFunction,
-                    getOboCallback,
-                    getMsiCallback,
                     message.Providers.ToArray());
             }
             if (envelope.MessageObject is AgentProviderStatusMessage)
@@ -130,28 +125,6 @@ namespace AuthJanitor
                 await periodicUpdateFunction(message.WorkflowActionCollection);
             }
         }
-
-        /// <summary>
-        /// Stash the credentials for the current user in the preferred
-        /// secure storage, and return the Guid of the stashed object.
-        /// </summary>
-        /// <param name="expiry">When the credentials expire, if unused</param>
-        /// <returns>Guid of stashed object</returns>
-        public async Task<Guid> StashCredentialForCurrentUserAsync(DateTimeOffset expiry = default) =>
-            await StashCredentialAsync(
-                await _identityService.GetAccessTokenOnBehalfOfCurrentUserAsync(),
-                expiry);
-
-        /// <summary>
-        /// Stash the credentials for the application's identity in the preferred
-        /// secure storage, and return the Guid of the stashed object.
-        /// </summary>
-        /// <param name="expiry">When the credentials expire, if unused</param>
-        /// <returns>Guid of stashed object</returns>
-        public async Task<Guid> StashCredentialForCurrentAppAsync(DateTimeOffset expiry = default) =>
-            await StashCredentialAsync(
-                await _identityService.GetAccessTokenForApplicationAsync(),
-                expiry);
 
         /// <summary>
         /// Stash a given credentials object in the preferred
@@ -187,8 +160,6 @@ namespace AuthJanitor
         public async Task DispatchOrExecuteAsync(
             TimeSpan secretValidPeriod,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
-            Func<Task<AccessTokenCredential>> getOboCallback,
-            Func<Task<AccessTokenCredential>> getMsiCallback,
             string dispatchMessageState,
             params ProviderExecutionParameters[] providerConfigurations)
         {
@@ -211,8 +182,6 @@ namespace AuthJanitor
             {
                 await ExecuteAsync(secretValidPeriod,
                     periodicUpdateFunction,
-                    getOboCallback,
-                    getMsiCallback,
                     providerConfigurations.Where(c => c.AgentId == _options.Value.InstanceId).ToArray());
             }
         }
@@ -232,69 +201,18 @@ namespace AuthJanitor
         public async Task<ProviderWorkflowActionCollection> ExecuteAsync(
             TimeSpan secretValidPeriod,
             Func<ProviderWorkflowActionCollection, Task> periodicUpdateFunction,
-            Func<Task<AccessTokenCredential>> getOboCallback,
-            Func<Task<AccessTokenCredential>> getMsiCallback,
             params ProviderExecutionParameters[] providerConfigurations)
         {
             ProviderWorkflowActionCollection workflowCollection =
                 new ProviderWorkflowActionCollection();
             try
             {
-                var persisted = new Dictionary<Guid, AccessTokenCredential>();
-                if (providerConfigurations.Any(p => p.TokenSource == TokenSources.Persisted))
+                await Task.WhenAll(providerConfigurations.Select(async provider =>
                 {
-                    _logger.LogInformation("Downloading persisted tokens");
-                    foreach (var item in providerConfigurations.Where(p => p.TokenSource == TokenSources.Persisted))
-                    {
-                        var guid = Guid.Parse(item.TokenParameter);
-                        persisted[guid] = await _secureStorage.Retrieve<AccessTokenCredential>(guid);
-                    }
-                }
-
-                AccessTokenCredential obo = null, msi = null;
-                if (providerConfigurations.Any(p => p.TokenSource == TokenSources.OBO))
-                {
-                    _logger.LogInformation("Acquiring OBO token");
-                    obo = await getOboCallback();
-                }
-                if (providerConfigurations.Any(p => p.TokenSource == TokenSources.ServicePrincipal))
-                {
-                    _logger.LogInformation("Acquiring application token");
-                    msi = await getMsiCallback();
-                }
-
-                _logger.LogInformation("Getting providers for {ResourceCount} resources", providerConfigurations.Count());
-                await Task.WhenAll(providerConfigurations.Select(async r =>
-                {
-                    switch (r.TokenSource)
-                    {
-                        case TokenSources.Explicit:
-                            r.AccessToken = JsonConvert.DeserializeObject<AccessTokenCredential>(r.TokenParameter);
-                            break;
-                        case TokenSources.OBO:
-                            r.AccessToken = obo;
-                            r.AccessToken.DisplayEmail = _identityService.UserEmail;
-                            r.AccessToken.DisplayUserName = _identityService.UserName;
-                            break;
-                        case TokenSources.Persisted:
-                            r.AccessToken = persisted[Guid.Parse(r.TokenParameter)];
-                            r.AccessToken.DisplayEmail = r.AccessToken.Username;
-                            r.AccessToken.DisplayUserName = r.AccessToken.Username;
-                            break;
-                        case TokenSources.ServicePrincipal:
-                            r.AccessToken = msi;
-                            break;
-                        case TokenSources.Unknown:
-                        default:
-                            await _eventDispatcher.DispatchEvent(AuthJanitorSystemEvents.AnomalousEventOccurred,
-                                nameof(AuthJanitorService.ExecuteAsync),
-                                $"TokenSource was unknown for a provider! ({r.ProviderType})");
-                            break;
-                    }
-                    return r;
+                    provider.AccessToken = await _tokenCredentialProvider.GetToken(
+                        provider.TokenSource,
+                        provider.TokenParameter);
                 }));
-
-                // --- end access token acquisition/embed ---
 
                 var providers = providerConfigurations.Select(r =>
                 {

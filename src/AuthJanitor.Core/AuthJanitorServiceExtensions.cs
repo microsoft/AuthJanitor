@@ -37,7 +37,6 @@ namespace AuthJanitor
                 o.EmbedEphemeralRSAKey();
             });
             serviceCollection.AddDummyAgentCommunicationProvider();
-            serviceCollection.AddDummyIdentityService();
             serviceCollection.AddDummySecureStorage();
         }
 

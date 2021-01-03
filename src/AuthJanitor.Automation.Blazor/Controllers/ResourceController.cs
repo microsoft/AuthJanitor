@@ -16,12 +16,12 @@ namespace AuthJanitor.Automation.Blazor.Controllers
     public class ResourceController : ReadWriteEntityControllerBase<ResourceModel>
     {
         private readonly AuthJanitorService _authJanitorService;
-        private readonly TokenAbstractionService _tokens;
+        private readonly ITokenAcquisition _tokens;
 
         public ResourceController(
             AuthJanitorDbContext context,
             AuthJanitorService authJanitorService,
-            TokenAbstractionService tokenAbstraction) : base(context)
+            ITokenAcquisition tokenAbstraction) : base(context)
         {
             _authJanitorService = authJanitorService;
             _tokens = tokenAbstraction;
@@ -35,7 +35,8 @@ namespace AuthJanitor.Automation.Blazor.Controllers
         [HttpGet("enumerate")]
         public async Task<ActionResult<IEnumerable<ProviderResourceSuggestion>>> Enumerate()
         {
-            var token = await _tokens.GetAzureAsUser();
+            var token = AccessTokenCredential.CreateBearer(await _tokens.GetAccessTokenForUserAsync(new[] {
+                BlazorTokenCredentialProvider.AZURE_SCOPE }));
             var resources = await _authJanitorService.EnumerateAsync(token);
             return Ok(
                 JsonConvert.SerializeObject(resources,

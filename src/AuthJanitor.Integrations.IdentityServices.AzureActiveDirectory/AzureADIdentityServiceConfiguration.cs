@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers;
 using System.ComponentModel;
 
 namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
@@ -14,5 +15,8 @@ namespace AuthJanitor.Integrations.IdentityServices.AzureActiveDirectory
 
         [Description("Azure AD tenant ID")]
         public string TenantId { get; set; }
+
+        [Description("Token Source")]
+        public TokenSources TokenSource { get; set; }
     }
 }

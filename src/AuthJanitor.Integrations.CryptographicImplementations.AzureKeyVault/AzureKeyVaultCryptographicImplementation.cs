@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 using AuthJanitor.CryptographicImplementations;
-using AuthJanitor.IdentityServices;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
 using Microsoft.Extensions.Options;
@@ -21,17 +20,17 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.AzureKeyVault
         private AzureKeyVaultCryptographicImplementationConfiguration Configuration { get; }
         private ICryptographicImplementation FallbackCryptography => Configuration.FallbackCryptography;
 
-        private readonly IIdentityService _identityService;
+        private readonly ITokenCredentialProvider _tokenProvider;
 
         /// <summary>
         /// The default AuthJanitor cryptographic implementation
         /// </summary>
         public AzureKeyVaultCryptographicImplementation(
             IOptions<AzureKeyVaultCryptographicImplementationConfiguration> configuration,
-            IIdentityService identityService)
+            ITokenCredentialProvider tokenProvider)
         {
             Configuration = configuration.Value;
-            _identityService = identityService;
+            _tokenProvider = tokenProvider;
         }
 
         /// <summary>
@@ -173,13 +172,13 @@ namespace AuthJanitor.Integrations.CryptographicImplementations.AzureKeyVault
                 plainText)).Ciphertext;
 
         private Task<CryptographyClient> GetClient() =>
-            _identityService.GetAccessTokenForApplicationAsync()
+            _tokenProvider.GetToken(Configuration.VaultTokenSource, string.Empty)
                 .ContinueWith(t => new CryptographyClient(
                     new Uri(Configuration.KeyIdUri),
                     ExistingTokenCredential.FromAccessToken(t.Result)));
 
         private Task<CryptographyClient> GetClient(string key) =>
-            _identityService.GetAccessTokenForApplicationAsync()
+            _tokenProvider.GetToken(Configuration.VaultTokenSource, string.Empty)
                     .ContinueWith(async t =>
                     {
                         var keyClient = new KeyClient(new Uri(Configuration.VaultUri),
