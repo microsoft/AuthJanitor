@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using AuthJanitor.Providers;
 using System.ComponentModel;
 
 namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
@@ -11,5 +12,7 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
 
         [Description("Object prefix")]
         public string Prefix { get; set; } = "AJPersist-";
+
+        public TokenSources TokenSource { get; set; }
     }
 }

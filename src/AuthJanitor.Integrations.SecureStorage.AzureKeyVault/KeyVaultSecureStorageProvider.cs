@@ -15,16 +15,16 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
     public class KeyVaultSecureStorageProvider : ISecureStorage
     {
         private KeyVaultSecureStorageProviderConfiguration Configuration { get; }
-        private readonly IIdentityService _identityService;
         private readonly ICryptographicImplementation _cryptographicImplementation;
+        private readonly ITokenCredentialProvider _tokenCredentialProvider;
 
         public KeyVaultSecureStorageProvider(
             IOptions<KeyVaultSecureStorageProviderConfiguration> configuration,
-            IIdentityService identityService,
+            ITokenCredentialProvider tokenCredentialProvider,
             ICryptographicImplementation cryptographicImplementation)
         {
             Configuration = configuration.Value;
-            _identityService = identityService;
+            _tokenCredentialProvider = tokenCredentialProvider;
             _cryptographicImplementation = cryptographicImplementation;
 
             if (_cryptographicImplementation == null)
@@ -63,7 +63,7 @@ namespace AuthJanitor.Integrations.SecureStorage.AzureKeyVault
         }
 
         private Task<SecretClient> GetClient() =>
-            _identityService.GetAccessTokenForApplicationAsync()
+            _tokenCredentialProvider.GetToken(Configuration.TokenSource, string.Empty)
                 .ContinueWith(t => new SecretClient(
                     new Uri($"https://{Configuration.VaultName}.vault.azure.net/"),
                     ExistingTokenCredential.FromAccessToken(t.Result)));

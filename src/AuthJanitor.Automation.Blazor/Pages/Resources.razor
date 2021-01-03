@@ -1,0 +1,47 @@
+﻿@page "/resources"
+
+<Button Clicked="@(() => {
+                       AuthJanitorService.EnumerateAsync(null);
+                   })">Enumerate
+</Button>
+
+@* rowselectable is false here! *@
+<DataGrid TItem="ResourceModel"
+          Data="@ModelCollection"
+          @bind-SelectedRow="@SelectedModel"
+          RowSelectable="@((r) => false)"
+          Editable="true"
+          EditMode="DataGridEditMode.Inline"
+          RowInserted="@(async (r) => await Create(r.Item))"
+          RowUpdated="@(async (r) => await Update(r.Item))"
+          RowRemoved="@(async (r) => await Delete(r))">
+    <DataGridCommandColumn TItem="ResourceModel"
+                           Field="@nameof(ResourceModel.ResourceId)" />
+    <DataGridColumn TItem="ResourceModel"
+                    Field="@nameof(ResourceModel.DescriptiveName)"
+                    Caption="Name"
+                    Editable="true" />
+    <DataGridColumn TItem="ResourceModel"
+                    Field="@nameof(ResourceModel.Parameters)"
+                    Caption="Provider">
+        <DisplayTemplate>
+            @context.Parameters.ProviderType
+        </DisplayTemplate>
+    </DataGridColumn>
+    <DataGridColumn TItem="ResourceModel"
+                    Field="@nameof(ResourceModel.Parameters)"
+                    Caption="Configuration">
+        <DisplayTemplate>
+            @context.Parameters.ProviderConfiguration
+        </DisplayTemplate>
+    </DataGridColumn>
+</DataGrid>
+
+@inherits EntityBasePage<ResourceModel>
+@using AuthJanitor.Repository.Models
+@code
+{ 
+    protected override string UrlBase => "/api/resources";
+    protected override Func<ResourceModel, Guid> GetId => new Func<ResourceModel, Guid>(
+        (rm) => rm.ResourceId);
+}

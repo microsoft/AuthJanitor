@@ -1,0 +1,22 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using AuthJanitor.Automation.Blazor
+@using AuthJanitor.Automation.Blazor.Shared
+@using AuthJanitor.Automation.Blazor.Components
+@using AuthJanitor.Providers
+@using Microsoft.Identity.Web
+
+@using Blazorise
+@using Blazorise.DataGrid
+
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject AuthJanitorService AuthJanitorService
+@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
+@inject ITokenAcquisition TokenAcquisitionService

@@ -1,0 +1,17 @@
+﻿@page "/"
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+
+<CardDeck Style="column-count: 4">
+    @foreach (var item in AuthJanitorService.ProviderManager.LoadedProviders)
+    {
+    <Column ColumnSize="ColumnSize.Is3">
+        <Card Class="border border-dark bg-light p-2 m-2">
+            <LoadedProviderMetadataComponent Provider="item" />
+        </Card>
+    </Column>
+    }
+</CardDeck>

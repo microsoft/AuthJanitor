@@ -16,6 +16,12 @@ namespace AuthJanitor.Providers
 
         public AuthJanitorProviderConfiguration Configuration { get; set; }
         public string SerializedConfiguration { get; set; }
+        public ProviderExecutionParameters Parameters =>
+            new ProviderExecutionParameters()
+            {
+                ProviderType = ProviderType,
+                ProviderConfiguration = SerializedConfiguration,
+            };
 
         public ProviderResourceSuggestion()
         {

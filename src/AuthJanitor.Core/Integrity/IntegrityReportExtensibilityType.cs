@@ -30,10 +30,6 @@ namespace AuthJanitor.Integrity
             {
                 ExtensibilityType = ExtensibilityTypes.Provider;
             }
-            else if (typeof(IdentityServices.IIdentityService).IsAssignableFrom(type))
-            {
-                ExtensibilityType = ExtensibilityTypes.Identity;
-            }
             else if (typeof(CryptographicImplementations.ICryptographicImplementation).IsAssignableFrom(type))
             {
                 ExtensibilityType = ExtensibilityTypes.CryptographicImplementation;
