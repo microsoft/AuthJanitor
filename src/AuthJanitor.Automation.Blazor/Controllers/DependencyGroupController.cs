@@ -1,4 +1,6 @@
-﻿using AuthJanitor.Repository;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.Repository;
 using AuthJanitor.Repository.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

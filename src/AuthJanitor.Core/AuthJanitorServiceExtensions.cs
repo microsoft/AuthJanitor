@@ -1,4 +1,6 @@
-﻿using AuthJanitor.CryptographicImplementations;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.CryptographicImplementations;
 using AuthJanitor.IdentityServices;
 using AuthJanitor.Providers;
 using AuthJanitor.SecureStorage;
@@ -48,7 +50,7 @@ namespace AuthJanitor
             serviceCollection.AddTransient<ProviderWorkflowActionLogger>();
             serviceCollection.AddTransient(typeof(ProviderWorkflowActionLogger<>), typeof(ProviderWorkflowActionLogger<>));
             
-            serviceCollection.AddSingleton<AuthJanitorService>();
+            serviceCollection.AddScoped<AuthJanitorService>();
 
         }
 

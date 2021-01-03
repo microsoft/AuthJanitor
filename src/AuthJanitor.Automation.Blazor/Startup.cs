@@ -51,7 +51,7 @@ namespace AuthJanitor.Automation.Blazor
                 options.Filters.Add(new AuthorizeFilter(policy));
             }).AddMicrosoftIdentityUI();
 
-            services.AddTransient<ITokenCredentialProvider, BlazorTokenCredentialProvider>();
+            services.AddScoped<ITokenCredentialProvider, BlazorTokenCredentialProvider>();
             
             // NOTE: In this mode, the RSA data is ephemeral and cleared at shutdown
             services.AddAuthJanitorDummyServices();

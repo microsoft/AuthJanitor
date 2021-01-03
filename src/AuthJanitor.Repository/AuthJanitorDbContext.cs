@@ -42,7 +42,12 @@ namespace AuthJanitor.Repository
             modelBuilder
                 .Entity<DependencyGroupRotationModel>()
                 .Property(e => e.WorkflowActions)
-                .HasConversion(GetJsonConverter<ProviderWorkflowActionCollection>()); ;
+                .HasConversion(GetJsonConverter<ProviderWorkflowActionCollection>());
+
+            modelBuilder
+                .Entity<DependencyGroupModel>()
+                .Property(e => e.DefaultParameters)
+                .HasConversion(GetJsonConverter<ProviderExecutionParameters>());
 
             // *:* join table
             modelBuilder.Entity<ResourceDependencyGroupModel>()

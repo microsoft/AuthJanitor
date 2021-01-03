@@ -1,4 +1,6 @@
-﻿using AuthJanitor.Providers;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+using AuthJanitor.Providers;
 using AuthJanitor.SecureStorage;
 using Microsoft.Identity.Web;
 using System;
@@ -24,6 +26,8 @@ namespace AuthJanitor.Automation.Blazor
         {
             switch (source)
             {
+                case TokenSources.Explicit:
+                    return AccessTokenCredential.CreateBearer(parameters);
                 case TokenSources.Persisted:
                     var guid = Guid.Parse(parameters);
                     return await _secureStorage.Retrieve<AccessTokenCredential>(guid);
