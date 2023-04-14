@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "AuthJanitor.Functions.Agent": {
-      "commandName": "Project",
-      "commandLineArgs": "host start --pause-on-error --port 16020"
-    }
-  }
-}

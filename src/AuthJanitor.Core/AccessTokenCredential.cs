@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+using Newtonsoft.Json;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace AuthJanitor
@@ -70,6 +72,14 @@ namespace AuthJanitor
         public string SubErrorType { get; set; }
 
         [JsonPropertyName("error_codes")]
+        [NotMapped]
         public int[] ErrorCodes { get; set; }
+
+        public static AccessTokenCredential CreateBearer(string token) =>
+            new AccessTokenCredential()
+            {
+                TokenType = "Bearer",
+                AccessToken = token
+            };
     }
 }

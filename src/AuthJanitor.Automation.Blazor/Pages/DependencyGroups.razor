@@ -1,0 +1,45 @@
+﻿@page "/dependencygroups"
+
+@* rowselectable is false here! *@
+<DataGrid TItem="DependencyGroupModel"
+          Data="@ModelCollection"
+          @bind-SelectedRow="@SelectedModel"
+          RowSelectable="@((r) => false)"
+          Editable="true"
+          EditMode="DataGridEditMode.Inline"
+          RowInserted="@(async (r) => await Create(r.Item))"
+          RowUpdated="@(async (r) => await Update(r.Item))"
+          RowRemoved="@(async (r) => await Delete(r))">
+    <DataGridCommandColumn TItem="DependencyGroupModel"
+                           Field="@nameof(DependencyGroupModel.DependencyGroupId)" />
+    <DataGridColumn TItem="DependencyGroupModel"
+                    Field="@nameof(DependencyGroupModel.Name)"
+                    Caption="Name"
+                    Editable="true" />
+    <DataGridColumn TItem="DependencyGroupModel"
+                    Field="@nameof(DependencyGroupModel.ValidPeriod)"
+                    Caption="Valid Period" />
+    <DataGridColumn TItem="DependencyGroupModel"
+                    Field="@nameof(DependencyGroupModel.Resources)"
+                    Caption="Resources">
+        <DisplayTemplate>
+            <ul>
+                @foreach (var item in context.Resources)
+                {
+                <li>
+                    @item.Resource.DescriptiveName
+                </li>
+                }
+            </ul>
+        </DisplayTemplate>
+    </DataGridColumn>
+</DataGrid>
+
+@inherits EntityBasePage<DependencyGroupModel>
+@using AuthJanitor.Repository.Models
+@code
+{ 
+    protected override string UrlBase => "/api/dependencygroups";
+    protected override Func<DependencyGroupModel, Guid> GetId => new Func<DependencyGroupModel, Guid>(
+        (rm) => rm.DependencyGroupId);
+}

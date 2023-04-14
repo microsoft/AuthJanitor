@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.1.1" />
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="McMaster.NETCore.Plugins" Version="1.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuthJanitor.Core\AuthJanitor.Core.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Integrations.SecureStorage.AzureKeyVault\AuthJanitor.Integrations.SecureStorage.AzureKeyVault.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AppServices\AuthJanitor.Providers.AppServices.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureAD\AuthJanitor.Providers.AzureAD.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureMaps\AuthJanitor.Providers.AzureMaps.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureSearch\AuthJanitor.Providers.AzureSearch.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.AzureSql\AuthJanitor.Providers.AzureSql.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.Azure\AuthJanitor.Providers.Azure.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.CosmosDb\AuthJanitor.Providers.CosmosDb.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.EventHub\AuthJanitor.Providers.EventHub.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.KeyVault\AuthJanitor.Providers.KeyVault.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.RedisCache\AuthJanitor.Providers.RedisCache.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.ServiceBus\AuthJanitor.Providers.ServiceBus.csproj" />
+    <ProjectReference Include="..\AuthJanitor.Providers.Storage\AuthJanitor.Providers.Storage.csproj" />
+  </ItemGroup>
+
+</Project>
